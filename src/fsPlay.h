@@ -32,6 +32,7 @@ void fsSleepUs(FSPSView *v, FSLong time);
 FSBits fsReadKeys(FSPSView *v);
 
 // Peform an entire draw, blit loop
+// (
 void fsDraw(FSPSView *v);
 
 // Run before any user code is processed in a tick
@@ -39,5 +40,11 @@ void fsPreFrameHook(FSPSView *v);
 
 // Run after we have slept for the specified period of time
 void fsPostFrameHook(FSPSView *v);
+
+// Hook for frontend to parse specific options
+void fsUnpackFrontendOption(FSPSView *v, const char *key, const char *value);
+
+// Parse the specified ini file options into a view
+void fsParseIniFile(FSPSView *p, FSView *v, const char *fname);
 
 #endif

@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <SDL.h>
 #include <SDL_ttf.h>
+#include "keymap.h"
 #include "../../fs.h"
 #include "../../fsPlay.h"
 
@@ -47,6 +48,9 @@ const int FontSize = 20;
 struct FSPSView {
     // The generic backing view
     FSView *view;
+
+    // Keymap mapping an action to a number of keycodes
+    SDL_Keycode keymap[VKEY_COUNT][FS_MAX_KEYS_PER_ACTION];
 
     // Platform-specific render structures
     //
@@ -168,28 +172,16 @@ void handleWindowEvents(FSPSView *v, const Uint8 *state)
 FSBits fsReadKeys(FSPSView *v)
 {
     (void) v;
-    // We should put this in fscontrol.h
-    static const FSBits virtualKeys[] = {
-        VKEY_UP, VKEY_DOWN, VKEY_LEFT, VKEY_RIGHT, VKEY_ROTL,
-        VKEY_ROTR, VKEY_ROTH, VKEY_HOLD, VKEY_START
-    };
-
-    // We can do this by keyboard name and use SDL_GetScancodeFromName.
-    // Formalize the configuration file expectation that should be used for
-    // settings.
-    //
-    // No graphical interface.
-    static const SDL_Keycode physicalKeys[] = {
-        SDLK_SPACE, SDLK_DOWN, SDLK_LEFT, SDLK_RIGHT, SDLK_z,
-        SDLK_x, SDLK_a, SDLK_c, SDLK_RETURN
-    };
 
     const Uint8 *state = SDL_GetKeyboardState(NULL);
 
+    // Check through all values in the keymap
     FSBits keys = 0;
-    for (int i = 0; i < 9; ++i) {
-        if (state[SDL_GetScancodeFromKey(physicalKeys[i])]) {
-            keys |= virtualKeys[i];
+    for (int i = 0; i < VKEY_COUNT; ++i) {
+        // Check just the first keycode for now (will extend)
+        if (state[SDL_GetScancodeFromKey(v->keymap[i][0])]) {
+            // Equivalent to mapping VKEYI -> VKEY
+            keys |= (1 << i);
         }
     }
 
@@ -601,6 +593,36 @@ void fsDraw(FSPSView *v)
     SDL_RenderPresent(v->renderer);
 }
 
+// parse ini will call this function and pass appropriate values
+void fsUnpackFrontendOption(FSPSView *v, const char *key, const char *value)
+{
+    if (!strncmp(key, "keybind.", 8)) {
+        const char *s = key + 8;
+
+        // Handle keybinds - We should only expose fsKey2SDL here and handle the
+        // keybinds in the engine. Less room for error that way.
+        if (!strcmpi("rotateRight", s))
+           v->keymap[VKEYI_ROTR][0] = fsKey2SDLKey(value);
+        else if (!strcmpi("rotateLeft", s))
+           v->keymap[VKEYI_ROTL][0] = fsKey2SDLKey(value);
+        else if (!strcmpi("rotate180", s))
+           v->keymap[VKEYI_ROTH][0] = fsKey2SDLKey(value);
+        else if (!strcmpi("left", s))
+           v->keymap[VKEYI_LEFT][0] = fsKey2SDLKey(value);
+        else if (!strcmpi("right", s))
+           v->keymap[VKEYI_RIGHT][0] = fsKey2SDLKey(value);
+        else if (!strcmpi("down", s))
+           v->keymap[VKEYI_DOWN][0] = fsKey2SDLKey(value);
+        else if (!strcmpi("up", s))
+           v->keymap[VKEYI_UP][0] = fsKey2SDLKey(value);
+        else if (!strcmpi("hold", s))
+           v->keymap[VKEYI_HOLD][0] = fsKey2SDLKey(value);
+    }
+    else if (!strncmp(key, "frontend.sdl2.", 14)) {
+        // Handle other specific options
+    }
+}
+
 // Main entry point. This jumps straight into the game right now but should
 // perform configuration parsing and provide a menu of sorts probably.
 // At least start at a menu like Nullpomino does.
@@ -630,7 +652,7 @@ int main(void)
     initSDL(&mainView);
 
     fsGameClear(mainView.view->game);
-    fsParseIniFile(mainView.view, "fs.ini");
+    fsParseIniFile(&mainView, mainView.view, "fs.ini");
 
     // Draw a rudimentary menu waiting for any keypress
     // Start the game - we need to pass the generic view since we do not know

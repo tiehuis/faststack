@@ -7,6 +7,9 @@
 #include "fs.h"
 #include "fsInternal.h"
 
+// Forward declaration for fsUnpackPlatformOption
+#include "fsPlay.h"
+
 // Case insensitive strcmp.
 static int strcmpi(const char *a, const char *b)
 {
@@ -61,7 +64,8 @@ static inline int fsLockStyleLookup(const char *value)
 
 // This is where option names are implicitly defined as encountered in ini
 // files. All names are case-insensitive.
-static void unpackOptionValue(FSView *v, const char *key, const char *value)
+struct FSPSView;
+static void unpackOptionValue(struct FSPSView *p, FSView *v, const char *key, const char *value)
 {
     if (!strncmp(key, "game.", 5)) {
         const char *s = key + 5;
@@ -95,6 +99,9 @@ static void unpackOptionValue(FSView *v, const char *key, const char *value)
         else if (!strcmpi(s, "dasDelay"))
             c->dasDelay = atol(value);
     }
+    else {
+        fsUnpackFrontendOption(p, key, value);
+    }
 }
 
 // Assume a line is at most 512 bytes long
@@ -113,7 +120,7 @@ static void unpackOptionValue(FSView *v, const char *key, const char *value)
 // Comments must occur at the start of the line. Empty lines
 // are ignored.
 // Errors are ignored silently.
-void fsParseIniFile(FSView *v, const char *fname)
+void fsParseIniFile(struct FSPSView *p, FSView *v, const char *fname)
 {
     char buffer[MAX_LINE_LENGTH];
 
@@ -204,7 +211,7 @@ void fsParseIniFile(FSView *v, const char *fname)
 
             // Try an unpack the key-value pair into the current view
             snprintf(grpkey, 2 * MAX_ID_LENGTH, "%s.%s", grp, key);
-            unpackOptionValue(v, grpkey, val);
+            unpackOptionValue(p, v, grpkey, val);
         }
     }
 

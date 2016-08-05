@@ -50,6 +50,19 @@ typedef struct FSInput {
     FSInt extra;
 } FSInput;
 
+enum VirtualKeyIndex {
+    VKEYI_UP,
+    VKEYI_DOWN,
+    VKEYI_LEFT,
+    VKEYI_RIGHT,
+    VKEYI_ROTL,
+    VKEYI_ROTR,
+    VKEYI_ROTH,
+    VKEYI_HOLD,
+    VKEYI_START,
+    VKEY_COUNT
+};
+
 // Virtual key input representing a specific game action
 enum VirtualKey {
     VKEY_UP    = 0x0001,
@@ -60,7 +73,7 @@ enum VirtualKey {
     VKEY_ROTR  = 0x0020,
     VKEY_ROTH  = 0x0040,
     VKEY_HOLD  = 0x0080,
-    VKEY_START = 0x0100
+    VKEY_START = 0x0100,
 };
 
 // Transforms virtual keys into a set of game input using the specified control

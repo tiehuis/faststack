@@ -244,7 +244,4 @@ FSBlock fsNextRandomPiece(FSGame *f);
 // Convert the specified piece into its component blocks.
 void fsPieceToBlocks(const FSGame *f, FSInt2 *dst, FSInt piece, int x, int y, int theta);
 
-// Parse the specified ini file options into a view
-void fsParseIniFile(FSView *v, const char *fname);
-
 #endif

@@ -20,3 +20,6 @@
 
 // How many unique wallkick tables a single rotation system can have
 #define FS_MAX_NO_OF_WALLKICK_TABLES 5
+
+// How many keys can be assigned to a single action i.e. z and x could both rotr
+#define FS_MAX_KEYS_PER_ACTION 1
