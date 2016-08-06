@@ -16,6 +16,7 @@
 #include <termios.h>
 #include <linux/input.h>
 
+#include "keymap.h"
 #include "../../fs.h"
 #include "../../fsPlay.h"
 
@@ -39,6 +40,9 @@ static const char *inputDeviceName = "/dev/input/by-path/platform-i8042-serio-0-
 struct FSPSView {
     // The generic backing view
     FSView *view;
+
+    // Keymapping of keycode to virtual key
+    int keymap[VKEY_COUNT][FS_MAX_KEYS_PER_ACTION];
 
     // File descriptor of the currently open input device
     int inputFd;
@@ -141,17 +145,6 @@ FSBits fsReadKeys(FSPSView *v)
 {
     char keyState[(KEY_MAX + 7) / 8] = {0};
 
-    // We should put this in fscontrol.h
-    static const FSBits virtualKeys[] = {
-        VKEY_UP, VKEY_DOWN, VKEY_LEFT, VKEY_RIGHT, VKEY_ROTL,
-        VKEY_ROTR, VKEY_ROTH, VKEY_HOLD, VKEY_START
-    };
-
-    static const int physicalKeys[] = {
-        KEY_SPACE, KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_Z,
-        KEY_X, KEY_A, KEY_C, KEY_KPENTER
-    };
-
     // Characters are still being printed, but are just not being displayed.
     // Periodically empty the output queue so it doesn't grow too large.
     while (inputPending()) {
@@ -162,14 +155,15 @@ FSBits fsReadKeys(FSPSView *v)
     ioctl(v->inputFd, EVIOCGKEY(sizeof(keyState)), keyState);
 
     FSBits keys = 0;
-    for (int i = 0; i < 9; ++i) {
+    for (int i = 0; i < VKEY_COUNT; ++i) {
         // Extract the target key into a queryable structure
-        const int key = physicalKeys[i];
+        const int key = v->keymap[i][0];
         const int keyQuery = keyState[key >> 3];
         const int keyMask  = 1 << (key & 7);
 
         if (keyQuery & keyMask) {
-            keys |= virtualKeys[i];
+            // Should replace with a macro indicating why this is valid
+            keys |= (1 << i);
         }
     }
 
@@ -239,6 +233,36 @@ static void blitBackbuffer(FSPSView *v)
         v->invalidBuffers = false;
 }
 
+// parse ini will call this function and pass appropriate values
+void fsUnpackFrontendOption(FSPSView *v, const char *key, const char *value)
+{
+    if (!strncmp(key, "keybind.", 8)) {
+        const char *s = key + 8;
+
+        // Handle keybinds - We should only expose fsKey2SDL here and handle the
+        // keybinds in the engine. Less room for error that way.
+        if (!strcmpi("rotateRight", s))
+           v->keymap[VKEYI_ROTR][0] = fsKey2LinuxKey(value);
+        else if (!strcmpi("rotateLeft", s))
+           v->keymap[VKEYI_ROTL][0] = fsKey2LinuxKey(value);
+        else if (!strcmpi("rotate180", s))
+           v->keymap[VKEYI_ROTH][0] = fsKey2LinuxKey(value);
+        else if (!strcmpi("left", s))
+           v->keymap[VKEYI_LEFT][0] = fsKey2LinuxKey(value);
+        else if (!strcmpi("right", s))
+           v->keymap[VKEYI_RIGHT][0] = fsKey2LinuxKey(value);
+        else if (!strcmpi("down", s))
+           v->keymap[VKEYI_DOWN][0] = fsKey2LinuxKey(value);
+        else if (!strcmpi("up", s))
+           v->keymap[VKEYI_UP][0] = fsKey2LinuxKey(value);
+        else if (!strcmpi("hold", s))
+           v->keymap[VKEYI_HOLD][0] = fsKey2LinuxKey(value);
+    }
+    else if (!strncmp(key, "frontend.terminal.", 18)) {
+        // Handle other specific options
+    }
+}
+
 // Peform an entire draw, blit loop
 void fsDraw(FSPSView *v)
 {
@@ -284,7 +308,7 @@ int main(void)
     initTerm(&mainView);
 
     fsGameClear(mainView.view->game);
-    fsParseIniFile(mainView.view, "fs.ini");
+    fsParseIniFile(&mainView, mainView.view, "fs.ini");
 
     // Draw a rudimentary menu waiting for any keypress
     // Start the game - we need to pass the generic view since we do not know
