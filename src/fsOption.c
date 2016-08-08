@@ -1,16 +1,26 @@
-// Handle reading options files and copying options into the specified
-// structs.
+///
+// fsOption.c
+//
+// Handle parsing of configuration files and the associated setting of value
+// within a `FSGame` instance.
+///
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "fs.h"
+#include "fsLog.h"
 #include "fsInternal.h"
 
-// Forward declaration for fsUnpackPlatformOption
-#include "fsPlay.h"
+///
+// @impl in frontend code.
+// @decl in `fsInterface.h`.
+///
+struct FSPSView;
+void fsiUnpackFrontendOption(struct FSPSView *v, const char *key, const char *value);
+void fsiAddToKeymap(struct FSPSView *v, const int vkey, const char *key);
 
-// Case insensitive strcmp.
+/// Helper: Case insensitive strcmp for configuration parsing.
 static int strcmpi(const char *a, const char *b)
 {
     for (;; a++, b++) {
@@ -62,8 +72,10 @@ static inline int fsLockStyleLookup(const char *value)
     return -1;
 }
 
-// This is where option names are implicitly defined as encountered in ini
-// files. All names are case-insensitive.
+// This is where option names are implicitly defined as encountered in
+// configuration files.
+//
+// All keys are case-insensitive.
 struct FSPSView;
 static void unpackOptionValue(struct FSPSView *p, FSView *v, const char *key, const char *value)
 {
@@ -99,8 +111,29 @@ static void unpackOptionValue(struct FSPSView *p, FSView *v, const char *key, co
         else if (!strcmpi(s, "dasDelay"))
             c->dasDelay = atol(value);
     }
-    else {
-        fsUnpackFrontendOption(p, key, value);
+    else if (!strncmp(key, "keybind.", 8)) {
+        const char *s = key + 8;
+
+        if (!strcmpi("rotateRight", s))
+            fsiAddToKeymap(p, VKEYI_ROTR, value);
+        else if (!strcmpi("rotateLeft", s))
+            fsiAddToKeymap(p, VKEYI_ROTL, value);
+        else if (!strcmpi("rotate180", s))
+            fsiAddToKeymap(p, VKEYI_ROTH, value);
+        else if (!strcmpi("left", s))
+            fsiAddToKeymap(p, VKEYI_LEFT, value);
+        else if (!strcmpi("right", s))
+            fsiAddToKeymap(p, VKEYI_RIGHT, value);
+        else if (!strcmpi("down", s))
+            fsiAddToKeymap(p, VKEYI_DOWN, value);
+        else if (!strcmpi("up", s))
+            fsiAddToKeymap(p, VKEYI_UP, value);
+        else if (!strcmpi("hold", s))
+            fsiAddToKeymap(p, VKEYI_HOLD, value);
+    }
+    // Hardcoded currently, may have to require frontend to do this
+    else if (!strncmp(key, "frontend.sdl2", 13)) {
+        fsiUnpackFrontendOption(p, key + 13, value);
     }
 }
 
@@ -120,14 +153,16 @@ static void unpackOptionValue(struct FSPSView *p, FSView *v, const char *key, co
 // Comments must occur at the start of the line. Empty lines
 // are ignored.
 // Errors are ignored silently.
+//
+// Note: Should combine group and key buffers to avoid the copy.
 void fsParseIniFile(struct FSPSView *p, FSView *v, const char *fname)
 {
     char buffer[MAX_LINE_LENGTH];
 
     FILE *fd = fopen(fname, "r");
     if (!fd) {
-        fprintf(stderr, "Failed to open init file: %s\n", fname);
-        exit(2);
+        fsLogWarning("Failed to open .ini file. Falling back to defaults");
+        return;
     }
 
     // [group] tag
@@ -192,7 +227,7 @@ void fsParseIniFile(struct FSPSView *p, FSView *v, const char *fname)
 
             // Expect '='
             if (*s++ != '=') {
-                fprintf(stderr, "Key %s missing a value\n", key);
+                fsLogWarning("Skipping key '%s' with no value", key);
                 continue;
             }
 
@@ -204,6 +239,12 @@ void fsParseIniFile(struct FSPSView *p, FSView *v, const char *fname)
             while (*s && !isspace(*s)) {
                 s++;
                 c++;
+            }
+
+            // If key is empty value didn't exist
+            if (!c) {
+                fsLogWarning("Skipping key '%s' with no value", key);
+                continue;
             }
 
             strncpy(val, s - c, c);

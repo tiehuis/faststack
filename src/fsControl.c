@@ -1,13 +1,15 @@
+///
 // fsControl.c
 //
-// Bridge between virtual keys -> game input.
+// Implementation of the function to convert key input into simplified actions
+// for the FastStack engine.
 
 #include "fs.h"
 #include "fsControl.h"
 #include "fsInternal.h"
 
-// Map a set of virtual key presses to the current tick input using the current
-// control state.
+// `keys` is an integer with bits set depending on the state of the specified
+// key. The bits set correspond to the `VKEY` enum in `fsControl.h`.
 void fsVirtualKeysToInput(struct FSInput *dst, FSBits keys, const FSGame *f, FSControl *c)
 {
     FSBits lastTickKeys = c->lastKeys;
@@ -21,7 +23,6 @@ void fsVirtualKeysToInput(struct FSInput *dst, FSBits keys, const FSGame *f, FSC
 
     newKeys &= keys;
 
-    // Handle DAS
     if (keys & VKEY_LEFT) {
         if (c->dasCounter > TICKS(-c->dasDelay)) {
             if (c->dasCounter >= 0) {
@@ -80,7 +81,7 @@ void fsVirtualKeysToInput(struct FSInput *dst, FSBits keys, const FSGame *f, FSC
         dst->rotation += 1;
         dst->extra |= FSI_FINESSE_ROTATION;
     }
-    // Override any single lr rotation
+    // A 180 degree rotation takes priority over any 90 degree rotations
     if (newKeys & VKEY_ROTH) {
         dst->rotation = 2;
     }

@@ -1,25 +1,38 @@
+///
+// fsConfig.h
+//
 // Compile-Time configuration variables.
 //
-// Do not include this header directly, since fs.h includes it.
-// Reducing these in some cases can improve memory usage, but beware!
+// Contains variables which typically specify how much stack memory to
+// allocate for various structures. This can be configured based on the
+// requirements of the frontend implementation.
+//
+// Note: Do not include this directly. 'fs.h' includes this.
+///
 
-// The maximum possible height a playfield can be
+/// Maximum height of a playfield.
+//
+//  - Constraints
+//      FS_MAX_HEIGHT <= sizeof(FSBits) * 8
+//
+//      Due to the current algorithm used for clearing lines.
+///
 #define FS_MAX_HEIGHT 25
 
-// The maximum possible width a playfield can be
+/// Maximum width of a playfield.
 #define FS_MAX_WIDTH 20
 
-// The maximum number of previews that can be stored
+/// Maximum size of preview piece buffer.
 #define FS_PREVIEW_MAX 10
 
-// The maximum number of wallkicks allowed in a table
+/// Maximum number of wallkick tables a rotation system is allowed
 #define FS_MAX_KICK_LEN 10
 
-// The maximum length of an internal randomizer working bag
+/// Maximum length of internal randomizer buffer.
 #define FS_RAND_BUFFER_LEN (2 * 7)
 
-// How many unique wallkick tables a single rotation system can have
+/// Maximum number of wallkick tests allowed.
 #define FS_MAX_NO_OF_WALLKICK_TABLES 5
 
-// How many keys can be assigned to a single action i.e. z and x could both rotr
+/// Maximum number of keys an action can be triggered by.
 #define FS_MAX_KEYS_PER_ACTION 1

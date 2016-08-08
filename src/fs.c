@@ -1,6 +1,7 @@
-// fs.c
+///
+// `fs.c`
 //
-// FastStack engine implementation.
+// FastStack Engine implementation.
 
 #include <stdio.h>
 #include <string.h>
@@ -8,13 +9,24 @@
 #include <time.h>
 
 #include "fs.h"
+#include "fsDefault.h"
 #include "fsInternal.h"
 
-// These map to SRS rotation by standard.
-// Different offsets can be applied in fsTables on a case-by-case
-// basis.
-// Incrementing theta mod FS_NPT will perform consecutive clockwise
-// rotations.
+///
+// @impl in `fsRand.c`
+//
+// Return the next randomly generated piece.
+FSBlock fsNextRandomPiece(FSGame *f);
+
+///
+// Static piece offsets.
+//
+// These map to SRS rotation by default. Alternate rotation systems
+// are specific in 'fsTables.c' by customising the default wallkick
+// test to account for the differences.
+//
+// This complicates wallkicks for some otherwise simple rotations, but
+// in my experience is cleaner than implementing different base offsets.
 static const FSInt2 pieceOffsets[FS_NPT][FS_NPR][FS_NBP] = {
     [FS_I] = {
         {{0, 1}, {1, 1}, {2, 1}, {3, 1}},
@@ -60,7 +72,7 @@ static const FSInt2 pieceOffsets[FS_NPT][FS_NPR][FS_NBP] = {
     }
 };
 
-// What values are stored in each cell on the field
+/* Specifies the value stored in each cell. Not currently utilized much. */
 const FSInt pieceColors[7] = {
     0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70
 };
@@ -70,29 +82,30 @@ void fsGameClear(FSGame *f)
     // Do this on every new game restart for now
     srand(time(NULL));
 
-    // Most values just need to be zeroed, with some specific
-    // values set explicitly for safety.
+    // Handle all required zero values here, there are some special cases
     memset(f, 0, sizeof(FSGame));
 
-    // Set some default options
+    // Signal that we are changing the randomizer and need to reinitialize
     f->lastRandomizer = FSRAND_UNDEFINED;
-    f->randomizer = FSRAND_NOSZO_BAG7;
 
+    // Set defaults
+    f->fieldWidth = FSD_FIELD_WIDTH;
+    f->fieldHeight = FSD_FIELD_HEIGHT;
+    f->msPerTick = FSD_MS_PER_TICK;
+    f->msPerDraw = FSD_MS_PER_DRAW;
+    f->areDelay = FSD_ARE_DELAY;
+    f->lockStyle = FSD_LOCK_STYLE;
+    f->lockDelay = FSD_LOCK_DELAY;
+    f->rotationSystem = FSD_ROTATION_SYSTEM;
+    f->gravity = FSD_GRAVITY;
+    f->softDropGravity = FSD_SOFT_DROP_GRAVITY;
+    f->randomizer = FSD_RANDOMIZER;
+    f->goal = FSD_GOAL;
+
+    // Internal defaults
     f->state = FSS_NEW_PIECE;
-    f->msPerTick = 16;
-    f->rotationSystem = FSROT_SRS;
-    f->fieldWidth = 10;
-    f->fieldHeight = 20;
-    f->goal = 40;
-    f->areDelay = 0;
-    f->lockDelay = 200;
-    f->softDropGravity = 1.25; // 20G gravity
-    f->gravity = 0.000625f; // 0.01G (0.01/60)
     f->holdAvailable = true;
     f->holdPiece = FS_NONE;
-    f->finesse = 0;
-    f->lockStyle = FSLOCK_ENTRY;
-    memset(f->b, 0, sizeof(f->b));
 
     // Initialize the next queue and current
     f->piece = fsNextRandomPiece(f);
@@ -101,7 +114,9 @@ void fsGameClear(FSGame *f)
     }
 }
 
-// Extend to 3-tuple to store colour as well
+// Could extend to store colour here as well.
+// If we want to allow specific piece colouring as an option. Not essential
+// right now, manage in frontend.
 void fsPieceToBlocks(const FSGame *f, FSInt2 *dst, FSInt piece, int x, int y, int theta)
 {
     // A rotation system could be offset
@@ -114,6 +129,10 @@ void fsPieceToBlocks(const FSGame *f, FSInt2 *dst, FSInt piece, int x, int y, in
     }
 }
 
+///
+// Is the specified location on the field occupied?
+//
+// If the coordinates are outside the field, false is returned.
 static bool isOccupied(const FSGame *f, int x, int y)
 {
     if (x < 0 || x >= f->fieldWidth || y < 0 || y >= f->fieldHeight)
@@ -122,6 +141,8 @@ static bool isOccupied(const FSGame *f, int x, int y)
     return f->b[y][x] > 1;
 }
 
+///
+// Does the current piece collide at the specified coordinates/rotation.
 static bool isCollision(const FSGame *f, int x, int y, int theta)
 {
     FSInt2 blocks[FS_NBP];
@@ -138,6 +159,7 @@ static bool isCollision(const FSGame *f, int x, int y, int theta)
 
 // Lock the active piece to the playfield and perform any required
 // routines.
+// NOTE: Finesse is currently a bit off.
 static void lockPiece(FSGame *f)
 {
     FSInt2 blocks[FS_NBP];
@@ -176,11 +198,14 @@ static void lockPiece(FSGame *f)
     f->finesse += wastedDirection + wastedRotation;
 }
 
-/**
- * Generate a new piece and spawn onto the field.
- */
+///
+// Generate a new piece and 'spawn' it to the field.
 static void newPiece(FSGame *f)
 {
+    // NOTE: Should use wallkick entryOffset here probably, and entryTheta?
+    // Else we are maintaining the current where we map only when the blocks
+    // themselves are generated. Think about this.
+
     f->x = f->fieldWidth / 2 - 1;
     f->y = 0;
     f->actualY = 0;
@@ -196,9 +221,9 @@ static void newPiece(FSGame *f)
     f->holdAvailable = true;
 }
 
-/**
- * Try to rotate the current piece in the specified direction.
- */
+///
+// Try to rotate the current piece in the specified direction using the
+// existing rotation system.
 static bool doRotate(FSGame *f, FSInt direction)
 {
     // Get the appropriate table and theta
@@ -266,9 +291,8 @@ static bool doRotate(FSGame *f, FSInt direction)
     return false;
 }
 
-/**
- * Apply the specified gravity to the current piece.
- */
+///
+// Apply the specified gravity. To the piece.
 static void doPieceGravity(FSGame *f, FSInt gravity)
 {
     f->actualY += (f->msPerTick * f->gravity) + gravity;
@@ -294,7 +318,17 @@ static void doPieceGravity(FSGame *f, FSInt gravity)
     }
 }
 
-// Find all full rows and clear them, moving upper rows down
+///
+// Find all full rows and clear them, moving upper rows down.
+// The algorithm used is as follows:
+//
+// 1. Check each row, setting a flag if it is full
+// 2. Walk through each row, if the flag was set copy it, else skip
+// 3. Clear remaining upper rows
+//
+// This requires only two passes of the data, and at worst copying of
+// fieldHeight - 1 rows.
+///
 static FSInt clearLines(FSGame *f)
 {
     // This limits the maximum field height to 32
@@ -351,8 +385,14 @@ void updateHardDropY(FSGame *f)
     f->hardDropY = y - 1;
 }
 
-/// The main logic loop of a game.
-void fsGameDoTick(FSGame *f, const FSInput *i)
+///
+// A single game tick.
+//
+// This is just a state machine which is repeatedly called from the main
+// game loop. We do not want a 1 frame delay for some actions so we allow
+// some to run 'instantly'.
+///
+void fsGameTick(FSGame *f, const FSInput *i)
 {
     FSInt distance;
     bool moved = false;

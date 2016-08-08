@@ -1,3 +1,4 @@
+///
 // fsTables.c
 //
 // Define all rotation systems.
@@ -19,24 +20,21 @@
 // This seems easier to think about in terms of symmetry (choosing right or left)
 // indexes into the same position, just a different table.
 
+#include "fs.h"
+#include "fsInternal.h"
+
 // The C standard dictates that static members are zero-filled by default.
 // We implicitly set the .z extra value to 0, but we get a warning under
 // strict checking, so disable this here.
 #pragma GCC diagnostic ignored "-Wmissing-field-initializers"
 
-#include "fs.h"
-#include "fsInternal.h"
-
-// Sentinel value for the end of a set of wallkick offset.
-//
-// This SHOULD be placed at the end of any wallkick table. If it is not, the
-// result should still be the same, but more wallkick tests will be performed.
+// Shorthand for specifying final wallkick test.
 #define WKE {.z = WK_END}
 
-// -1 acts as a sentinel value indicating no wallkicks are available.
+// Shorthand for a kick table index with no kicks.
 #define NO_KICKS -1, -1, -1, -1, -1, -1, -1
 
-// This cannot be static since it is extern'd!
+// This cannot be static since it is externed.
 const WallkickTable emptyWallkickTable = {
     {{0, 0}, WKE}, // R -> U
     {{0, 0}, WKE}, // D -> R
@@ -44,6 +42,8 @@ const WallkickTable emptyWallkickTable = {
     {{0, 0}, WKE}  // U -> L
 };
 
+// The simple rotation system does nothing but is useful when encountering
+// an empty wallkick test.
 static const FSRotationSystem rotSimple = {
     .kicksR = {NO_KICKS},
     .kicksL = {NO_KICKS},
@@ -139,10 +139,10 @@ static const FSRotationSystem rotTGM12 = {
     .kicksH = {NO_KICKS},
     .kickTables = {
         {
-            {{ 0, 0}, { 1, 0, WK_ARIKA_LJT}, {-1, 0}, WKE}, // 0
-            {{ 0, 0}, { 1, 0              }, {-1, 0}, WKE}, // R
-            {{ 0, 0}, { 1, 0, WK_ARIKA_LJT}, {-1, 0}, WKE}, // 2
-            {{ 0, 0}, { 1, 0              }, {-1, 0}, WKE}, // L
+            {{ 0, 0}, { 1, 0}, {.z = WK_ARIKA_LJT}, {-1, 0}, WKE}, // 0
+            {{ 0, 0}, { 1, 0},                      {-1, 0}, WKE}, // R
+            {{ 0, 0}, { 1, 0}, {.z = WK_ARIKA_LJT}, {-1, 0}, WKE}, // 2
+            {{ 0, 0}, { 1, 0},                      {-1, 0}, WKE}, // L
         },
     }
 };
@@ -173,6 +173,9 @@ static const FSRotationSystem rotDTET = {
     }
 };
 
+/// Set of known rotation systems.
+//
+// This is externed in `fs.h`
 const FSRotationSystem *rotationSystems[FS_NRS] = {
     &rotSimple, &rotSRS, &rotArikaSRS, &rotTGM12, &rotDTET
 };

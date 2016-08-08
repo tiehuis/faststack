@@ -1,12 +1,15 @@
+///
 // fsInternal.h
 //
-// Internal macros used across implementations.
+// Internal macros and definitions that are used across multiple files.
+///
 
-// Sentinel value indicating the end of a wallkick
+/// Wallkick: Sentinel value indicating no more wallkick tests are left.
 #define WK_END 0x71
 
-// Specifies to check for the TGM1,2 rotation condition
+/// Wallkick: Flag specifying that the TGM1, 2 rotation condition should be
+//            tested.
 #define WK_ARIKA_LJT 0x70
 
-// Convert milliseconds to ticks using the FSGame instance in variable f.
+/// General: Convert milliseconds value to ticks.
 #define TICKS(x) ((x) / (f->msPerTick))

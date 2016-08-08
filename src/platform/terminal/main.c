@@ -16,9 +16,9 @@
 #include <termios.h>
 #include <linux/input.h>
 
+#include <fs.h>
+#include <fsInterface.h>
 #include "keymap.h"
-#include "../../fs.h"
-#include "../../fsPlay.h"
 
 // This is the input device on my machine. This could differ on other machines and a
 // way to determine this generically would be nice.
@@ -116,7 +116,7 @@ static void destroyTerm(FSPSView *v)
 }
 
 // Return the clock time in microsecond granularity.
-FSLong fsGetTime(FSPSView *v)
+FSLong fsiGetTime(FSPSView *v)
 {
     (void) v;
     struct timespec ts = {0, 0};
@@ -125,7 +125,7 @@ FSLong fsGetTime(FSPSView *v)
 }
 
 // Sleep for the specified number of microseconds.
-void fsSleepUs(FSPSView *v, FSLong time)
+void fsiSleepUs(FSPSView *v, FSLong time)
 {
     (void) v;
     usleep(time);
@@ -141,7 +141,7 @@ static bool inputPending(void)
 
 // Return the set of virtual keys that were read from the physical device.
 // This should also handle any other events that aren't explicitly keys.
-FSBits fsReadKeys(FSPSView *v)
+FSBits fsiReadKeys(FSPSView *v)
 {
     char keyState[(KEY_MAX + 7) / 8] = {0};
 
@@ -209,7 +209,7 @@ static void drawField(FSPSView *v)
 }
 
 
-static void blitBackbuffer(FSPSView *v)
+void fsiBlit(FSPSView *v)
 {
     const FSGame *f = v->view->game;
 
@@ -233,87 +233,57 @@ static void blitBackbuffer(FSPSView *v)
         v->invalidBuffers = false;
 }
 
-// parse ini will call this function and pass appropriate values
-void fsUnpackFrontendOption(FSPSView *v, const char *key, const char *value)
+void fsiAddToKeymap(FSPSView *v, int virtualKey, const char *keyValue)
 {
-    if (!strncmp(key, "keybind.", 8)) {
-        const char *s = key + 8;
-
-        // Handle keybinds - We should only expose fsKey2SDL here and handle the
-        // keybinds in the engine. Less room for error that way.
-        if (!strcmpi("rotateRight", s))
-           v->keymap[VKEYI_ROTR][0] = fsKey2LinuxKey(value);
-        else if (!strcmpi("rotateLeft", s))
-           v->keymap[VKEYI_ROTL][0] = fsKey2LinuxKey(value);
-        else if (!strcmpi("rotate180", s))
-           v->keymap[VKEYI_ROTH][0] = fsKey2LinuxKey(value);
-        else if (!strcmpi("left", s))
-           v->keymap[VKEYI_LEFT][0] = fsKey2LinuxKey(value);
-        else if (!strcmpi("right", s))
-           v->keymap[VKEYI_RIGHT][0] = fsKey2LinuxKey(value);
-        else if (!strcmpi("down", s))
-           v->keymap[VKEYI_DOWN][0] = fsKey2LinuxKey(value);
-        else if (!strcmpi("up", s))
-           v->keymap[VKEYI_UP][0] = fsKey2LinuxKey(value);
-        else if (!strcmpi("hold", s))
-           v->keymap[VKEYI_HOLD][0] = fsKey2LinuxKey(value);
+    const int kc = fsKeyToPhysicalKey(keyValue);
+    if (kc) {
+        v->keymap[virtualKey][0] = kc;
     }
-    else if (!strncmp(key, "frontend.terminal.", 18)) {
+}
+
+// parse ini will call this function and pass appropriate values
+void fsiUnpackFrontendOption(FSPSView *v, const char *key, const char *value)
+{
+    (void) v;
+    (void) value;
+
+    if (!strncmp(key, "frontend.terminal.", 18)) {
         // Handle other specific options
     }
 }
 
 // Peform an entire draw, blit loop
-void fsDraw(FSPSView *v)
+void fsiDraw(FSPSView *v)
 {
     drawField(v);
-    blitBackbuffer(v);
 }
 
 // Run before any user code is processed in a tick
-void fsPreFrameHook(FSPSView *v)
+void fsiPreFrameHook(FSPSView *v)
 {
     (void) v;
 }
 
 // Run after we have slept for the specified period of time
-void fsPostFrameHook(FSPSView *v)
+void fsiPostFrameHook(FSPSView *v)
 {
     (void) v;
 }
 
 int main(void)
 {
-    FSGame game = {
-        .fieldWidth = 10,
-        .fieldHeight = 20,
-        .msPerTick = 8
-    };
+    FSGame game;
+    FSControl control;
+    // Generic View
+    FSView gView = { .game = &game, .control = &control, .totalFramesDrawn = 0 };
+    // Platform-Specific View
+    FSPSView pView = { .view = &gView };
 
-    FSControl control = {
-        .dasSpeed = 0,
-        .dasDelay = 150
-    };
+    initTerm(&pView);
 
-    FSView genericView = {
-        .game = &game,
-        .control = &control,
-        .totalFramesDrawn = 0
-    };
+    fsGameClear(&game);
+    fsParseIniFile(&pView, &gView, "fs.ini");
+    fsGameLoop(&pView, &gView);
 
-    FSPSView mainView = {
-        .view = &genericView,
-    };
-
-    initTerm(&mainView);
-
-    fsGameClear(mainView.view->game);
-    fsParseIniFile(&mainView, mainView.view, "fs.ini");
-
-    // Draw a rudimentary menu waiting for any keypress
-    // Start the game - we need to pass the generic view since we do not know
-    // about the internal structure.
-    fsPlayStart(&mainView, mainView.view);
-
-    destroyTerm(&mainView);
+    destroyTerm(&pView);
 }

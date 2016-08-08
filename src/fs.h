@@ -1,6 +1,11 @@
-// fs.h
+///
+// `fs.c`
 //
-// Main header file for FastStack engine.
+// Header file for the FastStack engine.
+//
+// The engine is mostly opaque to an outside user. A number of functions are
+// provided which provide some convenience when performing certain tasks.
+///
 
 #ifndef FS_H
 #define FS_H
@@ -11,25 +16,25 @@
 #include "fsConfig.h"
 #include "fsControl.h"
 #include "fsTypes.h"
+#include "fsLog.h"
 
-// The following are fixed. They could change in the future though and it
-// better displays intent. The identifiers are purposely short because of
-// their prevalence. This is considered fine since everything else has clear
-// identifiers.
+/// Name of configuration file.
+#define FS_CONFIG_FILENAME "fs.ini"
 
-// Number of piece types
+/// Number of types of pieces.
 #define FS_NPT 7
 
-// Number of Rotation Systems
+/// Number of rotation systems.
 #define FS_NRS 5
 
-// Number of Piece Rotations
+/// Number of rotation states.
 #define FS_NPR 4
 
-// (Max) Number of Blocks in a Piece
+/// Number of blocks in a piece.
 #define FS_NBP 4
 
-enum BlockType {
+/// Piece types
+enum PieceType {
     FS_I,
     FS_J,
     FS_L,
@@ -40,12 +45,14 @@ enum BlockType {
     FS_NONE
 };
 
+/// Randomizer type
 enum RandomizerType {
     FSRAND_UNDEFINED,
     FSRAND_SIMPLE,
     FSRAND_NOSZO_BAG7
 };
 
+/// Rotation System type
 enum RotationSystemType {
     FSROT_SIMPLE,
     FSROT_SRS,
@@ -54,194 +61,326 @@ enum RotationSystemType {
     FSROT_DTET
 };
 
+/// Rotation amount
 enum RotationAmount {
     FSROT_CLOCKWISE = 1,
     FSROT_ANTICLOCKWISE = -1,
     FSROT_HALFTURN = 2
 };
 
+///
+// Locking System type.
+//
+// The systems have the following behaviour:
+//
+//  - FSLOCK_ENTRY
+//      Lock delay is reset only on entry of a new piece.
+//
+//  - FSLOCK_STEP
+//      Lock delay is reset on any downwards movement in the y-axis.
+//
+//  - FSLOCK_MOVE
+//      Lock delay is reset on any **successful** movement.
+///
 enum LockStyle {
     FSLOCK_ENTRY,
     FSLOCK_STEP,
     FSLOCK_MOVE
 };
 
+///
+// All possible game states.
+///
 enum GameState {
+    /// Occurs when a piece has nothing beneath it.
     FSS_FALLING,
+
+    /// Occurs when a piece has hit the top of the stack/floor.
     FSS_LANDED,
+
+    /// Occurs when waiting for a new piece to spawn (entry delay)
     FSS_ARE,
+
+    /// Occurs when a new piece needs to be spawned. This occurs instantly.
     FSS_NEW_PIECE,
-    FSS_LINES_FALLING,
+
+    /// (unused) Occurs when a line clear is occurring.
     FSS_LINES,
+
+    /// Occurs when a user-specified quit action occurred.
     FSS_QUIT,
+
+    /// Occurs when the user lost (topped out).
     FSS_GAMEOVER
 };
 
+///
+// A wallkick table consists of a number 'tests' which are tested in order
+// until success or every test has been tried.
+///
 typedef FSInt3 WallkickTable[FS_NPR][FS_MAX_KICK_LEN];
 
-// Specific rotation systems are defined in fsTables.c.
-// NOTE: Should we allow reading dynamic rotation systems from file?
+///
+// Specifies a single rotation system.
+//
+// A rotation system is comprised of three main parts:
+//
+//  - Entry Offsets
+//      Specifies x, y offsets of a piece when it initially spawns.
+//
+//  - Entry Theta
+//      Specifies the rotation state of a piece when it initially spawns.
+//
+//  - Kick Tables and Kick Indexes
+//      Specifies individual wallkick tables for a given piece. Tables can
+//      be shared amongst types by reusing the index.
+///
 typedef struct FSRotationSystem {
-    // Base movements offsets
+    /* Initial x, y offsets. */
     FSInt entryOffset[FS_NPT];
 
-    // Base rotation offsets
+    /* Initial theta offets. */
     FSInt entryTheta[FS_NPT];
 
-    // Pointers into the kick table for each piece
+    /* Indexes into 'kickTables'. */
     FSInt kicksL[FS_NPT];
     FSInt kicksR[FS_NPT];
     FSInt kicksH[FS_NPT];
 
-    // Actual kick values for each table.
-    // A kick value is comprised of an x, y and extra field, which
-    // can specify special cases that are then handled individually in
-    // the rotation logic.
+    /* A sequence of wallkick tests. */
     WallkickTable kickTables[FS_MAX_NO_OF_WALLKICK_TABLES];
 } FSRotationSystem;
 
+///
+// Rotation Systems are defined statically. We only store an index to the
+// currently used table in 'FSGame'.
+///
 extern const FSRotationSystem *rotationSystems[FS_NRS];
+
+///
+// An empty wallkick table.
+///
 extern const WallkickTable emptyWallkickTable;
 
-// The main game structure. Stores all current game state/options excluding
-// timing based input, which is abstracted to FSControl.
+///
+// A single FastStack game instance.
+//
+// Stores all internal variables and options pertaining to a field.
+// Values can be broken down into one of three classes.
+//
+//  - Internal Status (@I)
+//      Only used internally and never required to be read by a platform.
+//
+//  - External Status (@E)
+//      Calculated internally by the engine, but expected to be read by a
+//      user.
+//
+//  - Fixed Option (@O)
+//      Can be set by the user. Typically unsafe to change during execution.
+//
+//  We document which of the following variables belongs to which class. These
+//  are only guidelines and there may be cases where we need to break the
+//  following visibility rules.
+//
+//  Note: ANy 'Constraints' should always be true at any point in time.
+///
 typedef struct FSGame {
-    // Board state
+    /// @E: Current field state.
     FSBlock b[FS_MAX_HEIGHT][FS_MAX_WIDTH];
 
-    // The width is variable but less than FS_MAX_WIDTH
+    /// @O: Current field width.
+    //
+    //  - Constraints
+    //      - fieldWidth < FS_MAX_WIDTH
     FSInt fieldWidth;
 
-    // The height is variable but less than FS_MAX_HEIGHT
+    /// @O: Current field height.
+    //
+    //  - Constraints
+    //      - fieldHeight < FS_MAX_HEIGHT
     FSInt fieldHeight;
 
-    // A buffer of all the upcoming pieces
+    /// @E: Next available pieces.
     FSBlock nextPiece[FS_PREVIEW_MAX];
 
-    // Internal buffer used by all randomizer states
+    /// @I: Buffer for calculating next pieces.
     FSBlock randomInternal[FS_RAND_BUFFER_LEN];
 
-    // Index into randomInternal, useful for a bag
+    /// @I: Index for `randomInternal`
     int randomInternalIndex;
 
-    // The current piece type
+    /// @E: Current pieces type.
     FSBlock piece;
 
-    // Current piece x
+    /// @E: Current pieces x position.
     FSInt x;
 
-    // Current piece y
+    /// @E: Current pieces y position.
     FSInt y;
 
-    // The actual y with fractional portion.
-    // This is required since gravity is not strictly integer based.
-    // y will ALWAYS be (int) actualY
+    /// @I: Actual y position with greater precision.
+    //
+    // To calculate soft drop and gravity we need more precision than an
+    // integer can provide.
+    //
+    //  - Constraints
+    //      - y == (float) actualY
     float actualY;
 
-    // Highest y which the current piece can lie
+    /// @I: Greatest 'y' the current piece can exist at without a collision.
     FSInt hardDropY;
 
-    // Current block rotation state
+    /// @E: Current pieces rotation state.
     FSInt theta;
 
-    // Current finesse (wasted movement count)
+    /// @E: Number of wasted movements have occurred during the games
+    //      lifetime.
     FSLong finesse;
 
-    // How many movement keypresses during this pieces lifetime
+    /// @I: Number of directional movements have been performed during this
+    //     pieces lifetime.
     FSLong finessePieceDirection;
 
-    // How many rotation keypresses during this pieces lifetime
+    /// @I: Number of rotational movements have been performed during this
+    //     pieces lifetime.
     FSLong finessePieceRotation;
 
-    // NOTE: This should be microsecond granularity to provide as accurate
-    // as possible timings.
-    // Time taken to perform a game update in ms (default 16)
+    /// @O: Milliseconds between each game logic update.
     FSInt msPerTick;
 
-    // How long each draw tick should take.
+    /// @O: Milliseconds between each game draw update.
     FSLong msPerDraw;
 
-    // How long ARE should last
+    /// @O: Length in ms that ARE should take.
     FSLong areDelay;
 
-    // Current time we have been in ARE
+    /// @I: Counter for ARE.
     FSLong areTimer;
 
-    // Actual time that passed according to the specified clock.
-    // NOTE: This is solely to ensure that the clock was accurate, but can be
-    // used for high-speed timing as another reliable measure.
+    /// @E: Actual game length using a high precision timer.
+    //
+    // The game length is usually calculated as 'msPerTick * totalTicks' but
+    // this is potentially inaccurate up to (+-msPerTick). 'actualTimer' acts
+    // as a reliable source to ensure the game was played at the correct speed.
+    //
+    // This is calculated **only** on game finish.
     FSLong actualTime;
 
-    // Total ticks elapsed
+    /// @E: Number of ticks that have elapsed during this game.
     FSLong totalTicks;
 
-    // Which lock style we are using
+    /// @O: Current lock reset style in use.
     FSInt lockStyle;
 
-    // Lock delay (in ms)
+    /// @O: Length in ms that it should take to lock a piece.
     FSLong lockDelay;
 
-    // How long we have been locking for (in ticks)
+    /// @I: Counter for locking.
     FSLong lockTimer;
 
-    // Usually SRS
+    /// @O: Current rotation system being used.
     FSInt rotationSystem;
 
-    // Current gravity
+    /// @O: How many blocks a piece will fall by every ms.
     float gravity;
 
-    // Soft drop gravity
+    /// @O: How many blocks a piece will fall by every ms when soft dropping.
     float softDropGravity;
 
-    // Current game state
+    /// @E: Current state of the internal engine.
     FSInt state;
 
-    // Last input movement found
+    /// @I: The key input applied during the last logic update. */
     FSInput lastInput;
 
-    // We remove the requirement to explicitly initialize randomizer
-    // using thread-local variables and a last flag state.
-    FSInt lastRandomizer;
+    /// @O: The current randomizer in play. */
     FSInt randomizer;
 
-    // Can we currently hold?
+    /// @I: The randomizer in use during the last game update.
+    //
+    // Used to determine if reinitialization of a randomizer is required.
+    // This allows one to alter than randomizer mid-game.
+    FSInt lastRandomizer;
+
+    /// @I: Whether a hold can be performed.
     bool holdAvailable;
 
-    // What is the current hold piece? (-1 if none)
+    /// @E: Current piece we are holding.
     FSBlock holdPiece;
 
-    // How many lines have been cleared?
+    /// @E: Number of cleared lines during the games lifetime
     FSLong linesCleared;
 
-    // How many blocks have been placed?
+    /// @E: Number of blocks placed during the games lifetime.
     FSLong blocksPlaced;
 
-    // The target goal for this line race
+    /// @O: Target number of lines to clear during this game.
     FSLong goal;
 } FSGame;
 
-// A generic wrapper representing a current view of a game.
+///
+// A generic view of a games components.
+//
+// The 'FSGame' instance does not handle all the components, such as input.
+// This view encapsulates all these components into one structure.
+///
 typedef struct FSView {
-    // The current internal game configuration/state
+    /// Current game instance.
     FSGame *game;
 
-    // The current input state
+    /// Current input state.
     FSControl *control;
 
-    // How many frames this view has drawn
+    /// Number of draw requests made during this views lifetime.
     FSLong totalFramesDrawn;
 } FSView;
 
-// Clear the field instance.
+///
+// Reset the specified games instances.
+//
+// This sets its internal values as they are required for a new game, and its
+// options are set to those found in 'fsDefault.h'.
+//
+//  - FSGame *f
+//      The instance to clear.
+///
 void fsGameClear(FSGame *f);
 
-// Perform logic for a single game tick.
-void fsGameDoTick(FSGame *f, const FSInput *i);
+///
+// Perform a single game update.
+//
+//  - FSGame *f
+//      The instance to update
+//
+//  - const FSInput *i
+//      The input for the instance to compute.
+///
+void fsGameTick(FSGame *f, const FSInput *i);
 
-// Return a new random piece using the current randomizer.
-FSBlock fsNextRandomPiece(FSGame *f);
-
-// Convert the specified piece into its component blocks.
+///
+// Convert the specified into its individual blocks.
+//
+//  - const FSGame *f
+//      The instance which options are used
+//
+//  - FSInt2 *dst
+//      The destination buffer to store the pieces in.
+//
+//      Note: **must** be greater than or equal to FS_NBP in size.
+//
+//  - FSInt piece
+//      Type of piece to generate.
+//
+//  - int x
+//      X coordinate of the piece
+//
+//  - int y
+//      Y coordinate of the piece
+//
+//  - int theta
+//      Rotation state of the piece.
+//
+///
 void fsPieceToBlocks(const FSGame *f, FSInt2 *dst, FSInt piece, int x, int y, int theta);
 
 #endif

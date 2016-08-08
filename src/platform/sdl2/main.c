@@ -1,15 +1,22 @@
-// SDL frontend for FastStack.
+///
+// main.c
+//
+// SDL2 frontend for FastStack.
+///
 
 #include <stdio.h>
 #include <SDL.h>
 #include <SDL_ttf.h>
+
+#include <fs.h>
+#include <fsInterface.h>
+
+// Not usual, but just includes these definitions directly.
 #include "keymap.h"
-#include "../../fs.h"
-#include "../../fsPlay.h"
 
 // We define the font directly in memory since we only want to use one, and it
 // reduces the requirement of having seperate resource files.
-#include "ProFont.font"
+#include "ProFont.res"
 const int FontSize = 20;
 
 // Field positional locations
@@ -76,12 +83,12 @@ struct FSPSView {
 void initSDL(FSPSView *v)
 {
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
-        fprintf(stderr, "SDL_Init error: %s\n", SDL_GetError());
+        fsLogFatal("SDL_Init error: %s", SDL_GetError());
         exit(1);
     }
 
     if (TTF_Init() == -1) {
-        fprintf(stderr, "TTF_Init error: %s\n", TTF_GetError());
+        fsLogFatal("TTF_Init error: %s", TTF_GetError());
         SDL_Quit();
         exit(1);
     }
@@ -90,7 +97,7 @@ void initSDL(FSPSView *v)
     SDL_RWops *rw = SDL_RWFromConstMem(ttfFontSpec, ttfFontSpecLen);
     v->font = TTF_OpenFontRW(rw, 1, FontSize);
     if (v->font == NULL) {
-        fprintf(stderr, "TTF_OpenFontIndexRW: %s\n", TTF_GetError());
+        fsLogFatal("TTF_OpenFontIndexRW error: %s", TTF_GetError());
         TTF_Quit();
         SDL_Quit();
         exit(1);
@@ -102,7 +109,7 @@ void initSDL(FSPSView *v)
 
     if (SDL_CreateWindowAndRenderer(v->width, v->height, SDL_WINDOW_SHOWN,
                                     &v->window, &v->renderer)) {
-        fprintf(stderr, "SDL_CreateWindowAndRenderer error: %s\n", SDL_GetError());
+        fsLogFatal("SDL_CreateWindowAndRenderer error: %s", SDL_GetError());
         SDL_Quit();
         exit(1);
     }
@@ -132,14 +139,14 @@ const int CBLUE[7]  = {221, 234,   0, 240,  31,   0,   0};
 // Defines how we work out a color pattern for a specific block id.
 #define BLOCK_RGBA_TRIPLE(id) CRED[(id)], CGREEN[(id)], CBLUE[(id)], 255
 
-FSLong fsGetTime(FSPSView *v)
+FSLong fsiGetTime(FSPSView *v)
 {
     (void) v;
     return SDL_GetTicks() * 1000;
 }
 
 // Sleep for the specified number of microseconds.
-void fsSleepUs(FSPSView *v, FSLong time)
+void fsiSleepUs(FSPSView *v, FSLong time)
 {
     (void) v;
     SDL_Delay(time / 1000);
@@ -169,7 +176,7 @@ void handleWindowEvents(FSPSView *v, const Uint8 *state)
 }
 
 // Return the set of virtual keys that were read from the physical device.
-FSBits fsReadKeys(FSPSView *v)
+FSBits fsiReadKeys(FSPSView *v)
 {
     (void) v;
 
@@ -185,16 +192,19 @@ FSBits fsReadKeys(FSPSView *v)
         }
     }
 
-    handleWindowEvents(v, state);
     return keys;
 }
 
 // We only want to update new events once per frame, as we may read state
 // multiple times, so we do this in a pre frame hook.
-void fsPreFrameHook(FSPSView *v)
+void fsiPreFrameHook(FSPSView *v)
 {
     (void) v;
     SDL_PumpEvents();
+
+    // We handle these events potentially when the game isn't running
+    const Uint8 *state = SDL_GetKeyboardState(NULL);
+    handleWindowEvents(v, state);
 }
 
 // Render the string to the specified coordinates
@@ -211,7 +221,7 @@ inline static void renderString(FSPSView *v, const char *s, int x, int y)
     SDL_Color color = { BLOCK_RGBA_TRIPLE(4) };
     SDL_Surface *textSurface = TTF_RenderText_Solid(v->font, s, color);
     if (textSurface == NULL) {
-        fprintf(stderr, "TTF_RenderText_Solid error: %s\n", TTF_GetError());
+        fsLogFatal("TTF_RenderText_Solid error: %s", TTF_GetError());
         destroySDL(v);
         exit(1);
     }
@@ -219,7 +229,7 @@ inline static void renderString(FSPSView *v, const char *s, int x, int y)
     // Copy a texture to the current renderer
     SDL_Texture *textTexture = SDL_CreateTextureFromSurface(v->renderer, textSurface);
     if (textTexture == NULL) {
-        fprintf(stderr, "SDL_CreateTextureFromtSurface error: %s\n", TTF_GetError());
+        fsLogFatal("SDL_CreateTextureFromSurface error: %s", TTF_GetError());
         SDL_FreeSurface(textSurface);
         destroySDL(v);
         exit(1);
@@ -228,7 +238,7 @@ inline static void renderString(FSPSView *v, const char *s, int x, int y)
     // Size the input method correctly
     int w, h;
     if (TTF_SizeText(v->font, s, &w, &h) == -1) {
-        fprintf(stderr, "TTF_SizeText error: %s\n", TTF_GetError());
+        fsLogFatal("TTF_SizeText error: %s", TTF_GetError());
         SDL_DestroyTexture(textTexture);
         SDL_FreeSurface(textSurface);
         destroySDL(v);
@@ -248,7 +258,7 @@ inline static void renderString(FSPSView *v, const char *s, int x, int y)
 }
 
 // Called at the end of every frame
-void fsPostFrameHook(FSPSView *v)
+void fsiPostFrameHook(FSPSView *v)
 {
     (void) v;
 }
@@ -275,7 +285,7 @@ void drawDebug(FSPSView *v)
 
     // Print the game logic fps and the render fps.
     // assume non-zero for now (maybe not if we had a supercomputer).
-    const int elapsedTime = fsGetTime(v);
+    const int elapsedTime = fsiGetTime(v);
 
     // Should only look at a window here  but oh well
     const float renderFPS = (float) elapsedTime / (1000 * v->view->totalFramesDrawn);
@@ -348,10 +358,8 @@ static void drawHoldPiece(FSPSView *v)
     };
 
     const FSBlock pid = v->view->game->holdPiece;
-    if (pid == -1)
+    if (pid == FS_NONE)
         return;
-
-    // Clear the screen segmet
 
     FSInt2 blocks[4];
     fsPieceToBlocks(v->view->game, blocks, pid, 0, 0, 0);
@@ -385,7 +393,7 @@ static void drawPieceAndShadow(FSPSView *v)
     const FSBlock pid = v->view->game->piece;
 
     // We have no piece to draw
-    if (pid == -1)
+    if (pid == FS_NONE)
         return;
 
     FSInt2 blocks[4];
@@ -575,7 +583,7 @@ static void drawInfoSection(FSPSView *v)
 }
 
 // Draw the prewview pieces
-void fsDraw(FSPSView *v)
+void fsiDraw(FSPSView *v)
 {
     // Clear entire screen
     SDL_SetRenderDrawColor(v->renderer, 0, 0, 0, 255);
@@ -589,79 +597,53 @@ void fsDraw(FSPSView *v)
 
     if (v->showDebug)
         drawDebug(v);
+}
 
+void fsiBlit(FSPSView *v)
+{
     SDL_RenderPresent(v->renderer);
 }
 
-// parse ini will call this function and pass appropriate values
-void fsUnpackFrontendOption(FSPSView *v, const char *key, const char *value)
+void fsiAddToKeymap(FSPSView *v, int virtualKey, const char *keyValue)
 {
-    if (!strncmp(key, "keybind.", 8)) {
-        const char *s = key + 8;
-
-        // Handle keybinds - We should only expose fsKey2SDL here and handle the
-        // keybinds in the engine. Less room for error that way.
-        if (!strcmpi("rotateRight", s))
-           v->keymap[VKEYI_ROTR][0] = fsKey2SDLKey(value);
-        else if (!strcmpi("rotateLeft", s))
-           v->keymap[VKEYI_ROTL][0] = fsKey2SDLKey(value);
-        else if (!strcmpi("rotate180", s))
-           v->keymap[VKEYI_ROTH][0] = fsKey2SDLKey(value);
-        else if (!strcmpi("left", s))
-           v->keymap[VKEYI_LEFT][0] = fsKey2SDLKey(value);
-        else if (!strcmpi("right", s))
-           v->keymap[VKEYI_RIGHT][0] = fsKey2SDLKey(value);
-        else if (!strcmpi("down", s))
-           v->keymap[VKEYI_DOWN][0] = fsKey2SDLKey(value);
-        else if (!strcmpi("up", s))
-           v->keymap[VKEYI_UP][0] = fsKey2SDLKey(value);
-        else if (!strcmpi("hold", s))
-           v->keymap[VKEYI_HOLD][0] = fsKey2SDLKey(value);
-    }
-    else if (!strncmp(key, "frontend.sdl2.", 14)) {
-        // Handle other specific options
+    const SDL_Keycode kc = fsKeyToPhysicalKey(keyValue);
+    if (kc) {
+        v->keymap[virtualKey][0] = kc;
     }
 }
 
-// Main entry point. This jumps straight into the game right now but should
-// perform configuration parsing and provide a menu of sorts probably.
-// At least start at a menu like Nullpomino does.
+// parse ini will call this function and pass appropriate values
+void fsiUnpackFrontendOption(FSPSView *v, const char *key, const char *value)
+{
+    (void) value;
+
+    if (!strcmpi(key, "debug")) {
+        v->showDebug = false;
+    }
+}
+
+// Should probably provide a menu and ability to play another game/restart.
+// Replays and other things should be an option specified.
 int main(void)
 {
-    FSGame game = {
-        .fieldWidth = 10,
-        .fieldHeight = 20,
-        .msPerTick = 8
-    };
+    fsCurrentLogLevel = FS_LOG_LEVEL_DEBUG;
 
-    FSControl control = {
-        .dasSpeed = 0,
-        .dasDelay = 150
-    };
+    FSGame game;
+    FSControl control;
+    // Generic View
+    FSView gView = { .game = &game, .control = &control, .totalFramesDrawn = 0 };
+    // Platform-Specific View
+    FSPSView pView = { .view = &gView };
 
-    FSView genericView = {
-        .game = &game,
-        .control = &control,
-        .totalFramesDrawn = 0
-    };
+    initSDL(&pView);
 
-    FSPSView mainView = {
-        .view = &genericView,
-    };
+    fsGameClear(&game);
+    fsParseIniFile(&pView, &gView, FS_CONFIG_FILENAME);
+    fsGameLoop(&pView, &gView);
 
-    initSDL(&mainView);
-
-    fsGameClear(mainView.view->game);
-    fsParseIniFile(&mainView, mainView.view, "fs.ini");
-
-    // Draw a rudimentary menu waiting for any keypress
-    // Start the game - we need to pass the generic view since we do not know
-    // about the internal structure.
-    fsPlayStart(&mainView, mainView.view);
-
-    // Give time to read final scores
-    if (mainView.view->game->state == FSS_GAMEOVER)
+    // Give time to read final scores (temporary)
+    if (gView.game->state == FSS_GAMEOVER)
         SDL_Delay(3000);
 
-    destroySDL(&mainView);
+    destroySDL(&pView);
 }

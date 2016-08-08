@@ -23,7 +23,7 @@ static int strcmpi(const char *a, const char *b)
 }
 
 // Convert a fsKeyString to a physical key (SDL)
-static int fsKey2LinuxKey(const char *str)
+static int fsKeyToPhysicalKey(const char *str)
 {
     // Number row
     S(0); S(1); S(2); S(3); S(4); S(5); S(6); S(7); S(8); S(9);

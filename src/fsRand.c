@@ -1,14 +1,16 @@
+///
 // fsRand.c
 //
-// Implements a number of tetris randomizers.
+// Implements a number of different types of randomizers.
 //
-// All randomizers are free to use the space in FSGame->randomInternal.
+// All randomizer can uset the internal 'FSGame' variables
+// 'randomInternal' and 'randomInternalIndex'.
+///
 
 #include <stdlib.h>
 #include <stdio.h>
 #include "fs.h"
 
-// Shuffle the input buffer of the specified length.
 static void fisherYatesShuffle(FSBlock *a, int n)
 {
     for (int i = n - 1; i > 0; --i) {
@@ -50,10 +52,12 @@ FSBlock fromSimple(FSGame *f)
     return rand() % 7;
 }
 
+///
 // Generate the next random piece in sequence using the games randomizer.
 //
 // This wil initialize the randomizer if it has yet to be called with the
 // current randomizer type.
+///
 FSBlock fsNextRandomPiece(FSGame *f)
 {
     if (f->randomizer != f->lastRandomizer) {
@@ -72,7 +76,7 @@ FSBlock fsNextRandomPiece(FSGame *f)
       case FSRAND_NOSZO_BAG7:
         return fromNoSZOBag7(f);
       default:
-        fprintf(stderr, "Unknown randomizer %d\n", f->randomizer);
+        fsLogFatal("Unknown randomizer: %d", f->randomizer);
         exit(1);
     }
 
