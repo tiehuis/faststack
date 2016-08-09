@@ -659,11 +659,12 @@ int main(void)
     do {
         pView.restart = false;
 
-        // Wait till restart key is removed before entering loop
+        // Wait till restart key is removed before entering loop.
+        // REMOVE THIS PLEASE.
         while (1) {
             SDL_PumpEvents();
             const Uint8 *state = SDL_GetKeyboardState(NULL);
-            if (state[SDL_SCANCODE_LSHIFT] == 0) {
+            if (state[SDL_SCANCODE_RSHIFT] == 0) {
                 break;
             }
             SDL_Delay(50);
