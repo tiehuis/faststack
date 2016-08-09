@@ -11,45 +11,78 @@
 #include <stdio.h>
 #include "fs.h"
 
+///
+// Generate an unbiased random number between [low, high).
+//
+// Standard technique to unbias a value.
+///
+static int randomInRange(int low, int high)
+{
+    const int range = high - low + 1;
+    const int rem = RAND_MAX % range;
+    int x;
+
+    do {
+        x = rand();
+    } while (x >= RAND_MAX - rem);
+
+    return low + x % range;
+}
+
+///
+// Perform an unbiased shuffle.
+///
 static void fisherYatesShuffle(FSBlock *a, int n)
 {
     for (int i = n - 1; i > 0; --i) {
-        const int j = rand() % (i + 1);
+        const int j = randomInRange(0, i + 1);
         const int t = a[j];
         a[j] = a[i];
         a[i] = t;
     }
 }
 
+///
+// Bag Randomizer (no SZO)
+//
+// This implements a standard 7-bag shuffle randomizer. An extra condition is
+// added to ensure that an S, Z or O piece is not dealt first.
+///
 static void initNoSZOBag7(FSGame *f)
 {
     f->randomInternalIndex = 0;
-    for (int i = 0; i < 7; ++i) {
+    for (int i = 0; i < FS_NPT; ++i) {
         f->randomInternal[i] = i;
     }
 
     do {
-        fisherYatesShuffle(f->randomInternal, 7);
+        fisherYatesShuffle(f->randomInternal, FS_NPT);
         // Discard S, Z, O pieces
     } while (f->randomInternal[0] == FS_S ||
              f->randomInternal[0] == FS_Z ||
              f->randomInternal[0] == FS_O);
 }
 
-FSBlock fromNoSZOBag7(FSGame *f)
+static FSBlock fromNoSZOBag7(FSGame *f)
 {
     const FSBlock b = f->randomInternal[f->randomInternalIndex];
-    if (++f->randomInternalIndex == 7) {
+    if (++f->randomInternalIndex == FS_NPT) {
         f->randomInternalIndex = 0;
-        fisherYatesShuffle(f->randomInternal, 7);
+        fisherYatesShuffle(f->randomInternal, FS_NPT);
     }
     return b;
 }
 
+///
+// Simple Randomizer.
+//
+// A simple randomizer just generates a random number with no knowledge
+// of what comes before or after it.
+///
 FSBlock fromSimple(FSGame *f)
 {
     (void) f;
-    return rand() % 7;
+    return randomInRange(0, FS_NPT);
 }
 
 ///
@@ -67,6 +100,7 @@ FSBlock fsNextRandomPiece(FSGame *f)
             break;
           case FSRAND_NOSZO_BAG7:
             initNoSZOBag7(f);
+            break;
         }
     }
 
@@ -80,5 +114,5 @@ FSBlock fsNextRandomPiece(FSGame *f)
         exit(1);
     }
 
-    // Unreachable!
+    fsLogFatal("Unreachable code encountered");
 }
