@@ -29,7 +29,6 @@ static void updateGameLogic(FSPSView *v, FSView *g)
 static void updateGameView(FSPSView *v, FSView *g)
 {
     fsiDraw(v);
-    fsiBlit(v);
     g->totalFramesDrawn += 1;
 }
 
@@ -73,6 +72,9 @@ void fsGameLoop(FSPSView *v, FSView *g)
 
         updateGameView(v, g);
         fsiPostFrameHook(v);
+
+        // Blit after postFrameHook to allow final rendering
+        fsiBlit(v);
 
         // Update actual game time
         FSLong currentTime = fsiGetTime(v);

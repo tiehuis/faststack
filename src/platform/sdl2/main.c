@@ -195,18 +195,6 @@ FSBits fsiReadKeys(FSPSView *v)
     return keys;
 }
 
-// We only want to update new events once per frame, as we may read state
-// multiple times, so we do this in a pre frame hook.
-void fsiPreFrameHook(FSPSView *v)
-{
-    (void) v;
-    SDL_PumpEvents();
-
-    // We handle these events potentially when the game isn't running
-    const Uint8 *state = SDL_GetKeyboardState(NULL);
-    handleWindowEvents(v, state);
-}
-
 // Render the string to the specified coordinates
 //
 // Consider improving this to avoid software rendering.
@@ -216,7 +204,7 @@ void fsiPreFrameHook(FSPSView *v)
 // Should ideally pre-map each font to a texture and copy regions to the
 // text of the pre-rendered glyphs. Would take a bit of work, so will not
 // do unless it becomes a noticeable bottleneck/problem.
-inline static void renderString(FSPSView *v, const char *s, int x, int y)
+static void renderString(FSPSView *v, const char *s, int x, int y)
 {
     SDL_Color color = { BLOCK_RGBA_TRIPLE(4) };
     SDL_Surface *textSurface = TTF_RenderText_Solid(v->font, s, color);
@@ -257,10 +245,34 @@ inline static void renderString(FSPSView *v, const char *s, int x, int y)
     SDL_FreeSurface(textSurface);
 }
 
+// We only want to update new events once per frame, as we may read state
+// multiple times, so we do this in a pre frame hook.
+void fsiPreFrameHook(FSPSView *v)
+{
+    (void) v;
+    SDL_PumpEvents();
+
+    // We handle these events potentially when the game isn't running
+    const Uint8 *state = SDL_GetKeyboardState(NULL);
+    handleWindowEvents(v, state);
+}
+
+
 // Called at the end of every frame
 void fsiPostFrameHook(FSPSView *v)
 {
-    (void) v;
+    // We want to render ready, go on top of the field so this **must** be
+    // renderered last.
+    switch (v->view->game->state) {
+      case FSS_READY:
+        renderString(v, "READY", FIELD_X + FIELD_W / 2 - 20, FIELD_Y + FIELD_H / 2);
+        break;
+      case FSS_GO:
+        renderString(v, "GO", FIELD_X + FIELD_W / 2 - 20, FIELD_Y + FIELD_H / 2);
+        break;
+      default:
+        break;
+    }
 }
 
 void drawDebug(FSPSView *v)

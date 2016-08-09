@@ -100,15 +100,17 @@ void fsGameClear(FSGame *f)
     f->gravity = FSD_GRAVITY;
     f->softDropGravity = FSD_SOFT_DROP_GRAVITY;
     f->randomizer = FSD_RANDOMIZER;
+    f->infiniteReadyGoHold = FSD_INFINITE_READY_GO_HOLD;
     f->goal = FSD_GOAL;
 
     // Internal defaults
-    f->state = FSS_NEW_PIECE;
+    f->state = FSS_READY;
     f->holdAvailable = true;
     f->holdPiece = FS_NONE;
 
-    // Initialize the next queue and current
-    f->piece = fsNextRandomPiece(f);
+    // We only initialize the current piece after the ready/go is complete.
+    // This ensures we don't render it to the field until we begin.
+    f->piece = FS_NONE;
     for (int i = 0; i < FS_PREVIEW_MAX; ++i) {
         f->nextPiece[i] = fsNextRandomPiece(f);
     }
@@ -386,6 +388,41 @@ void updateHardDropY(FSGame *f)
 }
 
 ///
+// Attempt to hold the piece, returning if a hold was successful.
+///
+static bool tryHold(FSGame *f)
+{
+    if (f->holdAvailable) {
+        f->holdAvailable = false;
+        if (f->holdPiece == FS_NONE) {
+            f->holdPiece = f->piece;
+            newPiece(f);
+            f->holdAvailable = false;
+        }
+        else {
+            // Abstract into new piece of type theta
+            f->x = f->fieldWidth / 2 - 1;
+            f->y = 0;
+            f->actualY = 0;
+            f->theta = 0;
+            f->lockTimer = 0;
+
+            // Swap block types
+            FSBlock t = f->holdPiece;
+            f->holdPiece = f->piece;
+            f->piece = t;
+
+            updateHardDropY(f);
+        }
+
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+///
 // A single game tick.
 //
 // This is just a state machine which is repeatedly called from the main
@@ -403,13 +440,41 @@ void fsGameTick(FSGame *f, const FSInput *i)
 
 beginTick:
     switch (f->state) {
+        // We still want to handle hold during the start phase
+      case FSS_READY:
+      case FSS_GO:
+        if ((i->extra & FSI_HOLD) && f->holdAvailable) {
+            // Hold action pre-game is slightly different since we do not
+            // actually have a piece here yet.
+            //
+            // Move our pending piece directly into hold and shift
+            // preview segment.
+            f->holdPiece = f->nextPiece[0];
+            memcpy(f->nextPiece, f->nextPiece + 1, FS_PREVIEW_MAX - 1);
+            f->nextPiece[FS_PREVIEW_MAX - 1] = fsNextRandomPiece(f);
+
+            if (!f->infiniteReadyGoHold)
+                f->holdAvailable = false;
+        }
+
+        // Stay on ready for 500ms
+        if (f->genericCounter == TICKS(500))
+            f->state = FSS_GO;
+        // Start game 500ms later
+        else if (f->genericCounter == TICKS(1000))
+            f->state = FSS_NEW_PIECE;
+
+        // Return so we don't increment totalTicks and update game clock
+        f->genericCounter++;
+        return;
+
       case FSS_ARE:
-          if (f->areTimer++ > TICKS(f->areDelay)) {
-              f->areTimer = 0;
-              f->state = FSS_NEW_PIECE;
-              goto beginTick;
-          }
-          break;
+        if (f->areTimer++ > TICKS(f->areDelay)) {
+            f->areTimer = 0;
+            f->state = FSS_NEW_PIECE;
+            goto beginTick;
+        }
+        break;
 
       case FSS_NEW_PIECE:
         newPiece(f);
@@ -427,28 +492,8 @@ beginTick:
       case FSS_FALLING:
       case FSS_LANDED:
         // Handle hold
-        if ((i->extra & FSI_HOLD) && f->holdAvailable) {
-            f->holdAvailable = false;
-            if (f->holdPiece == FS_NONE) {
-                f->holdPiece = f->piece;
-                newPiece(f);
-                f->holdAvailable = false;
-            }
-            else {
-                // Abstract into new piece of type theta
-                f->x = f->fieldWidth / 2 - 1;
-                f->y = 0;
-                f->actualY = 0;
-                f->theta = 0;
-                f->lockTimer = 0;
-
-                // Swap block types
-                FSBlock t = f->holdPiece;
-                f->holdPiece = f->piece;
-                f->piece = t;
-
-                updateHardDropY(f);
-            }
+        if (i->extra & FSI_HOLD) {
+            tryHold(f);
         }
 
         // Check finesse counters

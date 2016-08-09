@@ -101,6 +101,8 @@ static void unpackOptionValue(struct FSPSView *p, FSView *v, const char *key, co
             f->fieldWidth = atol(value);
         else if (!strcmpi(s, "lockStyle"))
             f->lockStyle = fsLockStyleLookup(value);
+        else if (!strcmpi(s, "infiniteReadyGoHold"))
+            f->infiniteReadyGoHold = (bool) atol(value);
     }
     else if (!strncmp(key, "control.", 8)) {
         const char *s = key + 8;

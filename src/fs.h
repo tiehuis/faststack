@@ -70,21 +70,15 @@ enum RotationAmount {
 
 ///
 // Locking System type.
-//
-// The systems have the following behaviour:
-//
-//  - FSLOCK_ENTRY
-//      Lock delay is reset only on entry of a new piece.
-//
-//  - FSLOCK_STEP
-//      Lock delay is reset on any downwards movement in the y-axis.
-//
-//  - FSLOCK_MOVE
-//      Lock delay is reset on any **successful** movement.
 ///
 enum LockStyle {
+    /// Lock delay is reset only on entry of a new piece.
     FSLOCK_ENTRY,
+
+    /// Lock delay is reset on any downwards movement.
     FSLOCK_STEP,
+
+    /// Lock delay is reset on any **successful** movement.
     FSLOCK_MOVE
 };
 
@@ -92,6 +86,12 @@ enum LockStyle {
 // All possible game states.
 ///
 enum GameState {
+    /// Occurs whilst 'READY' is displayed
+    FSS_READY,
+
+    /// Occurs whilst 'GO' is displayed
+    FSS_GO,
+
     /// Occurs when a piece has nothing beneath it.
     FSS_FALLING,
 
@@ -111,7 +111,10 @@ enum GameState {
     FSS_QUIT,
 
     /// Occurs when the user lost (topped out).
-    FSS_GAMEOVER
+    FSS_GAMEOVER,
+
+    /// Unknown state
+    FSS_UNKNOWN
 };
 
 ///
@@ -266,6 +269,9 @@ typedef struct FSGame {
     // This is calculated **only** on game finish.
     FSLong actualTime;
 
+    /// @I: Generic counter for multi-tick usage.
+    FSLong genericCounter;
+
     /// @E: Number of ticks that have elapsed during this game.
     FSLong totalTicks;
 
@@ -290,10 +296,13 @@ typedef struct FSGame {
     /// @E: Current state of the internal engine.
     FSInt state;
 
-    /// @I: The key input applied during the last logic update. */
+    /// @E: State of the game during the last frame.
+    FSInt lastState;
+
+    /// @I: Key input applied during the last logic update.
     FSInput lastInput;
 
-    /// @O: The current randomizer in play. */
+    /// @O: Current randomizer in play. */
     FSInt randomizer;
 
     /// @I: The randomizer in use during the last game update.
@@ -301,6 +310,9 @@ typedef struct FSGame {
     // Used to determine if reinitialization of a randomizer is required.
     // This allows one to alter than randomizer mid-game.
     FSInt lastRandomizer;
+
+    /// @O: Whether infinite hold is allowed during pre-game.
+    bool infiniteReadyGoHold;
 
     /// @I: Whether a hold can be performed.
     bool holdAvailable;
