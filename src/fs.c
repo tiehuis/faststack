@@ -457,11 +457,11 @@ beginTick:
                 f->holdAvailable = false;
         }
 
-        // Stay on ready for 500ms
-        if (f->genericCounter == TICKS(500))
+        if (f->genericCounter == TICKS(f->readyPhaseLength))
             f->state = FSS_GO;
-        // Start game 500ms later
-        else if (f->genericCounter == TICKS(1000))
+
+        // This cannot be an `else if` since goPhaseLength could be 0.
+        if (f->genericCounter == TICKS(f->readyPhaseLength) + TICKS(f->goPhaseLength))
             f->state = FSS_NEW_PIECE;
 
         // Return so we don't increment totalTicks and update game clock

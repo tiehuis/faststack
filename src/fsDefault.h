@@ -34,4 +34,8 @@
 
 #define FSD_INFINITE_READY_GO_HOLD false
 
+#define FSD_READY_PHASE_LENGTH 833
+
+#define FSD_GO_PHASE_LENGTH 833
+
 #define FSD_GOAL 40

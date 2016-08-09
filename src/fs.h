@@ -311,6 +311,12 @@ typedef struct FSGame {
     // This allows one to alter than randomizer mid-game.
     FSInt lastRandomizer;
 
+    /// @O: How long the "Ready" phase countdown should last in ms
+    FSLong readyPhaseLength;
+
+    /// @O: How long the "Go" phase countdown should last in ms
+    FSLong goPhaseLength;
+
     /// @O: Whether infinite hold is allowed during pre-game.
     bool infiniteReadyGoHold;
 
