@@ -76,12 +76,20 @@ struct FSPSView {
     // The current height of the window
     int height;
 
+    // Did we receive a restart event?
+    bool restart;
+
     // Should we display the debug screen?
     bool showDebug;
 };
 
 void initSDL(FSPSView *v)
 {
+    v->width = 800;
+    v->height = 600;
+    v->showDebug = false;
+    v->restart = false;
+
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
         fsLogFatal("SDL_Init error: %s", SDL_GetError());
         exit(1);
@@ -103,10 +111,6 @@ void initSDL(FSPSView *v)
         exit(1);
     }
 
-    v->width = 800;
-    v->height = 600;
-    v->showDebug = false;
-
     if (SDL_CreateWindowAndRenderer(v->width, v->height, SDL_WINDOW_SHOWN,
                                     &v->window, &v->renderer)) {
         fsLogFatal("SDL_CreateWindowAndRenderer error: %s", SDL_GetError());
@@ -115,9 +119,6 @@ void initSDL(FSPSView *v)
     }
 
     SDL_SetWindowTitle(v->window, "FastStack");
-
-    // Clear the entire screen here, since each draw function only manages the
-    // section of the screen it can draw to.
     SDL_SetRenderDrawColor(v->renderer, 0, 0, 0, 255);
     SDL_RenderClear(v->renderer);
 }
@@ -161,6 +162,13 @@ void handleWindowEvents(FSPSView *v, const Uint8 *state)
         v->view->game->state = FSS_QUIT;
     }
 
+    // Handle restart event.
+    // It would be nice to handle this within a game for a number of reasons.
+    if (state[SDL_GetScancodeFromKey(SDLK_RSHIFT)]) {
+        v->view->game->state = FSS_QUIT;
+        v->restart = true; // Signal this is a restart event
+    }
+
     // We are only interested in the single press
     static bool uWasJustPressed = false;
 
@@ -171,8 +179,6 @@ void handleWindowEvents(FSPSView *v, const Uint8 *state)
     else if (!state[SDL_GetScancodeFromKey(SDLK_u)]) {
         uWasJustPressed = false;
     }
-
-    // Hint that we need to clear the screen
 }
 
 // Return the set of virtual keys that were read from the physical device.
@@ -583,7 +589,9 @@ static void drawInfoSection(FSPSView *v)
     renderString(v, writeBuffer, INFOS_X, INFOS_Y + c++ * lineSkipY);
 
     snprintf(writeBuffer, writeBufferSize, "%.5f",
-            (float) v->view->game->blocksPlaced / ((float) msElapsed / 1000));
+            msElapsed != 0
+             ? (float) v->view->game->blocksPlaced / ((float) msElapsed / 1000)
+             : 0);
     renderString(v, writeBuffer, INFOS_X, INFOS_Y + c++ * lineSkipY);
 
     ++c;
@@ -638,8 +646,6 @@ void fsiUnpackFrontendOption(FSPSView *v, const char *key, const char *value)
 // Replays and other things should be an option specified.
 int main(void)
 {
-    fsCurrentLogLevel = FS_LOG_LEVEL_DEBUG;
-
     FSGame game;
     FSControl control;
     // Generic View
@@ -649,9 +655,28 @@ int main(void)
 
     initSDL(&pView);
 
-    fsGameClear(&game);
-    fsParseIniFile(&pView, &gView, FS_CONFIG_FILENAME);
-    fsGameLoop(&pView, &gView);
+    // Loop until we didn't receive a restart
+    do {
+        pView.restart = false;
+
+        // Wait till restart key is removed before entering loop
+        while (1) {
+            SDL_PumpEvents();
+            const Uint8 *state = SDL_GetKeyboardState(NULL);
+            if (state[SDL_SCANCODE_LSHIFT] == 0) {
+                break;
+            }
+            SDL_Delay(50);
+        }
+
+        fsGameClear(&game);
+
+        // Ideally we would store the parsed options somewhere and just reload
+        // instead of re-reading the file.
+        fsParseIniFile(&pView, &gView, FS_CONFIG_FILENAME);
+        fsGameLoop(&pView, &gView);
+
+    } while (pView.restart == true);
 
     // Give time to read final scores (temporary)
     if (gView.game->state == FSS_GAMEOVER)
