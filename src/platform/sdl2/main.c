@@ -643,8 +643,7 @@ void fsiUnpackFrontendOption(FSPSView *v, const char *key, const char *value)
     }
 }
 
-// Should probably provide a menu and ability to play another game/restart.
-// Replays and other things should be an option specified.
+// Clean up this main loop. It is really ugly right now.
 int main(void)
 {
     FSGame game;
@@ -678,11 +677,33 @@ int main(void)
         fsParseIniFile(&pView, &gView, FS_CONFIG_FILENAME);
         fsGameLoop(&pView, &gView);
 
-    } while (pView.restart == true);
+        // If we finish a game successfully, check if the user wants to play again
+        if (game.state == FSS_GAMEOVER) {
+            // Allow FIELD macros to work
+            FSPSView *v = &pView;
 
-    // Give time to read final scores (temporary)
-    if (gView.game->state == FSS_GAMEOVER)
-        SDL_Delay(3000);
+            // Well done
+            renderString(v, "EXCELLENT", FIELD_X + FIELD_W / 2 - 40, FIELD_Y + FIELD_H / 2);
+            fsiBlit(v);
+            SDL_Delay(2000);
+            renderString(v, "(Y) TO PLAY AGAIN", FIELD_X + FIELD_W / 2 - 90, FIELD_Y + FIELD_H / 2 + 20);
+            fsiBlit(v);
+            while (1) {
+                SDL_PumpEvents();
+                const Uint8 *state = SDL_GetKeyboardState(NULL);
+                if (state[SDL_SCANCODE_Y]) {
+                    pView.restart = true;
+                    break;
+                }
+                else if (state[SDL_GetScancodeFromKey(SDLK_q)] || SDL_QuitRequested()) {
+                    // Just quit and don't restart
+                    break;
+                }
+                SDL_Delay(50);
+            }
+        }
+
+    } while (pView.restart == true);
 
     destroySDL(&pView);
 }
