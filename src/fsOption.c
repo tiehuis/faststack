@@ -35,8 +35,12 @@ static inline int fsRandomizerLookup(const char *value)
 {
     if (!strcmpi(value, "simple"))
         return FSRAND_SIMPLE;
-    if (!strcmpi(value, "noszobag7"))
+    else if (!strcmpi(value, "noszobag7"))
         return FSRAND_NOSZO_BAG7;
+    else if (!strcmpi(value, "tgm1"))
+        return FSRAND_TGM1;
+    else if (!strcmpi(value, "tgm2"))
+        return FSRAND_TGM2;
 
     return -1;
 }
@@ -47,13 +51,13 @@ static inline int fsRotationSystemLookup(const char *value)
 {
     if (!strcmpi(value, "simple"))
         return FSROT_SIMPLE;
-    if (!strcmpi(value, "srs"))
+    else if (!strcmpi(value, "srs"))
         return FSROT_SRS;
-    if (!strcmpi(value, "arikasrs"))
+    else if (!strcmpi(value, "arikasrs"))
         return FSROT_ARIKA_SRS;
-    if (!strcmpi(value, "tgm12"))
+    else if (!strcmpi(value, "tgm12"))
         return FSROT_TGM12;
-    if (!strcmpi(value, "dtet"))
+    else if (!strcmpi(value, "dtet"))
         return FSROT_DTET;
 
     return -1;

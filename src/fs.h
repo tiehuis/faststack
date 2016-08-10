@@ -49,7 +49,9 @@ enum PieceType {
 enum RandomizerType {
     FSRAND_UNDEFINED,
     FSRAND_SIMPLE,
-    FSRAND_NOSZO_BAG7
+    FSRAND_NOSZO_BAG7,
+    FSRAND_TGM1,
+    FSRAND_TGM2
 };
 
 /// Rotation System type
