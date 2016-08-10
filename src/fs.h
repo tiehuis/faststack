@@ -320,6 +320,9 @@ typedef struct FSGame {
     /// @O: Whether infinite hold is allowed during pre-game.
     bool infiniteReadyGoHold;
 
+    /// @O: Number of preview pieces displayed.
+    FSInt nextPieceCount;
+
     /// @I: Whether a hold can be performed.
     bool holdAvailable;
 

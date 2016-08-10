@@ -77,6 +77,24 @@ const FSInt pieceColors[7] = {
     0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70
 };
 
+///
+// Return the next preview piece from the queue.
+///
+static FSBlock nextPreviewPiece(FSGame *f)
+{
+    const FSBlock newPiece = fsNextRandomPiece(f);
+
+    if (f->nextPieceCount == 0) {
+        return newPiece;
+    }
+    else {
+        const FSBlock pendingPiece = f->nextPiece[0];
+        memcpy(f->nextPiece, f->nextPiece + 1, f->nextPieceCount - 1);
+        f->nextPiece[f->nextPieceCount - 1] = newPiece;
+        return pendingPiece;
+    }
+}
+
 void fsGameClear(FSGame *f)
 {
     // Do this on every new game restart for now
@@ -101,6 +119,7 @@ void fsGameClear(FSGame *f)
     f->softDropGravity = FSD_SOFT_DROP_GRAVITY;
     f->randomizer = FSD_RANDOMIZER;
     f->infiniteReadyGoHold = FSD_INFINITE_READY_GO_HOLD;
+    f->nextPieceCount = FSD_NEXT_PIECE_COUNT;
     f->goal = FSD_GOAL;
 
     // Internal defaults
@@ -111,7 +130,7 @@ void fsGameClear(FSGame *f)
     // We only initialize the current piece after the ready/go is complete.
     // This ensures we don't render it to the field until we begin.
     f->piece = FS_NONE;
-    for (int i = 0; i < FS_PREVIEW_MAX; ++i) {
+    for (int i = 0; i < f->nextPieceCount; ++i) {
         f->nextPiece[i] = fsNextRandomPiece(f);
     }
 }
@@ -215,11 +234,7 @@ static void newPiece(FSGame *f)
     f->lockTimer = 0;
     f->finessePieceRotation = 0;
     f->finessePieceDirection = 0;
-
-    // Move all buffered pieces to the next position in queue
-    f->piece = f->nextPiece[0];
-    memcpy(f->nextPiece, f->nextPiece + 1, FS_PREVIEW_MAX - 1);
-    f->nextPiece[FS_PREVIEW_MAX - 1] = fsNextRandomPiece(f);
+    f->piece = nextPreviewPiece(f);
     f->holdAvailable = true;
 }
 
@@ -449,9 +464,7 @@ beginTick:
             //
             // Move our pending piece directly into hold and shift
             // preview segment.
-            f->holdPiece = f->nextPiece[0];
-            memcpy(f->nextPiece, f->nextPiece + 1, FS_PREVIEW_MAX - 1);
-            f->nextPiece[FS_PREVIEW_MAX - 1] = fsNextRandomPiece(f);
+            f->holdPiece = nextPreviewPiece(f);
 
             if (!f->infiniteReadyGoHold)
                 f->holdAvailable = false;

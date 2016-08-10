@@ -379,14 +379,14 @@ static void drawHoldPiece(FSPSView *v)
     if (pid == FS_NONE)
         return;
 
-    FSInt2 blocks[4];
+    FSInt2 blocks[FS_NBP];
     fsPieceToBlocks(v->view->game, blocks, pid, 0, 0, 0);
     SDL_SetRenderDrawColor(v->renderer, BLOCK_RGBA_TRIPLE(pid));
 
-    int bxoff = pid != 3 && pid != 0 ? BLOCK_SL / 2 : 0;
-    int byoff = pid == 0 ? BLOCK_SL / 2 : 0;
+    int bxoff = pid != FS_O && pid != 0 ? BLOCK_SL / 2 : 0;
+    int byoff = pid == FS_I ? BLOCK_SL / 2 : 0;
 
-    for (int i = 0; i < 4; ++i) {
+    for (int i = 0; i < FS_NBP; ++i) {
         block.x = bxoff + HOLDP_X + blocks[i].x * BLOCK_SL;
         block.y = byoff + HOLDP_Y + blocks[i].y * BLOCK_SL;
 
@@ -414,11 +414,11 @@ static void drawPieceAndShadow(FSPSView *v)
     if (pid == FS_NONE)
         return;
 
-    FSInt2 blocks[4];
+    FSInt2 blocks[FS_NBP];
     fsPieceToBlocks(v->view->game, blocks, pid, v->view->game->x,
             v->view->game->hardDropY, v->view->game->theta);
 
-    for (int i = 0; i < 4; ++i) {
+    for (int i = 0; i < FS_NBP; ++i) {
         block.x = FIELD_X + blocks[i].x * BLOCK_SL;
         block.y = FIELD_Y + blocks[i].y * BLOCK_SL;
 
@@ -434,7 +434,7 @@ static void drawPieceAndShadow(FSPSView *v)
     fsPieceToBlocks(v->view->game, blocks, pid, v->view->game->x,
             v->view->game->y, v->view->game->theta);
 
-    for (int i = 0; i < 4; ++i) {
+    for (int i = 0; i < FS_NBP; ++i) {
         block.x = FIELD_X + blocks[i].x * BLOCK_SL;
         block.y = FIELD_Y + blocks[i].y * BLOCK_SL;
 
@@ -510,26 +510,27 @@ static void drawPreviewSection(FSPSView *v)
         .h = BLOCK_SL
     };
 
-    // Print 4 preview pieces for now
-    for (int i = 0; i < 4; ++i) {
-        FSInt2 blocks[4];
-        const FSBlock pid = v->view->game->nextPiece[i];
+    const FSGame *f = v->view->game;
+    const int previewCount = f->nextPieceCount > 4 ? 4 : f->nextPieceCount;
+
+    // Print 4 preview pieces max for now (where do we render if higher?)
+    for (int i = 0; i < previewCount; ++i) {
+        FSInt2 blocks[FS_NBP];
+        const FSBlock pid = f->nextPiece[i];
         fsPieceToBlocks(v->view->game, blocks, pid, 0, 0, 0);
 
         // Set field to grey currently
         const int by = PVIEW_Y + BLOCK_SL * (i * 4);
         SDL_SetRenderDrawColor(v->renderer, BLOCK_RGBA_TRIPLE(pid));
 
-        for (int j = 0; j < 4; ++j) {
+        for (int j = 0; j < FS_NBP; ++j) {
             block.y = by + BLOCK_SL * blocks[j].y;
             block.x = PVIEW_X + BLOCK_SL * blocks[j].x;
 
-            // I-piece
-            if (v->view->game->nextPiece[i] == 0) {
+            if (f->nextPiece[i] == FS_I) {
                 block.y += BLOCK_SL / 2;
             }
-            // Non O-Pieces
-            else if (v->view->game->nextPiece[i] != 3) {
+            else if (f->nextPiece[i] != FS_O) {
                 block.x += BLOCK_SL / 2;
             }
 

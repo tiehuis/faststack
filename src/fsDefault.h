@@ -38,4 +38,6 @@
 
 #define FSD_GO_PHASE_LENGTH 833
 
+#define FSD_NEXT_PIECE_COUNT 4
+
 #define FSD_GOAL 40
