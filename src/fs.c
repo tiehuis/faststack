@@ -426,10 +426,9 @@ static bool tryHold(FSGame *f)
             FSBlock t = f->holdPiece;
             f->holdPiece = f->piece;
             f->piece = t;
-
-            updateHardDropY(f);
         }
 
+        updateHardDropY(f);
         return true;
     }
     else {
