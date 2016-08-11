@@ -155,118 +155,159 @@ static void unpackOptionValue(struct FSPSView *p, FSView *v, const char *key, co
 #define MAX_LINE_LENGTH 512
 #define MAX_ID_LENGTH 32
 
-// Read an ini file into an option lookup table
+/// Consume non-empty characters until the specified is found.
+static inline int eat_till(char **s, const char c)
+{
+    int count = 0;
+    while (**s && !isspace(**s) && **s != c) {
+        count++, (*s)++;
+    }
+    return count;
+}
+
+/// Consume all empty characters.
+static inline void eat_space(char **s)
+{
+    while (**s && isspace(**s)) (*s)++;
+}
+
+///
+// Parse an ini file into the specified view states.
 //
-// INI files are of the following form:
+// # Format
+//
+//  - Comments must appears at the start of the line (excluding whitespace).
+//
+//  - Invalid keys and values are warned and skipped.
+//
+//  - Multiple values can be specified for a single key. These are
+//    comma-seperated and will be treated as successive individual
+//    key-value pairs.
+//
+//  - The last value encountered will be the one that is usually set.
+//    Exceptions for multi-valued items like keybindings.
+//
+//  - The maximum length of a group and key is 64 bytes.
+//
+//  - The maximum length of a value is 32 bytes.
+//
+//  - The maximum line length is 512 bytes.
+//
+// # Example
+//
 // ```
-// [group]
-// ; comment
+// [meta]
+// ; A comment
 // key = value
+// multi_valued_key = item1, item2, item3
 // ```
 //
-// Comments must occur at the start of the line. Empty lines
-// are ignored.
-// Errors are ignored silently.
+// Will parse into the following key-value pairs:
 //
-// Note: Should combine group and key buffers to avoid the copy.
+// ```
+// meta.key, value
+// meta.multi_valued_key, item1
+// meta.multi_valued_key, item2
+// meta.multi_valued_key, item3
+// ```
+///
 void fsParseIniFile(struct FSPSView *p, FSView *v, const char *fname)
 {
     char buffer[MAX_LINE_LENGTH];
+    int optionsCounted, c;
 
     FILE *fd = fopen(fname, "r");
     if (!fd) {
-        fsLogWarning("Failed to open .ini file. Falling back to defaults");
+        fsLogWarning("Failed to open ini file: %s.", fname);
+        fsLogWarning("Falling back to defaults");
         return;
     }
 
-    // [group] tag
-    char grp[MAX_ID_LENGTH] = {0};
-    char grpkey[MAX_ID_LENGTH * 2] = {0};
+    // group.key tag buffer
+    char groupKey[2 * MAX_ID_LENGTH] = {0};
 
-    // key = value
-    char key[MAX_ID_LENGTH] = {0};
-    char val[MAX_ID_LENGTH] = {0};
+    // Key segment with groupKey buffer
+    char *keySegment = groupKey;
 
-    // Read line by line, truncating any line that is too long
+    // Value
+    char value[MAX_ID_LENGTH] = {0};
+
+    // This is a very rudimentary line count.
+    int line = 0;
+
     while (fgets(buffer, MAX_LINE_LENGTH, fd)) {
         char *s = buffer;
+        eat_space(&s);
+        line += 1;
 
-        // Filter leading spaces
-        while (*s && isspace(*s))
+        switch (*s) {
+          case '[':
+            // Skip pending '['
             s++;
 
-        // Group case
-        if (*s == '[') {
-            s++;
+            eat_space(&s);
+            c = eat_till(&s, ']');
+            memcpy(groupKey, s - c, c);
 
-            while (*s && isspace(*s)) {
-                s++;
+            // Group and key are seperated by a '.' EXCEPT when the group is
+            // empty (unspecified or cleared with [])
+            if (c != 0) {
+                groupKey[c] = '.';
+                keySegment = groupKey + c + 1;
             }
-
-            // Read the interior key until the next space
-            int c = 0;
-            while (*s && !isspace(*s) && *s != ']') {
-                s++;
-                c++;
+            else {
+                keySegment = groupKey;
             }
+            break;
 
-            // Read the key, copy into group buffer
-            strncpy(grp, s - c, c);
-            grp[c] = 0;
-        }
-        // Comment case
-        else if (*s == ';') {
-            // Do nothing
-        }
-        // Empty line
-        else if (*s == '\0') {
-            // Do nothing
-        }
-        // Key = value
-        else {
-            // Read till space or '='
-            int c = 0;
-            while (*s && !isspace(*s) && *s != '=') {
-                s++;
-                c++;
-            }
+          case ';':
+          case '\0':
+            break;
 
-            // Copy the value into a key
-            strncpy(key, s - c, c);
-            key[c] = 0;
-
-            // Skip spaces
-            while (*s && isspace(*s))
-                s++;
+          default:
+            c = eat_till(&s, '=');
+            memcpy(keySegment, s - c, c);
+            keySegment[c] = 0;
+            eat_space(&s);
 
             // Expect '='
             if (*s++ != '=') {
-                fsLogWarning("Skipping key '%s' with no value", key);
-                continue;
+                fsLogWarning("line %d: Key %s missing '=' symbol", line, keySegment);
+                break;
             }
 
-            // Read the value
-            while (*s && isspace(*s))
-                s++;
+            // Unpack all values in a comma-seperated list.
+            // A trailing comma is not an error.
+            optionsCounted = 0;
+            while (*s != '\0') {
+                eat_space(&s);
 
-            c = 0;
-            while (*s && !isspace(*s)) {
-                s++;
-                c++;
+                // Skip comma from previous key.
+                if (*s == ',') {
+                    if (optionsCounted == 0)
+                        fsLogWarning("line %d: Comma seen before a value", line);
+                    s++;
+                }
+
+                c = eat_till(&s, ',');
+
+                // Ignore empty key section. Spacing around comma.
+                if (!c || !*s) {
+                    continue;
+                }
+
+                memcpy(value, s - c, c);
+                value[c] = 0;
+                unpackOptionValue(p, v, groupKey, value);
+                optionsCounted++;
             }
 
-            // If key is empty value didn't exist
-            if (!c) {
-                fsLogWarning("Skipping key '%s' with no value", key);
-                continue;
+            // Warn on no value present for key
+            if (optionsCounted == 0) {
+                fsLogWarning("line %d: Key %s has no value", line, keySegment);
             }
 
-            strncpy(val, s - c, c);
-            val[c] = 0;
-
-            // Try an unpack the key-value pair into the current view
-            snprintf(grpkey, 2 * MAX_ID_LENGTH, "%s.%s", grp, key);
-            unpackOptionValue(p, v, grpkey, val);
+            break;
         }
     }
 
