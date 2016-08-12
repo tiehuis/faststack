@@ -258,7 +258,8 @@ static void unpackOptionValue(struct FSPSView *p, FSView *v, const char *k, cons
         TS_KEY       (up, VKEYI_UP);
         TS_KEY       (hold, VKEYI_HOLD);
     }
-    // Hardcoded currently, may have to require frontend to do this
+    // Hardcoded currently, may have to require frontend to do this.
+    // Can just extern a variable name and require it to be implemented by frontend.
     else if (!strncmp(k, "frontend.sdl2", 13)) {
         fsiUnpackFrontendOption(p, k + 13, value);
     }

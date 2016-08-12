@@ -90,6 +90,14 @@ void initSDL(FSPSView *v)
     v->showDebug = false;
     v->restart = false;
 
+    // Set keymap to -1 (empty) value.
+    // Note: Should define seperate value for this.
+    for (int i = 0; i < VKEY_COUNT; ++i) {
+        for (int j = 0; j < FS_MAX_KEYS_PER_ACTION; ++j) {
+            v->keymap[i][j] = -1;
+        }
+    }
+
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
         fsLogFatal("SDL_Init error: %s", SDL_GetError());
         exit(1);
@@ -185,16 +193,21 @@ void handleWindowEvents(FSPSView *v, const Uint8 *state)
 FSBits fsiReadKeys(FSPSView *v)
 {
     (void) v;
-
     const Uint8 *state = SDL_GetKeyboardState(NULL);
 
-    // Check through all values in the keymap
+    // Check all associated keys for each virtual key
     FSBits keys = 0;
     for (int i = 0; i < VKEY_COUNT; ++i) {
-        // Check just the first keycode for now (will extend)
-        if (state[SDL_GetScancodeFromKey(v->keymap[i][0])]) {
-            // Equivalent to mapping VKEYI -> VKEY
-            keys |= (1 << i);
+        for (int j = 0; j < FS_MAX_KEYS_PER_ACTION; ++j) {
+            // -1 marks the end of an associated key set
+            if (v->keymap[i][j] == -1) {
+                break;
+            }
+
+            if (state[SDL_GetScancodeFromKey(v->keymap[i][j])]) {
+                // Equivalent to mapping VKEYI -> VKEY
+                keys |= (1 << i);
+            }
         }
     }
 
@@ -629,7 +642,16 @@ void fsiAddToKeymap(FSPSView *v, int virtualKey, const char *keyValue)
 {
     const SDL_Keycode kc = fsKeyToPhysicalKey(keyValue);
     if (kc) {
-        v->keymap[virtualKey][0] = kc;
+        for (int i = 0; i < FS_MAX_KEYS_PER_ACTION; ++i) {
+            // Found an empty slot to fill
+            if (v->keymap[virtualKey][i] == -1) {
+                v->keymap[virtualKey][i] = kc;
+                return;
+            }
+        }
+
+        // Keymap was full, warn user
+        fsLogWarning("Could not insert key %s into full keymap", keyValue);
     }
 }
 

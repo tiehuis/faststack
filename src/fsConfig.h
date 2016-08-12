@@ -35,4 +35,4 @@
 #define FS_MAX_NO_OF_WALLKICK_TABLES 5
 
 /// Maximum number of keys an action can be triggered by.
-#define FS_MAX_KEYS_PER_ACTION 1
+#define FS_MAX_KEYS_PER_ACTION 3
