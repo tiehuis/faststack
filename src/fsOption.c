@@ -3,11 +3,19 @@
 //
 // Handle parsing of configuration files and the associated setting of value
 // within a `FSGame` instance.
+//
+// We make heavy macro usage in order to get thorough input-checking for values
+// across a number of types. Will likely be slightly adjusted if we move hasing
+// approaches into here.
 ///
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <float.h>
+#include <limits.h>
+#include <errno.h>
+#include <math.h>
 #include "fs.h"
 #include "fsLog.h"
 #include "fsInternal.h"
@@ -29,6 +37,136 @@ static int strcmpi(const char *a, const char *b)
             return d;
     }
 }
+
+///
+// The following macros provide more robust parsing of key-value pairs into
+// their associated variables.
+//
+// These make a lot of assumptions about variable names that are in scope, but
+// adding any new values should be much easier now.
+//
+// They are summarised as follows:
+//
+//  TS_INT       - The value should be a positive integer.
+//  TS_INT_RANGE - The value should be an integer within the specified range.
+//  TS_FLT       - The value should be a positive float.
+//  TS_FLT_RANGE - The value should be a float within the specified range.
+//  TS_BOOL      - The value should be a boolean or equivalent.
+//  TS_INT_FUNC  - The value should be an integer after querying a user function.
+//
+//  We assume the following:
+//    - If we find a key match, there will be nothing else to do after assignment
+//    - Positive values are expected by default
+//    - `dst` is a pointer to a struct which contains the _id in question
+//    - `key` will store the key we are checking
+//    - `value` will store the value associated with this key
+///
+
+#define TS_INT(_id) TS_INT_RANGE(_id, 0, LLONG_MAX)
+
+#define TS_INT_RANGE(_id, _lo, _hi)                                             \
+do {                                                                            \
+    if (!strcmpi(#_id, key)) {                                                  \
+        errno = 0;                                                              \
+        char *_endptr;                                                          \
+        const long long _ival = strtoll(value, &_endptr, 10);                   \
+                                                                                \
+        if (errno == ERANGE) {                                                  \
+            fsLogWarning("Ignoring %s since it does not fit in an integer", value);\
+        }                                                                       \
+        else if (_endptr == value) {                                            \
+            fsLogError("Internal error: Found zero-length option value for %s", key);\
+        }                                                                       \
+        else {                                                                  \
+            if (*_endptr != '\0') {                                             \
+                fsLogWarning("Ignoring %s since it contains trailing garbage", value);\
+            }                                                                   \
+            else if (_ival < _lo || _hi < _ival) {                              \
+                fsLogWarning("Ignoring %s since it is not in allowed range [%lld, %lld]",\
+                        value, _lo, _hi);                                       \
+            }                                                                   \
+            else if (ceil(log2(abs(_ival))) > 8 * sizeof(dst->_id) - 1) {       \
+                fsLogWarning("Ignoring %s since it requires %d bits to represent"\
+                             " when target requires %d",                        \
+                             ceil(log2(abs(_ival))), 8 * sizeof(dst->_id) -1);  \
+            }                                                                   \
+            else {                                                              \
+                dst->_id = _ival;                                               \
+            }                                                                   \
+        }                                                                       \
+                                                                                \
+        return;                                                                 \
+    }                                                                           \
+} while (0)
+
+#define TS_INT_FUNC(_id, _func)                                                 \
+do {                                                                            \
+    if (!strcmpi(#_id, key)) {                                                  \
+        const int _ival = _func(value);                                         \
+                                                                                \
+        if (_ival == -1) {                                                      \
+            fsLogWarning("Ignoring unknown value %s for key %s", value, key);   \
+        }                                                                       \
+        else {                                                                  \
+            dst->_id = _ival;                                                   \
+        }                                                                       \
+    }                                                                           \
+} while (0)
+
+#define TS_FLT(_id) TS_FLT_RANGE(_id, 0.0, DBL_MAX)
+
+#define TS_FLT_RANGE(_id, _lo, _hi)                                             \
+do {                                                                            \
+    if (!strcmpi(#_id, key)) {                                                  \
+        errno = 0;                                                              \
+        char *_endptr;                                                          \
+        const double _ival = strod(value, &_endptr);                            \
+                                                                                \
+        if (errno == ERANGE) {                                                  \
+            fsLogWarning("Ignoring %s since it does not fit in a double", value);\
+        }                                                                       \
+        else if (_endptr == value) {                                            \
+            fsLogError("Internal error: Found zero-length option value for %s", value);\
+        }                                                                       \
+        else {                                                                  \
+            if (*_endptr != '\0') {                                             \
+                fsLogWarning("Ignoring %s since it contains trailing garbage", value);\
+            }                                                                   \
+            else if (!isnormal(_ival)) {                                        \
+                fsLogWarning("Ignoring non-normal floating-point value of %s", value);\
+            }                                                                   \
+            else if (_ival < _lo || _hi < _ival) {                              \
+                fsLogWarning("Ignoring %s since it is not in allowed range [%lf, %lf]",\
+                        value, _lo, _hi);                                       \
+            }                                                                   \
+            else {                                                              \
+                dst->_id = _ival;                                               \
+            }                                                                   \
+        }                                                                       \
+                                                                                \
+        return;                                                                 \
+    }                                                                           \
+} while (0)
+
+#define TS_BOOL(_id)                                                            \
+do {                                                                            \
+    if (!strcmpi(#_id, key)) {                                                  \
+        if (!strcmpi(value, "true") || !strcmpi(value, "yes") || !strcmpi(value, "1"))\
+            dst->_id = true;                                                    \
+        else if (!strcmpi(value, "false") || !strcmpi(value, "no") || !strcmpi(value, "0"))\
+            dst->_id = false;                                                   \
+        else                                                                    \
+            fsLogWarning("Invalid boolean value encountered %s", value);        \
+                                                                                \
+        return;                                                                 \
+    }                                                                           \
+} while (0)
+
+#define TS_KEY(_id, _vkey)                                                      \
+do {                                                                            \
+    if (!strcmpi(#_id, key))                                                    \
+        fsiAddToKeymap(p, _vkey, value);                                        \
+} while (0)
 
 // Convert a string representation of a randomizer to its symbolic constant
 static inline int fsRandomizerLookup(const char *value)
@@ -81,94 +219,49 @@ static inline int fsLockStyleLookup(const char *value)
 //
 // All keys are case-insensitive.
 struct FSPSView;
-static void unpackOptionValue(struct FSPSView *p, FSView *v, const char *key, const char *value)
+static void unpackOptionValue(struct FSPSView *p, FSView *v, const char *k, const char *value)
 {
-    if (!strncmp(key, "game.", 5)) {
-        const char *s = key + 5;
-        FSGame *f = v->game;
+    if (!strncmp(k, "game.", 5)) {
+        const char *key = k + 5;
+        FSGame *dst = v->game;
 
-        if (!strcmpi(s, "areDelay"))
-            f->areDelay = atol(value);
-        else if (!strcmpi(s, "lockDelay"))
-            f->lockDelay = atol(value);
-        else if (!strcmpi(s, "randomizer"))
-            f->randomizer = fsRandomizerLookup(value);
-        else if (!strcmpi(s, "rotationSystem"))
-            f->rotationSystem = fsRotationSystemLookup(value);
-        else if (!strcmpi(s, "msPerTick"))
-            f->msPerTick = atol(value);
-        else if (!strcmpi(s, "msPerDraw"))
-            f->msPerDraw = atol(value);
-        else if (!strcmpi(s, "fieldHeight"))
-            f->fieldHeight = atol(value);
-        else if (!strcmpi(s, "fieldWidth"))
-            f->fieldWidth = atol(value);
-        else if (!strcmpi(s, "lockStyle"))
-            f->lockStyle = fsLockStyleLookup(value);
-        else if (!strcmpi(s, "infiniteReadyGoHold"))
-            f->infiniteReadyGoHold = (bool) atol(value);
-        else if (!strcmpi(s, "readyPhaseLength"))
-            f->readyPhaseLength = atol(value);
-        else if (!strcmpi(s, "goPhaseLength"))
-            f->goPhaseLength = atol(value);
-        else if (!strcmpi(s, "nextPieceCount"))
-            f->nextPieceCount = atol(value);
-        else if (!strcmpi(s, "goal"))
-            f->goal = atol(value);
+        TS_INT       (areDelay);
+        TS_INT       (lockDelay);
+        TS_INT_FUNC  (randomizer, fsRandomizerLookup);
+        TS_INT_FUNC  (rotationSystem, fsRotationSystemLookup);
+        TS_INT       (msPerTick);
+        TS_INT       (msPerDraw);
+        TS_INT_RANGE (fieldHeight, 0, FS_MAX_HEIGHT);
+        TS_INT_RANGE (fieldWidth, 0, FS_MAX_WIDTH);
+        TS_INT_FUNC  (lockStyle, fsLockStyleLookup);
+        TS_BOOL      (infiniteReadyGoHold);
+        TS_INT       (readyPhaseLength);
+        TS_INT       (nextPieceCount);
+        TS_INT       (goal);
     }
-    else if (!strncmp(key, "control.", 8)) {
-        const char *s = key + 8;
-        FSControl *c = v->control;
+    else if (!strncmp(k, "control.", 8)) {
+        const char *key = k + 8;
+        FSControl *dst = v->control;
 
-        if (!strcmpi(s, "dasSpeed"))
-            c->dasSpeed = atol(value);
-        else if (!strcmpi(s, "dasDelay"))
-            c->dasDelay = atol(value);
+        TS_INT       (dasSpeed);
+        TS_INT       (dasDelay);
     }
-    else if (!strncmp(key, "keybind.", 8)) {
-        const char *s = key + 8;
+    else if (!strncmp(k, "keybind.", 8)) {
+        const char *key = k + 8;
 
-        if (!strcmpi("rotateRight", s))
-            fsiAddToKeymap(p, VKEYI_ROTR, value);
-        else if (!strcmpi("rotateLeft", s))
-            fsiAddToKeymap(p, VKEYI_ROTL, value);
-        else if (!strcmpi("rotate180", s))
-            fsiAddToKeymap(p, VKEYI_ROTH, value);
-        else if (!strcmpi("left", s))
-            fsiAddToKeymap(p, VKEYI_LEFT, value);
-        else if (!strcmpi("right", s))
-            fsiAddToKeymap(p, VKEYI_RIGHT, value);
-        else if (!strcmpi("down", s))
-            fsiAddToKeymap(p, VKEYI_DOWN, value);
-        else if (!strcmpi("up", s))
-            fsiAddToKeymap(p, VKEYI_UP, value);
-        else if (!strcmpi("hold", s))
-            fsiAddToKeymap(p, VKEYI_HOLD, value);
+        TS_KEY       (rotateRight, VKEYI_ROTR);
+        TS_KEY       (rotateLeft, VKEYI_ROTL);
+        TS_KEY       (rotate180, VKEYI_ROTH);
+        TS_KEY       (left, VKEYI_LEFT);
+        TS_KEY       (right, VKEYI_RIGHT);
+        TS_KEY       (down, VKEYI_DOWN);
+        TS_KEY       (up, VKEYI_UP);
+        TS_KEY       (hold, VKEYI_HOLD);
     }
     // Hardcoded currently, may have to require frontend to do this
-    else if (!strncmp(key, "frontend.sdl2", 13)) {
-        fsiUnpackFrontendOption(p, key + 13, value);
+    else if (!strncmp(k, "frontend.sdl2", 13)) {
+        fsiUnpackFrontendOption(p, k + 13, value);
     }
-}
-
-// Assume a line is at most 512 bytes long
-#define MAX_LINE_LENGTH 512
-#define MAX_ID_LENGTH 32
-
-/// Consume non-empty characters until the specified is found.
-static inline int eat_till(char **s, const char c)
-{
-    int count = 0;
-    while (**s && !isspace(**s) && **s != c) {
-        count++, (*s)++;
-    }
-    return count;
-}
-
-/// Consume all empty characters.
-static inline void eat_space(char **s)
-{
-    while (**s && isspace(**s)) (*s)++;
 }
 
 ///
@@ -211,6 +304,28 @@ static inline void eat_space(char **s)
 // meta.multi_valued_key, item3
 // ```
 ///
+
+// Assume a line is at most 512 bytes long
+#define MAX_LINE_LENGTH 512
+#define MAX_ID_LENGTH 32
+
+/// Consume non-empty characters until the specified is found.
+static inline int eat_till(char **s, const char c)
+{
+    int count = 0;
+    while (**s && !isspace(**s) && **s != c) {
+        count++, (*s)++;
+    }
+    return count;
+}
+
+/// Consume all empty characters.
+static inline void eat_space(char **s)
+{
+    while (**s && isspace(**s)) (*s)++;
+}
+
+/// Perform the actual parsing of the file.
 void fsParseIniFile(struct FSPSView *p, FSView *v, const char *fname)
 {
     char buffer[MAX_LINE_LENGTH];
