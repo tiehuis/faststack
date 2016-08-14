@@ -120,6 +120,7 @@ void fsGameClear(FSGame *f)
     f->randomizer = FSD_RANDOMIZER;
     f->infiniteReadyGoHold = FSD_INFINITE_READY_GO_HOLD;
     f->nextPieceCount = FSD_NEXT_PIECE_COUNT;
+    f->areCancellable = FSD_ARE_CANCELLABLE;
     f->goal = FSD_GOAL;
 
     // Internal defaults
@@ -481,6 +482,19 @@ beginTick:
         return;
 
       case FSS_ARE:
+        // Allow ARE to be skipped if any input is found. This is slightly laggy
+        // on certain inputs and needs to be refined.
+        if (f->areCancellable && (
+                i->rotation != 0 ||
+                i->movement != 0 ||
+                i->gravity  != 0 ||
+                i->extra    != 0)
+        ) {
+            f->areTimer = 0;
+            f->state = FSS_NEW_PIECE;
+            goto beginTick;
+        }
+
         if (f->areTimer++ > TICKS(f->areDelay)) {
             f->areTimer = 0;
             f->state = FSS_NEW_PIECE;

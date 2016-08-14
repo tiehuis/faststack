@@ -262,6 +262,9 @@ typedef struct FSGame {
     /// @I: Counter for ARE.
     FSLong areTimer;
 
+    /// @O: Can ARE be cancelled by input
+    bool areCancellable;
+
     /// @E: Actual game length using a high precision timer.
     //
     // The game length is usually calculated as 'msPerTick * totalTicks' but

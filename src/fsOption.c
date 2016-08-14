@@ -226,6 +226,7 @@ static void unpackOptionValue(struct FSPSView *p, FSView *v, const char *k, cons
         FSGame *dst = v->game;
 
         TS_INT       (areDelay);
+        TS_BOOL      (areCancellable);
         TS_INT       (lockDelay);
         TS_INT_FUNC  (randomizer, fsRandomizerLookup);
         TS_INT_FUNC  (rotationSystem, fsRotationSystemLookup);
