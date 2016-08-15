@@ -556,6 +556,7 @@ beginTick:
         if (moved) {
             updateHardDropY(f);
 
+            // Note: Do we want O rotation to be always succesful?
             if (f->lockStyle == FSLOCK_MOVE)
                 f->lockTimer = 0;
         }
@@ -567,8 +568,13 @@ beginTick:
 
         // Check if we are now in a landed state. If a hard drop action was
         // input then bypass this and go directly to line clear.
-        if ((i->extra & FSI_HARD_DROP) || f->lockTimer > TICKS(f->lockDelay))
+        if ((i->extra & FSI_HARD_DROP) ||
+                // We need to recheck state here since moving out of LANDED to
+                // FALLING on the last lockDelay frame will lock the piece in
+                // mid-air.
+                (f->lockTimer > TICKS(f->lockDelay) && f->state == FSS_LANDED)) {
             f->state = FSS_LINES;
+        }
 
         if (f->state == FSS_LANDED)
             f->lockTimer++;
