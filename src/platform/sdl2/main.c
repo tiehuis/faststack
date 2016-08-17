@@ -6,6 +6,7 @@
 
 #include <stdio.h>
 #include <SDL.h>
+#include <SDL_mixer.h>
 #include <SDL_ttf.h>
 
 #include <fs.h>
@@ -18,6 +19,14 @@
 // reduces the requirement of having seperate resource files.
 #include "ProFont.res"
 const int FontSize = 20;
+
+// We also include directly the wav for the sound effects.
+// Would like to reduce this size possibly.
+#include "se.res"
+
+// This should not be too large. Being larger increases latency and makes the
+// sounds lag. The files we are playing are small anyway.
+#define AUDIO_BUFFER_SIZE 512
 
 // Field positional locations
 
@@ -70,6 +79,9 @@ struct FSPSView {
     // We a single font specification while rendering.
     TTF_Font *font;
 
+    // Sound effect data
+    Mix_Chunk *seBuffer[FSSE_COUNT];
+
     // The current width of the window
     int width;
 
@@ -85,6 +97,9 @@ struct FSPSView {
 
 void initSDL(FSPSView *v)
 {
+    // Use for all rw ops in memory
+    SDL_RWops *rw;
+
     v->width = 800;
     v->height = 600;
     v->showDebug = false;
@@ -98,7 +113,7 @@ void initSDL(FSPSView *v)
         }
     }
 
-    if (SDL_Init(SDL_INIT_VIDEO) != 0) {
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) != 0) {
         fsLogFatal("SDL_Init error: %s", SDL_GetError());
         exit(1);
     }
@@ -110,7 +125,7 @@ void initSDL(FSPSView *v)
     }
 
     // Load the font defined in Unibody8.font
-    SDL_RWops *rw = SDL_RWFromConstMem(ttfFontSpec, ttfFontSpecLen);
+    rw = SDL_RWFromConstMem(ttfFontSpec, ttfFontSpecLen);
     v->font = TTF_OpenFontRW(rw, 1, FontSize);
     if (v->font == NULL) {
         fsLogFatal("TTF_OpenFontIndexRW error: %s", TTF_GetError());
@@ -126,6 +141,43 @@ void initSDL(FSPSView *v)
         exit(1);
     }
 
+    if (Mix_OpenAudio(22050, AUDIO_S16LSB, 1, AUDIO_BUFFER_SIZE) < 0) {
+        fsLogFatal("Mix_OpenAudio error: %s", Mix_GetError());
+        SDL_DestroyRenderer(v->renderer);
+        SDL_DestroyWindow(v->window);
+        SDL_Quit();
+        exit(1);
+    }
+
+    // Load audio files directly from memory.
+
+    #define LoadWav(seName, enumName)                                   \
+    do {                                                                \
+        if (!(v->seBuffer[FSSEI_##enumName] = Mix_QuickLoad_WAV(seName##_wav))) {\
+            fsLogFatal("Mix_QuickLoadWAV error: %s", Mix_GetError());     \
+            SDL_DestroyRenderer(v->renderer);                           \
+            SDL_DestroyWindow(v->window);                               \
+            SDL_Quit();                                                 \
+            exit(1);                                                    \
+        }                                                               \
+    } while(0)
+
+    LoadWav(gameover, GAMEOVER);
+    LoadWav(ready, READY);
+    LoadWav(go, GO);
+    LoadWav(piece0, IPIECE);
+    LoadWav(piece1, JPIECE);
+    LoadWav(piece2, LPIECE);
+    LoadWav(piece3, OPIECE);
+    LoadWav(piece4, SPIECE);
+    LoadWav(piece5, TPIECE);
+    LoadWav(piece6, ZPIECE);
+    LoadWav(move, MOVE);
+    LoadWav(rotate, ROTATE);
+    LoadWav(hold, HOLD);
+
+    #undef LoadWav
+
     SDL_SetWindowTitle(v->window, "FastStack");
     SDL_SetRenderDrawColor(v->renderer, 0, 0, 0, 255);
     SDL_RenderClear(v->renderer);
@@ -133,6 +185,8 @@ void initSDL(FSPSView *v)
 
 void destroySDL(FSPSView *v)
 {
+    // Just assume wav data is destroyed by OS
+    Mix_CloseAudio();
     SDL_DestroyRenderer(v->renderer);
     SDL_DestroyWindow(v->window);
     TTF_CloseFont(v->font);
@@ -212,6 +266,36 @@ FSBits fsiReadKeys(FSPSView *v)
     }
 
     return keys;
+}
+
+// We do not play audio if an existing track is still pending.
+void fsiPlaySe(FSPSView *v, FSBits se)
+{
+    #define PlayWav(name)                                                   \
+    do {                                                                    \
+        if (se & FSSE_##name) {                                             \
+            if (Mix_PlayChannel(-1, v->seBuffer[FSSEI_##name], 0) == -1) {  \
+                fsLogWarning("Mix_PlayChannel error: %s", Mix_GetError());  \
+            }                                                               \
+        }                                                                   \
+    } while (0)
+
+    PlayWav(MOVE);
+    PlayWav(GAMEOVER);
+    PlayWav(READY);
+    PlayWav(GO);
+    PlayWav(IPIECE);
+    PlayWav(JPIECE);
+    PlayWav(LPIECE);
+    PlayWav(OPIECE);
+    PlayWav(SPIECE);
+    PlayWav(TPIECE);
+    PlayWav(ZPIECE);
+    PlayWav(MOVE);
+    PlayWav(ROTATE);
+    PlayWav(HOLD);
+
+    #undef PlayWav
 }
 
 // Render the string to the specified coordinates

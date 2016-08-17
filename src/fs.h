@@ -70,6 +70,40 @@ enum RotationAmount {
     FSROT_HALFTURN = 2
 };
 
+enum SoundEffectIndex {
+    FSSEI_GAMEOVER,
+    FSSEI_READY,
+    FSSEI_GO,
+    FSSEI_IPIECE,
+    FSSEI_JPIECE,
+    FSSEI_LPIECE,
+    FSSEI_OPIECE,
+    FSSEI_SPIECE,
+    FSSEI_TPIECE,
+    FSSEI_ZPIECE,
+    FSSEI_MOVE,
+    FSSEI_ROTATE,
+    FSSEI_HOLD,
+    FSSE_COUNT
+};
+
+/// Types of sound effects
+enum SoundEffect {
+    FSSE_GAMEOVER = (1 << FSSEI_GAMEOVER),
+    FSSE_READY    = (1 << FSSEI_READY),
+    FSSE_GO       = (1 << FSSEI_GO),
+    FSSE_IPIECE   = (1 << FSSEI_IPIECE),
+    FSSE_JPIECE   = (1 << FSSEI_JPIECE),
+    FSSE_LPIECE   = (1 << FSSEI_LPIECE),
+    FSSE_OPIECE   = (1 << FSSEI_OPIECE),
+    FSSE_SPIECE   = (1 << FSSEI_SPIECE),
+    FSSE_TPIECE   = (1 << FSSEI_TPIECE),
+    FSSE_ZPIECE   = (1 << FSSEI_ZPIECE),
+    FSSE_MOVE     = (1 << FSSEI_MOVE),
+    FSSE_ROTATE   = (1 << FSSEI_ROTATE),
+    FSSE_HOLD     = (1 << FSSEI_HOLD)
+};
+
 ///
 // Locking System type.
 ///
@@ -213,6 +247,9 @@ typedef struct FSGame {
 
     /// @I: Index for `randomInternal`
     int randomInternalIndex;
+
+    /// @E: Current sound effects to be played this frame.
+    FSBits se;
 
     /// @E: Current pieces type.
     FSBlock piece;

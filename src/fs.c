@@ -277,24 +277,6 @@ static bool doRotate(FSGame *f, FSInt direction)
             break;
         }
 
-        /*
-        // Handle this special case
-        if (kickData.z == WK_ARIKA_LJT &&
-                (f->piece == FS_L || f->piece == FS_J || f->piece == FS_T) {
-            switch (f->piece) {
-              // Cannot have a block immediately above
-              case FS_T:
-                if (isOccupied(f, f->x + 1, f->y - 1))
-                    return false;
-                break;
-              case FS_J:
-                if (f->theta == 0) {
-                }
-
-            }
-        }
-        */
-
         int kickX = kickData.x + f->x;
         int kickY = kickData.y + f->y;
 
@@ -447,7 +429,10 @@ static bool tryHold(FSGame *f)
 void fsGameTick(FSGame *f, const FSInput *i)
 {
     FSInt distance;
-    bool moved = false;
+    bool moved = false, rotated = false;
+
+    // Always clear any previous sound effects.
+    f->se = 0;
 
     // Store the input encountered so we can debug it on the
     // frontend if required.
@@ -465,17 +450,25 @@ beginTick:
             // Move our pending piece directly into hold and shift
             // preview segment.
             f->holdPiece = nextPreviewPiece(f);
+            f->se |= FSSE_HOLD;
 
             if (!f->infiniteReadyGoHold)
                 f->holdAvailable = false;
         }
 
-        if (f->genericCounter == TICKS(f->readyPhaseLength))
+        if (f->genericCounter == 0) {
+            f->se |= FSSE_READY;
+        }
+
+        if (f->genericCounter == TICKS(f->readyPhaseLength)) {
+            f->se |= FSSE_GO;
             f->state = FSS_GO;
+        }
 
         // This cannot be an `else if` since goPhaseLength could be 0.
-        if (f->genericCounter == TICKS(f->readyPhaseLength) + TICKS(f->goPhaseLength))
+        if (f->genericCounter == TICKS(f->readyPhaseLength) + TICKS(f->goPhaseLength)) {
             f->state = FSS_NEW_PIECE;
+        }
 
         // Return so we don't increment totalTicks and update game clock
         f->genericCounter++;
@@ -533,7 +526,7 @@ beginTick:
         if (i->rotation) {
             // We should allow for a true 180 or stepped 180
             if (doRotate(f, i->rotation)) {
-                moved = true;
+                rotated = true;
             }
         }
 
@@ -553,7 +546,12 @@ beginTick:
             }
         }
 
-        if (moved) {
+        if (moved || rotated) {
+            if (moved)
+                f->se |= FSSE_MOVE;
+            if (rotated)
+                f->se |= FSSE_ROTATE;
+
             updateHardDropY(f);
 
             // Note: Do we want O rotation to be always succesful?
@@ -584,12 +582,16 @@ beginTick:
       case FSS_LINES:
         // Clear the lines in 0 frames (instant) currently
         lockPiece(f);
+
+        f->se |= (1 << (FSSEI_IPIECE + f->piece)); // Ordering is same for FSSE vs FS_PIECE
+
         f->piece = FS_NONE; // Invalidate piece so it is not drawn
         f->linesCleared += clearLines(f);
         f->state = f->linesCleared < f->goal ? FSS_ARE : FSS_GAMEOVER;
         goto beginTick;
 
       case FSS_GAMEOVER:
+        f->se |= FSSE_GAMEOVER;
       case FSS_QUIT:
       default:
         break;

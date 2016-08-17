@@ -29,6 +29,9 @@ static void updateGameLogic(FSPSView *v, FSView *g)
 static void updateGameView(FSPSView *v, FSView *g)
 {
     fsiDraw(v);
+    fsiPlaySe(v, g->game->se);
+
+    // Acknowledge that we played the sound effects
     g->totalFramesDrawn += 1;
 }
 

@@ -7,7 +7,7 @@ PROGRAM := FastStack
 SOURCE  := src/*.c
 
 SDL2_SOURCE := src/platform/sdl2/*.c
-SDL2_OPTION := `pkg-config sdl2 SDL2_ttf --cflags --libs`
+SDL2_OPTION := `pkg-config sdl2 SDL2_mixer SDL2_ttf --cflags --libs`
 
 TERM_SOURCE := src/platform/terminal/*.c
 TERM_OPTION :=
