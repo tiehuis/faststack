@@ -412,6 +412,7 @@ static bool tryHold(FSGame *f)
         }
 
         updateHardDropY(f);
+        f->se |= FSSE_HOLD;
         return true;
     }
     else {
@@ -582,11 +583,14 @@ beginTick:
       case FSS_LINES:
         // Clear the lines in 0 frames (instant) currently
         lockPiece(f);
-
         f->se |= (1 << (FSSEI_IPIECE + f->piece)); // Ordering is same for FSSE vs FS_PIECE
-
         f->piece = FS_NONE; // Invalidate piece so it is not drawn
-        f->linesCleared += clearLines(f);
+
+        const int lines = clearLines(f);
+        if (0 < lines && lines <= 4)
+            f->se |= (FSSE_ERASE1 << (lines - 1));
+
+        f->linesCleared += lines;
         f->state = f->linesCleared < f->goal ? FSS_ARE : FSS_GAMEOVER;
         goto beginTick;
 

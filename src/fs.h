@@ -84,6 +84,10 @@ enum SoundEffectIndex {
     FSSEI_MOVE,
     FSSEI_ROTATE,
     FSSEI_HOLD,
+    FSSEI_ERASE1,
+    FSSEI_ERASE2,
+    FSSEI_ERASE3,
+    FSSEI_ERASE4,
     FSSE_COUNT
 };
 
@@ -101,7 +105,11 @@ enum SoundEffect {
     FSSE_ZPIECE   = (1 << FSSEI_ZPIECE),
     FSSE_MOVE     = (1 << FSSEI_MOVE),
     FSSE_ROTATE   = (1 << FSSEI_ROTATE),
-    FSSE_HOLD     = (1 << FSSEI_HOLD)
+    FSSE_HOLD     = (1 << FSSEI_HOLD),
+    FSSE_ERASE1   = (1 << FSSEI_ERASE1),
+    FSSE_ERASE2   = (1 << FSSEI_ERASE2),
+    FSSE_ERASE3   = (1 << FSSEI_ERASE3),
+    FSSE_ERASE4   = (1 << FSSEI_ERASE4)
 };
 
 ///

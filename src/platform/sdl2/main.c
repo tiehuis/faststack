@@ -24,8 +24,7 @@ const int FontSize = 20;
 // Would like to reduce this size possibly.
 #include "se.res"
 
-// This should not be too large. Being larger increases latency and makes the
-// sounds lag. The files we are playing are small anyway.
+// Keep this 1024 or lower to avoid excessive audio latency.
 #define AUDIO_BUFFER_SIZE 512
 
 // Field positional locations
@@ -175,6 +174,10 @@ void initSDL(FSPSView *v)
     LoadWav(move, MOVE);
     LoadWav(rotate, ROTATE);
     LoadWav(hold, HOLD);
+    LoadWav(erase1, ERASE1);
+    LoadWav(erase2, ERASE2);
+    LoadWav(erase3, ERASE3);
+    LoadWav(erase4, ERASE4);
 
     #undef LoadWav
 
@@ -294,6 +297,10 @@ void fsiPlaySe(FSPSView *v, FSBits se)
     PlayWav(MOVE);
     PlayWav(ROTATE);
     PlayWav(HOLD);
+    PlayWav(ERASE1);
+    PlayWav(ERASE2);
+    PlayWav(ERASE3);
+    PlayWav(ERASE4);
 
     #undef PlayWav
 }
