@@ -115,6 +115,11 @@ static void destroyTerm(FSPSView *v)
     }
 }
 
+void fsiPlaySe(FSPSView *v, FSBits se)
+{
+    (void) v;
+}
+
 // Return the clock time in microsecond granularity.
 FSLong fsiGetTime(FSPSView *v)
 {

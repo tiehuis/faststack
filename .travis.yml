@@ -1,0 +1,21 @@
+language: c
+
+branches:
+  only:
+    - master
+
+compiler:
+  - gcc
+  - clang
+
+addons:
+  apt:
+    packages:
+      - pkg-config
+      - libsdl2-dev
+      - libsdl2-mixer-dev
+      - libsdl2-ttf-dev
+
+script:
+  - make sdl
+  - make term
