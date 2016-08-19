@@ -19,3 +19,6 @@ addons:
 script:
   - make sdl
   - make term
+
+notifications:
+  email: false
