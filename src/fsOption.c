@@ -237,6 +237,7 @@ static void unpackOptionValue(struct FSPSView *p, FSView *v, const char *k, cons
         TS_INT_FUNC  (lockStyle, fsLockStyleLookup);
         TS_BOOL      (infiniteReadyGoHold);
         TS_INT       (readyPhaseLength);
+        TS_INT       (goPhaseLength);
         TS_INT       (nextPieceCount);
         TS_INT       (goal);
     }

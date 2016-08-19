@@ -121,6 +121,8 @@ void fsGameClear(FSGame *f)
     f->infiniteReadyGoHold = FSD_INFINITE_READY_GO_HOLD;
     f->nextPieceCount = FSD_NEXT_PIECE_COUNT;
     f->areCancellable = FSD_ARE_CANCELLABLE;
+    f->readyPhaseLength = FSD_READY_PHASE_LENGTH;
+    f->goPhaseLength = FSD_GO_PHASE_LENGTH;
     f->goal = FSD_GOAL;
 
     // Internal defaults
