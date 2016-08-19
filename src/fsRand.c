@@ -5,37 +5,66 @@
 //
 // All randomizer can uset the internal 'FSGame' variables
 // 'randomInternal' and 'randomInternalIndex'.
+//
+// The PRNG used is found here: http://burtleburtle.net/bob/rand/smallprng.html.
+// We do not use stdlib's implementation so that we can ensure that we regenerate
+// specific piece sequences across any platform just from an initial seed.
 ///
 
+#include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include "fs.h"
 
 ///
-// Generate an unbiased random number between [low, high).
-//
-// Standard technique to unbias a value.
-///
-static int randomInRange(int low, int high)
+// Generate the next value for this PRNG context.
+uint32_t fsRandNext(FSRandCtx *ctx)
 {
-    const int range = high - low;
-    const int rem = RAND_MAX % range;
-    int x;
+#define ROT(x, k) (((x) << (k)) | ((x) >> (32 - (k))))
+
+    const uint32_t e = ctx->a - ROT(ctx->b, 27);
+    ctx->a = ctx->b ^ ROT(ctx->c, 17);
+    ctx->b = ctx->c + ctx->d;
+    ctx->c = ctx->d + e;
+    ctx->d = e + ctx->a;
+    return ctx->d;
+
+#undef ROT
+}
+
+///
+// Generate an unbiased integer within the range [low, high).
+static uint32_t fsRandInRange(FSRandCtx *ctx, uint32_t low, uint32_t high)
+{
+    const uint32_t range = high - low;
+    const uint32_t rem = UINT32_MAX % range;
+    uint32_t x;
 
     do {
-        x = rand();
-    } while (x >= RAND_MAX - rem);
+        x = fsRandNext(ctx);
+    } while (x >= UINT32_MAX - rem);
 
     return low + x % range;
 }
 
 ///
+// Seed the randomizer.
+void fsRandSeed(FSRandCtx *ctx, uint32_t seed)
+{
+    ctx->a = 0xf1ea5eed;
+    ctx->b = ctx->c = ctx->d = seed;
+    for (int i = 0; i < 20; ++i) {
+        (void) fsRandNext(ctx);
+    }
+}
+
+///
 // Perform an unbiased shuffle.
 ///
-static void fisherYatesShuffle(FSBlock *a, int n)
+static void fisherYatesShuffle(FSRandCtx *ctx, FSBlock *a, int n)
 {
     for (int i = n - 1; i > 0; --i) {
-        const int j = randomInRange(0, i + 1);
+        const int j = fsRandInRange(ctx, 0, i + 1);
         const int t = a[j];
         a[j] = a[i];
         a[i] = t;
@@ -56,7 +85,7 @@ static void initNoSZOBag7(FSGame *f)
     }
 
     do {
-        fisherYatesShuffle(f->randomInternal, FS_NPT);
+        fisherYatesShuffle(&f->randomContext, f->randomInternal, FS_NPT);
         // Discard S, Z, O pieces
     } while (f->randomInternal[0] == FS_S ||
              f->randomInternal[0] == FS_Z ||
@@ -68,7 +97,7 @@ static FSBlock fromNoSZOBag7(FSGame *f)
     const FSBlock b = f->randomInternal[f->randomInternalIndex];
     if (++f->randomInternalIndex == FS_NPT) {
         f->randomInternalIndex = 0;
-        fisherYatesShuffle(f->randomInternal, FS_NPT);
+        fisherYatesShuffle(&f->randomContext, f->randomInternal, FS_NPT);
     }
     return b;
 }
@@ -82,7 +111,7 @@ static FSBlock fromNoSZOBag7(FSGame *f)
 static FSBlock fromSimple(FSGame *f)
 {
     (void) f;
-    return randomInRange(0, FS_NPT);
+    return fsRandInRange(&f->randomContext, 0, FS_NPT);
 }
 
 ///
@@ -106,7 +135,7 @@ static FSBlock fromTGM1or2(FSGame *f, int noOfRolls)
 {
     FSBlock piece = 0;
     for (int i = 0; i < noOfRolls; ++i) {
-        piece = randomInRange(0, FS_NPT);
+        piece = fsRandInRange(&f->randomContext, 0, FS_NPT);
 
         // If the piece is not in the queue then we are done
         int j;

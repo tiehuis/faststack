@@ -162,6 +162,16 @@ enum GameState {
 };
 
 ///
+// Random state context.
+//
+// This stores the current data used to compute the next random value. Based on
+// the prng here: http://burtleburtle.net/bob/rand/smallprng.html.
+///
+typedef struct FSRandCtx {
+    uint32_t a, b, c, d;
+} FSRandCtx;
+
+///
 // A wallkick table consists of a number 'tests' which are tested in order
 // until success or every test has been tried.
 ///
@@ -249,6 +259,9 @@ typedef struct FSGame {
 
     /// @E: Next available pieces.
     FSBlock nextPiece[FS_PREVIEW_MAX];
+
+    /// @I: Current random state context.
+    FSRandCtx randomContext;
 
     /// @I: Buffer for calculating next pieces.
     FSBlock randomInternal[FS_RAND_BUFFER_LEN];

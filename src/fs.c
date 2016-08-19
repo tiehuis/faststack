@@ -17,6 +17,9 @@
 //
 // Return the next randomly generated piece.
 FSBlock fsNextRandomPiece(FSGame *f);
+// Initialize a randomizer instance with a seed
+void fsRandSeed(FSRandCtx *ctx, uint32_t seed);
+
 
 ///
 // Static piece offsets.
@@ -97,11 +100,11 @@ static FSBlock nextPreviewPiece(FSGame *f)
 
 void fsGameClear(FSGame *f)
 {
-    // Do this on every new game restart for now
-    srand(time(NULL));
-
     // Handle all required zero values here, there are some special cases
     memset(f, 0, sizeof(FSGame));
+
+    // Initialize game-specific random context
+    fsRandSeed(&f->randomContext, time(NULL));
 
     // Signal that we are changing the randomizer and need to reinitialize
     f->lastRandomizer = FSRAND_UNDEFINED;
