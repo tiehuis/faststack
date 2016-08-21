@@ -65,6 +65,7 @@ enum RotationSystemType {
 
 /// Rotation amount
 enum RotationAmount {
+    FSROT_NONE = 0,
     FSROT_CLOCKWISE = 1,
     FSROT_ANTICLOCKWISE = -1,
     FSROT_HALFTURN = 2
@@ -124,6 +125,20 @@ enum LockStyle {
 
     /// Lock delay is reset on any **successful** movement.
     FSLOCK_MOVE
+};
+
+///
+// Initial Action type.
+///
+enum InitialActionType {
+    /// IHS/IRS is disabled.
+    FSIA_NONE,
+
+    /// IHS/IRS can be triggered from a last frame action
+    FSIA_PERSISTENT,
+
+    /// IHS/IRS must get a new event to trigger
+    FSIA_TRIGGER
 };
 
 ///
@@ -269,6 +284,9 @@ typedef struct FSGame {
     /// @I: Index for `randomInternal`
     int randomInternalIndex;
 
+    /// @O: The way we should handle Initial Actions.
+    FSInt initialActionStyle;
+
     /// @E: Current sound effects to be played this frame.
     FSBits se;
 
@@ -295,6 +313,12 @@ typedef struct FSGame {
 
     /// @E: Current pieces rotation state.
     FSInt theta;
+
+    /// @I: Current Initial Rotation status (set in ARE)
+    FSInt irsAmount;
+
+    /// @I: Current Initial Hold status (set in ARE)
+    bool ihsFlag;
 
     /// @E: Number of wasted movements have occurred during the games
     //      lifetime.

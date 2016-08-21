@@ -20,7 +20,7 @@ static void updateGameLogic(FSPSView *v, FSView *g)
 {
     FSGame *f = g->game;
     FSControl *ctl = g->control;
-    FSInput in = {0, 0, 0, 0};
+    FSInput in = {0, 0, 0, 0, 0};
 
     fsVirtualKeysToInput(&in, fsiReadKeys(v), f, ctl);
     fsGameTick(f, &in);

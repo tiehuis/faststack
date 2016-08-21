@@ -115,6 +115,7 @@ void fsGameClear(FSGame *f)
     f->msPerTick = FSD_MS_PER_TICK;
     f->msPerDraw = FSD_MS_PER_DRAW;
     f->areDelay = FSD_ARE_DELAY;
+    f->initialActionStyle = FSD_INITIAL_ACTION_STYLE;
     f->lockStyle = FSD_LOCK_STYLE;
     f->lockDelay = FSD_LOCK_DELAY;
     f->rotationSystem = FSD_ROTATION_SYSTEM;
@@ -481,13 +482,55 @@ beginTick:
         return;
 
       case FSS_ARE:
+        // Even if ARE is instant, we still want to check for IHS and IRS state.
+        // This allows the following behaviour:
+        //
+        // Currently we should be able to have three different actions for an initial
+        // action:
+        //
+        //  NONE - IRS/IHS disabled and not checked
+        //  HELD - Allows input action to remain set from last piece
+        //  HIT  - Requires a new input action to trigger (not implemented)
+        //
+        // If ARE can be cancelled then the action will occur on the next
+        // frame with the piece already playable.
+        // This may need some more tweaking since during fast play initial stack
+        // far too easily.
+        if (f->initialActionStyle == FSIA_PERSISTENT) {
+            // Only check the current key state.
+            // This is only dependent on the value on the final frame before the
+            // piece spawns. Could adjust to allow any mid-ARE initial action to
+            // stick till spawn.
+
+            // We need an implicit ordering here so are slightly biased. May want to
+            // give an option to adjust this ordering or have a stricter
+            // order.
+            if (i->currentKeys & VKEY_ROTR)
+                f->irsAmount = FSROT_CLOCKWISE;
+            else if (i->currentKeys & VKEY_ROTL)
+                f->irsAmount = FSROT_ANTICLOCKWISE;
+            else if (i->currentKeys & VKEY_ROTH)
+                f->irsAmount = FSROT_HALFTURN;
+            else
+                f->irsAmount = FSROT_NONE;
+
+            if (i->currentKeys & VKEY_HOLD)
+                f->ihsFlag = true;
+            else
+                f->ihsFlag = false;
+        }
+
         // Allow ARE to be skipped if any input is found. This is slightly laggy
         // on certain inputs and needs to be refined.
         if (f->areCancellable && (
                 i->rotation != 0 ||
                 i->movement != 0 ||
                 i->gravity  != 0 ||
-                i->extra    != 0)
+                i->extra    != 0 ||
+                // We also need to check irs/ihs state since this is based solely
+                // on new key state and may not be picked up
+                f->ihsFlag || f->irsAmount
+                )
         ) {
             f->areTimer = 0;
             f->state = FSS_NEW_PIECE;
@@ -504,7 +547,20 @@ beginTick:
       case FSS_NEW_PIECE:
         newPiece(f);
 
-        // Check for lockout on spawn
+        // Apply IHS/IRS before checking lockout if this was triggered in ARE phase.
+        if (f->irsAmount != FSROT_NONE) {
+            doRotate(f, f->irsAmount);
+        }
+        if (f->ihsFlag) {
+            // We still want to trigger the hold flag
+            tryHold(f);
+        }
+
+        // Always reset irs/ihs on new piece
+        f->irsAmount = FSROT_NONE;
+        f->ihsFlag = false;
+
+        // Check for lockout on spawn now IRS/IHS has been applied
         if (isCollision(f, f->x, f->y, f->theta)) {
             f->state = FSS_GAMEOVER;
             goto beginTick;

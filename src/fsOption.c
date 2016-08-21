@@ -120,7 +120,7 @@ do {                                                                            
     if (!strcmpi(#_id, key)) {                                                  \
         errno = 0;                                                              \
         char *_endptr;                                                          \
-        const double _ival = strod(value, &_endptr);                            \
+        const double _ival = strtod(value, &_endptr);                           \
                                                                                 \
         if (errno == ERANGE) {                                                  \
             fsLogWarning("Ignoring %s since it does not fit in a double", value);\
@@ -214,6 +214,19 @@ static inline int fsLockStyleLookup(const char *value)
     return -1;
 }
 
+// Convert a string representation of a initial action style to its symbolic constant.
+static inline int fsInitialActionStyleLookup(const char *value)
+{
+    if (!strcmpi(value, "none"))
+        return FSIA_NONE;
+    if (!strcmpi(value, "persistent"))
+        return FSIA_PERSISTENT;
+    if (!strcmpi(value, "trigger"))
+        fsLogWarning("initialActionStyle = trigger is not implemented!");
+
+    return -1;
+}
+
 // This is where option names are implicitly defined as encountered in
 // configuration files.
 //
@@ -240,6 +253,8 @@ static void unpackOptionValue(struct FSPSView *p, FSView *v, const char *k, cons
         TS_INT       (goPhaseLength);
         TS_INT       (nextPieceCount);
         TS_INT       (goal);
+        TS_FLT       (gravity);
+        TS_INT_FUNC  (initialActionStyle, fsInitialActionStyleLookup);
     }
     else if (!strncmp(k, "control.", 8)) {
         const char *key = k + 8;

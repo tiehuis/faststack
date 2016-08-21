@@ -119,6 +119,9 @@ typedef struct FSInput {
 
     /// Specific extra movement (e.g. HardDrop).
     FSInt extra;
+
+    /// Current key status (used for some specific events)
+    FSBits currentKeys;
 } FSInput;
 
 

@@ -20,8 +20,10 @@ void fsVirtualKeysToInput(struct FSInput *dst, FSBits keys, const FSGame *f, FSC
     releasedKeys &= ~c->currentKeys;
     c->currentKeys &= keys;
     keys &= ~c->currentKeys;
-
     newKeys &= keys;
+
+    // Store current keystate just in case
+    dst->currentKeys = keys;
 
     if (keys & VKEY_LEFT) {
         if (c->dasCounter > TICKS(-c->dasDelay)) {
