@@ -797,8 +797,13 @@ int main(void)
 
             // Well done
             renderString(v, "EXCELLENT", FIELD_X + FIELD_W / 2 - 40, FIELD_Y + FIELD_H / 2);
-            fsiBlit(v);
-            SDL_Delay(2000);
+
+            // Blit and sleep in a loop so we don't get a non-redrawn screen
+            for (int i = 0; i < (2000 / 50); ++i) {
+                fsiBlit(v);
+                SDL_Delay(50);
+            }
+
             renderString(v, "(Y) TO PLAY AGAIN", FIELD_X + FIELD_W / 2 - 90, FIELD_Y + FIELD_H / 2 + 20);
             fsiBlit(v);
             while (1) {
@@ -812,6 +817,9 @@ int main(void)
                     // Just quit and don't restart
                     break;
                 }
+
+                // Stil want to blit here since when unminizing we need to redraw for example
+                fsiBlit(v);
                 SDL_Delay(50);
             }
         }
