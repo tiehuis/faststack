@@ -85,10 +85,10 @@ do {                                                                            
                 fsLogWarning("Ignoring %s since it is not in allowed range [%lld, %lld]",\
                         value, _lo, _hi);                                       \
             }                                                                   \
-            else if (ceil(log2(abs(_ival))) > 8 * sizeof(dst->_id) - 1) {       \
+            else if (ceil(log2(llabs(_ival))) > 8 * sizeof(dst->_id) - 1) {     \
                 fsLogWarning("Ignoring %s since it requires %d bits to represent"\
                              " when target requires %d",                        \
-                             ceil(log2(abs(_ival))), 8 * sizeof(dst->_id) -1);  \
+                             ceil(log2(llabs(_ival))), 8 * sizeof(dst->_id) -1);\
             }                                                                   \
             else {                                                              \
                 dst->_id = _ival;                                               \

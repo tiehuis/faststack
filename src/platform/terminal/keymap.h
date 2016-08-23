@@ -3,6 +3,8 @@
 #include <ctype.h>
 #include "linux/input.h"
 
+#define KEY_NONE -1
+
 // Match and return keycode
 #define M(x, y)                     \
     do {                            \

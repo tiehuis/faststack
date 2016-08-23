@@ -92,7 +92,7 @@ static FSBlock nextPreviewPiece(FSGame *f)
     }
     else {
         const FSBlock pendingPiece = f->nextPiece[0];
-        memcpy(f->nextPiece, f->nextPiece + 1, f->nextPieceCount - 1);
+        memmove(f->nextPiece, f->nextPiece + 1, f->nextPieceCount - 1);
         f->nextPiece[f->nextPieceCount - 1] = newPiece;
         return pendingPiece;
     }

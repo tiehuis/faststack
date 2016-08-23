@@ -1,5 +1,5 @@
 CC		?= clang
-CFLAGS  += -Wall -Wextra -std=c99 -O2 -Isrc
+CFLAGS  += -Wall -Wextra -std=c99 -O2 -Isrc ${EXTRA}
 CDFLAGS += -g
 LDFLAGS += -lm
 
