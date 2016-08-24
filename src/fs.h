@@ -335,8 +335,8 @@ typedef struct FSGame {
     /// @O: Milliseconds between each game logic update.
     FSInt msPerTick;
 
-    /// @O: Milliseconds between each game draw update.
-    FSLong msPerDraw;
+    /// @O: How many game ticks occur per draw update.
+    FSLong ticksPerDraw;
 
     /// @O: Length in ms that ARE should take.
     FSLong areDelay;

@@ -43,6 +43,8 @@ void fsGameLoop(FSPSView *v, FSView *g)
     FSLong lastTime = fsiGetTime(v);
     FSLong lag = 0;
 
+    // Determine the rate at which draws occur per tick
+
     // The game loop here uses a fixed timestep approach with lag reduction
     // in case we accumulate to much extra time.
     //
@@ -73,11 +75,22 @@ void fsGameLoop(FSPSView *v, FSView *g)
             lag -= tickRate;
         }
 
-        updateGameView(v, g);
-        fsiPostFrameHook(v);
+        // Check the last frame early so we can print if we encounter it. This
+        // is to ensure we don't finish between frame draws and get an incomplete
+        // result set back on end.
+        const bool lastFrame = f->state == FSS_GAMEOVER || f->state == FSS_QUIT;
 
-        // Blit after postFrameHook to allow final rendering
-        fsiBlit(v);
+        if (f->totalTicks % f->ticksPerDraw == 0 || lastFrame) {
+            updateGameView(v, g);
+
+            // Currently only used for draw so can put in here.
+            // TODO: Remove all draw code from postFrameHook and place
+            // into fsiDraw calls at end if possible.
+            fsiPostFrameHook(v);
+
+            // Blit after postFrameHook to allow final rendering
+            fsiBlit(v);
+        }
 
         // Update actual game time
         FSLong currentTime = fsiGetTime(v);
@@ -85,7 +98,7 @@ void fsGameLoop(FSPSView *v, FSView *g)
 
         // If we received an end event, finish before sleeping. This
         // saves one tick of lag (minor).
-        if (f->state == FSS_GAMEOVER || f->state == FSS_QUIT)
+        if (lastFrame)
             break;
 
         // If we fail to process within allotted time don't do anything special currently.

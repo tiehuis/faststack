@@ -110,6 +110,8 @@ do {                                                                            
         else {                                                                  \
             dst->_id = _ival;                                                   \
         }                                                                       \
+                                                                                \
+        return;                                                                 \
     }                                                                           \
 } while (0)
 
@@ -164,8 +166,10 @@ do {                                                                            
 
 #define TS_KEY(_id, _vkey)                                                      \
 do {                                                                            \
-    if (!strcmpi(#_id, key))                                                    \
+    if (!strcmpi(#_id, key)) {                                                  \
         fsiAddToKeymap(p, _vkey, value);                                        \
+        return;                                                                 \
+    }                                                                           \
 } while (0)
 
 // Convert a string representation of a randomizer to its symbolic constant
@@ -243,8 +247,8 @@ static void unpackOptionValue(struct FSPSView *p, FSView *v, const char *k, cons
         TS_INT       (lockDelay);
         TS_INT_FUNC  (randomizer, fsRandomizerLookup);
         TS_INT_FUNC  (rotationSystem, fsRotationSystemLookup);
-        TS_INT       (msPerTick);
-        TS_INT       (msPerDraw);
+        TS_INT_RANGE (msPerTick, 1, INT_MAX);
+        TS_INT_RANGE (ticksPerDraw, 1, INT_MAX);
         TS_INT_RANGE (fieldHeight, 0, FS_MAX_HEIGHT);
         TS_INT_RANGE (fieldWidth, 0, FS_MAX_WIDTH);
         TS_INT_FUNC  (lockStyle, fsLockStyleLookup);
@@ -279,7 +283,12 @@ static void unpackOptionValue(struct FSPSView *p, FSView *v, const char *k, cons
     // Can just extern a variable name and require it to be implemented by frontend.
     else if (!strncmp(k, "frontend.sdl2", 13)) {
         fsiUnpackFrontendOption(p, k + 13, value);
+
+        // Handle non-existent options at the platform level
+        return;
     }
+
+    fsLogWarning("No suitable key found for option %s = %s", k, value);
 }
 
 ///

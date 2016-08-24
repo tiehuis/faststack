@@ -16,7 +16,7 @@
 
 #define FSD_MS_PER_TICK 16
 
-#define FSD_MS_PER_DRAW 16
+#define FSD_TICKS_PER_DRAW 1
 
 #define FSD_ARE_DELAY 0
 

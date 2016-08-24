@@ -113,7 +113,7 @@ void fsGameClear(FSGame *f)
     f->fieldWidth = FSD_FIELD_WIDTH;
     f->fieldHeight = FSD_FIELD_HEIGHT;
     f->msPerTick = FSD_MS_PER_TICK;
-    f->msPerDraw = FSD_MS_PER_DRAW;
+    f->ticksPerDraw = FSD_TICKS_PER_DRAW;
     f->areDelay = FSD_ARE_DELAY;
     f->initialActionStyle = FSD_INITIAL_ACTION_STYLE;
     f->lockStyle = FSD_LOCK_STYLE;
