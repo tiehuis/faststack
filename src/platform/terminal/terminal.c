@@ -22,9 +22,23 @@
 #include <locale.h>
 #include <linux/input.h>
 #include <termios.h>
+#include <signal.h>
 #include <unistd.h>
 
 #include "terminal.h"
+
+// Set on sigwinch receive.
+// We have a global here so we do not need to set our FSPSView as global.
+static bool caughtSigwinch = false;
+
+///
+// Signal handler for handling a terminal resize event.
+// If this occurs we must invalidate all buffers.
+static void sigwinchHandler(int signal)
+{
+    (void) signal;
+    caughtSigwinch = true;
+}
 
 static void initializeTerminal(FSPSView *v)
 {
@@ -56,6 +70,11 @@ static void initializeTerminal(FSPSView *v)
     // Hide the cursor
     printf("\e[?25l");
     fflush(stdout);
+
+    // Initialize sigwinch handler
+    struct sigaction action;
+    action.sa_handler = sigwinchHandler;
+    sigaction(SIGWINCH, &action, NULL);
 
     // First draw must be a complete redraw
     v->invalidateBuffers = true;
@@ -172,6 +191,28 @@ FSBits fsiReadKeys(FSPSView *v)
     return keys;
 }
 
+///
+// Return the colour attribute for the specified piece.
+static uint16_t attr_colour(int piece)
+{
+    static const int attrmap[] = {
+        ATTR_CYAN,      // I
+        ATTR_BLUE,      // J
+        ATTR_WHITE,     // L
+        ATTR_YELLOW,    // O
+        ATTR_GREEN,     // S
+        ATTR_MAGENTA,   // T
+        ATTR_RED        // Z
+    };
+
+    if (piece < 0 || FS_NPT < piece) {
+        fsLogError("Invalid piece type passed to attr_colour: %d", piece);
+        exit(1);
+    }
+
+    return attrmap[piece];
+}
+
 // Draw the hold piece buffer.
 static void drawHold(FSPSView *v)
 {
@@ -187,11 +228,11 @@ static void drawHold(FSPSView *v)
 
         v->bbuf[HOLD_Y + blocks[i].y][HOLD_X + 2*blocks[i].x + xoffset] = (TerminalCell) {
             .value = GLYPH_LBLOCK,
-            .attrs = ATTR_REVERSE | ATTR_RED
+            .attrs = ATTR_REVERSE | attr_colour(f->holdPiece)
         };
         v->bbuf[HOLD_Y + blocks[i].y][HOLD_X + 2*blocks[i].x + 1 + xoffset] = (TerminalCell) {
             .value = GLYPH_RBLOCK,
-            .attrs = ATTR_REVERSE | ATTR_RED
+            .attrs = ATTR_REVERSE | attr_colour(f->holdPiece)
         };
     }
 }
@@ -239,11 +280,11 @@ static void drawField(FSPSView *v)
         for (int i = 0; i < FS_NBP; ++i) {
             v->bbuf[FIELD_Y + blocks[i].y][FIELD_X + 2*blocks[i].x + 2] = (TerminalCell) {
                 .value = GLYPH_LBLOCK,
-                .attrs = ATTR_REVERSE | ATTR_RED
+                .attrs = ATTR_REVERSE | ATTR_DIM | attr_colour(f->piece)
             };
             v->bbuf[FIELD_Y + blocks[i].y][FIELD_X + 2*blocks[i].x + 3] = (TerminalCell) {
                 .value = GLYPH_RBLOCK,
-                .attrs = ATTR_REVERSE | ATTR_RED
+                .attrs = ATTR_REVERSE | ATTR_DIM | attr_colour(f->piece)
             };
         }
 
@@ -253,11 +294,11 @@ static void drawField(FSPSView *v)
         for (int i = 0; i < FS_NBP; ++i) {
             v->bbuf[FIELD_Y + blocks[i].y][FIELD_X + 2*blocks[i].x + 2] = (TerminalCell) {
                 .value = GLYPH_LBLOCK,
-                .attrs = ATTR_REVERSE | ATTR_GREEN
+                .attrs = ATTR_REVERSE | attr_colour(f->piece)
             };
             v->bbuf[FIELD_Y + blocks[i].y][FIELD_X + 2*blocks[i].x + 3] = (TerminalCell) {
                 .value = GLYPH_RBLOCK,
-                .attrs = ATTR_REVERSE | ATTR_GREEN
+                .attrs = ATTR_REVERSE | attr_colour(f->piece)
             };
         }
     }
@@ -284,11 +325,11 @@ static void drawPreview(FSPSView *v)
 
             v->bbuf[yo][xo] = (TerminalCell) {
                 .value = GLYPH_LBLOCK,
-                .attrs = ATTR_REVERSE | ATTR_BLUE
+                .attrs = ATTR_REVERSE | attr_colour(f->nextPiece[i])
             };
             v->bbuf[yo][xo + 1] = (TerminalCell) {
                 .value = GLYPH_RBLOCK,
-                .attrs = ATTR_REVERSE | ATTR_BLUE
+                .attrs = ATTR_REVERSE | attr_colour(f->nextPiece[i])
             };
         }
     }
@@ -365,6 +406,13 @@ static void drawInfo(FSPSView *v)
 
 void fsiBlit(FSPSView *v)
 {
+    // If sigwinch was caught invalidate buffers (kind of pointless doing this
+    // set but it may be changed in the future).
+    if (caughtSigwinch) {
+        v->invalidateBuffers = true;
+        caughtSigwinch = false;
+    }
+
     // Clear entire screen if invalid buffers and restart
     if (v->invalidateBuffers)
         printf("\e[H\e[2J");
@@ -487,6 +535,12 @@ int main(void)
     fsGameClear(&game);
     fsParseIniFile(&pView, &gView, "fs.ini");
     fsGameLoop(&pView, &gView);
+
+    // Give some space after the screen so we can still view it nicely after a
+    // game has completed.
+    // Cursor is ALWAYS at the end after a draw so we are in the correct spot
+    // to print.
+    printf("\n\n");
 
     restoreTerminal(&pView);
 }
