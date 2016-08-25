@@ -532,7 +532,7 @@ int main(void)
 
     initializeTerminal(&pView);
 
-    fsGameClear(&game);
+    fsGameInit(&game);
     fsParseIniFile(&pView, &gView, "fs.ini");
     fsGameLoop(&pView, &gView);
 

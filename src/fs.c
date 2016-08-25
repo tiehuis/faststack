@@ -98,10 +98,28 @@ static FSBlock nextPreviewPiece(FSGame *f)
     }
 }
 
-void fsGameClear(FSGame *f)
+void fsGameReset(FSGame *f)
 {
-    // Handle all required zero values here, there are some special cases
-    memset(f, 0, sizeof(FSGame));
+    // Zero all required internal values. We cannot simply memset the entire
+    // structure since we want to preserve existing option (@O) values.
+    //
+    // Typically any added @I or @E piece needs to be added here as well.
+    memset(f->b, 0, sizeof(f->b));
+    memset(f->randomInternal, 0, sizeof(f->randomInternal));
+    memset(&f->lastInput, 0, sizeof(f->lastInput));
+    f->se = 0;
+    f->irsAmount = 0;
+    f->ihsFlag = false;
+    f->finesse = 0;
+    f->finessePieceDirection = 0;
+    f->finessePieceRotation = 0;
+    f->areTimer = 0;
+    f->genericCounter = 0;
+    f->totalTicks = 0;
+    f->lockTimer = 0;
+    f->lastState = FSS_UNKNOWN;
+    f->linesCleared = 0;
+    f->blocksPlaced = 0;
 
     // Initialize game-specific random context
     fsRandSeed(&f->randomContext, time(NULL));
@@ -109,7 +127,24 @@ void fsGameClear(FSGame *f)
     // Signal that we are changing the randomizer and need to reinitialize
     f->lastRandomizer = FSRAND_UNDEFINED;
 
-    // Set defaults
+    // Internal defaults
+    f->state = FSS_READY;
+    f->holdAvailable = true;
+    f->holdPiece = FS_NONE;
+
+    // We only initialize the current piece after the ready/go is complete.
+    // This ensures we don't render it to the field until we begin.
+    f->piece = FS_NONE;
+    for (int i = 0; i < f->nextPieceCount; ++i) {
+        f->nextPiece[i] = fsNextRandomPiece(f);
+    }
+}
+
+/// Initialize a game state.
+void fsGameInit(FSGame *f)
+{
+    // Set default values on initialization. We want this seperate since we want
+    // to be able to reset a game without discarding any user read options.
     f->fieldWidth = FSD_FIELD_WIDTH;
     f->fieldHeight = FSD_FIELD_HEIGHT;
     f->msPerTick = FSD_MS_PER_TICK;
@@ -129,18 +164,11 @@ void fsGameClear(FSGame *f)
     f->goPhaseLength = FSD_GO_PHASE_LENGTH;
     f->goal = FSD_GOAL;
 
-    // Internal defaults
-    f->state = FSS_READY;
-    f->holdAvailable = true;
-    f->holdPiece = FS_NONE;
-
-    // We only initialize the current piece after the ready/go is complete.
-    // This ensures we don't render it to the field until we begin.
-    f->piece = FS_NONE;
-    for (int i = 0; i < f->nextPieceCount; ++i) {
-        f->nextPiece[i] = fsNextRandomPiece(f);
-    }
+    // We must set our defaults before resetting to ensure that the random
+    // state has appropriate values to generate.
+    fsGameReset(f);
 }
+
 
 // Could extend to store colour here as well.
 // If we want to allow specific piece colouring as an option. Not essential

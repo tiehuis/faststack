@@ -768,6 +768,10 @@ int main(void)
 
     initSDL(&pView);
 
+    // Initialize the game state with user options
+    fsGameInit(&game);
+    fsParseIniFile(&pView, &gView, FS_CONFIG_FILENAME);
+
     // Loop until we didn't receive a restart
     do {
         pView.restart = false;
@@ -783,11 +787,11 @@ int main(void)
             SDL_Delay(50);
         }
 
-        fsGameClear(&game);
+        // This is safe to call without overwriting user options.
+        fsGameReset(&game);
 
         // Ideally we would store the parsed options somewhere and just reload
         // instead of re-reading the file.
-        fsParseIniFile(&pView, &gView, FS_CONFIG_FILENAME);
         fsGameLoop(&pView, &gView);
 
         // If we finish a game successfully, check if the user wants to play again

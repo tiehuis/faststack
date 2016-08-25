@@ -444,15 +444,24 @@ typedef struct FSView {
 } FSView;
 
 ///
-// Reset the specified games instances.
+// Clear the specified game instance.
 //
-// This sets its internal values as they are required for a new game, and its
-// options are set to those found in 'fsDefault.h'.
+// This only resets internal variables and will not overwrite any user specified
+// options. This is suitable to call when a new game is wanted to be started
+// without reloading an options file/keeping track of options elsewhere.
 //
 //  - FSGame *f
 //      The instance to clear.
 ///
-void fsGameClear(FSGame *f);
+void fsGameReset(FSGame *f);
+
+///
+// Initialize a game instance.
+//
+// This will reset all internal variables and also set options to their
+// default values.
+///
+void fsGameInit(FSGame *f);
 
 ///
 // Perform a single game update.
