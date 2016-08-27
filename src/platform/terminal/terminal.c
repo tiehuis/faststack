@@ -72,7 +72,7 @@ static void initializeTerminal(FSPSView *v)
     fflush(stdout);
 
     // Initialize sigwinch handler
-    struct sigaction action;
+    struct sigaction action = {0};
     action.sa_handler = sigwinchHandler;
     sigaction(SIGWINCH, &action, NULL);
 
