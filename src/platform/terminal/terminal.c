@@ -11,6 +11,7 @@
 ///
 
 #define _POSIX_C_SOURCE 199309L // For clock_gettime and nanosleep
+#define _XOPEN_SOURCE 500       // For SA_RESETHAND
 
 #include <errno.h>              // Standard headers
 #include <stdio.h>
@@ -38,6 +39,26 @@ static void sigwinchHandler(int signal)
 {
     (void) signal;
     caughtSigwinch = true;
+}
+
+///
+// Signal handler for interrupt signal.
+// We want to catch this so we can ensure that the entire screen
+// is properly displayed before exiting regardless of where the
+// cursor currently may be.
+static void sigintHandler(int signal)
+{
+    (void) signal;
+
+    // Don't worry about restoring terminal state for now.
+    // Can do with a static variable which may be required, at least allow
+    // entire screen to be shown.
+    printf("\e[?25h");
+    printf("\e[%d;%dH", FS_TERM_HEIGHT, FS_TERM_WIDTH);
+    fflush(stdout);
+
+    // Reraise the actual sigint now
+    raise(SIGINT);
 }
 
 static void initializeTerminal(FSPSView *v)
@@ -75,6 +96,10 @@ static void initializeTerminal(FSPSView *v)
     struct sigaction action = {0};
     action.sa_handler = sigwinchHandler;
     sigaction(SIGWINCH, &action, NULL);
+
+    action.sa_handler = sigintHandler;
+    action.sa_flags = SA_RESETHAND;
+    sigaction(SIGINT, &action, NULL);
 
     // First draw must be a complete redraw
     v->invalidateBuffers = true;

@@ -16,8 +16,8 @@
 ///
 // Offsets and lengths of the display field.
 ///
-#define FS_TERM_WIDTH 100
-#define FS_TERM_HEIGHT 50
+#define FS_TERM_WIDTH  76
+#define FS_TERM_HEIGHT 26
 
 // Preview offsets
 #define HOLD_X  2
