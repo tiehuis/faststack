@@ -104,8 +104,8 @@ void fsGameLoop(FSPSView *v, FSView *g)
         // If we fail to process within allotted time don't do anything special currently.
         // This shouldn't happen often, but at least warn if it does.
         if (startTime + tickRate < currentTime) {
-            fsLogError("Failed to perform a game tick within the specified time!");
-            fsLogDebug("Took %ld but game tick is only %ld", currentTime - startTime, tickRate);
+            fsLogDebug("Tick %ld took %ld but tickrate is only %ld",
+                        f->totalTicks, currentTime - startTime, tickRate);
         }
         else {
             fsiSleepUs(v, startTime + tickRate - currentTime);

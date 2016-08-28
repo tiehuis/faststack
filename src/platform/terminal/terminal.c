@@ -417,26 +417,44 @@ void fsiBlit(FSPSView *v)
     if (v->invalidateBuffers)
         printf("\e[H\e[2J");
 
+    int lx = -1, ly = -1;
+
     for (int y = 0; y < FS_TERM_HEIGHT; ++y) {
         for (int x = 0; x < FS_TERM_WIDTH; ++x) {
             if (v->invalidateBuffers
                     || v->bbuf[y][x].value != v->fbuf[y][x].value
                     || v->bbuf[y][x].attrs != v->fbuf[y][x].attrs) {
+
                 // Apply all attributes for the current block (only if non-zero)
+                bool attr_set = false;
                 if (v->bbuf[y][x].attrs) {
                     for (int i = 0; i < ATTR_COUNT; ++i) {
                         if (v->bbuf[y][x].attrs & (1 << i)) {
                             printf("\e[%dm", attributes[i]);
+                            attr_set = true;
                         }
                     }
                 }
 
+                // Only update the cursor position if we are not in the right.
+                // This optimization drastically reduces the cursor movement
+                // escape sequences being processed and without it early frames
+                // may not be rendered in time.
+                if (x != lx + 1 || y != ly) {
+                    printf("\e[%d;%dH", y + 1, x + 1);
+                }
+
+                lx = x;
+                ly = y;
+
                 // Print the actual value
-                printf("\e[%d;%dH", y + 1, x + 1);
                 printf("%c", (char) v->bbuf[y][x].value);
 
-                // Reset attributes for the piece
-                printf("\e[0m");
+                // Reset attributes for the piece.
+                // Only do this if an attribute was actually set.
+                if (attr_set) {
+                    printf("\e[0m");
+                }
             }
 
             v->fbuf[y][x] = v->bbuf[y][x];
