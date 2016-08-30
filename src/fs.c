@@ -162,6 +162,7 @@ void fsGameInit(FSGame *f)
     f->areCancellable = FSD_ARE_CANCELLABLE;
     f->readyPhaseLength = FSD_READY_PHASE_LENGTH;
     f->goPhaseLength = FSD_GO_PHASE_LENGTH;
+    f->oneShotSoftDrop = FSD_ONE_SHOT_SOFT_DROP;
     f->goal = FSD_GOAL;
 
     // We must set our defaults before resetting to ensure that the random

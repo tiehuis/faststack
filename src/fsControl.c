@@ -71,7 +71,8 @@ void fsVirtualKeysToInput(struct FSInput *dst, FSBits keys, const FSGame *f, FSC
         c->dasCounter = 0;
     }
 
-    if (keys & VKEY_DOWN) {
+    const int sdKeysToCheck = f->oneShotSoftDrop ? newKeys : keys;
+    if (sdKeysToCheck & VKEY_DOWN) {
         dst->gravity = f->msPerTick * f->softDropGravity;
     }
 

@@ -371,6 +371,9 @@ typedef struct FSGame {
     /// @I: Counter for locking.
     FSLong lockTimer;
 
+    /// @O: Should soft drop be a single shot on each key press.
+    bool oneShotSoftDrop;
+
     /// @O: Current rotation system being used.
     FSInt rotationSystem;
 

@@ -253,11 +253,13 @@ static void unpackOptionValue(struct FSPSView *p, FSView *v, const char *k, cons
         TS_INT_RANGE (fieldWidth, 0, FS_MAX_WIDTH);
         TS_INT_FUNC  (lockStyle, fsLockStyleLookup);
         TS_BOOL      (infiniteReadyGoHold);
+        TS_BOOL      (oneShotSoftDrop);
         TS_INT       (readyPhaseLength);
         TS_INT       (goPhaseLength);
         TS_INT       (nextPieceCount);
         TS_INT       (goal);
         TS_FLT       (gravity);
+        TS_FLT       (softDropGravity);
         TS_INT_FUNC  (initialActionStyle, fsInitialActionStyleLookup);
     }
     else if (!strncmp(k, "control.", 8)) {

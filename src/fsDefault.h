@@ -44,4 +44,6 @@
 
 #define FSD_NEXT_PIECE_COUNT 4
 
+#define FSD_ONE_SHOT_SOFT_DROP false
+
 #define FSD_GOAL 40
