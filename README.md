@@ -41,7 +41,7 @@ way.
 
 See the specific README files for details.
 
- * [SDL2](./src/frontend/SDL/README.md)
+ * [SDL2](./src/frontend/SDL2/README.md)
  * [Terminal](./src/frontend/terminal/README.md)
 
 Contributing
