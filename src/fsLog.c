@@ -1,9 +1,10 @@
 ///
 // fsLog.c
+// =======
 //
 // Logging functions which can have their level changed at runtime.
 //
-// Note: Not thread-safe right now, but this isn't being used in threads.
+// NOTE: Not thread-safe.
 ///
 
 #include <stdarg.h>

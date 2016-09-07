@@ -1,102 +1,20 @@
 ///
-// main.c
+// frontend.c
+// ==========
 //
 // SDL2 frontend for FastStack.
 ///
 
-#include <stdio.h>
+#include "frontend.h"
+
 #include <SDL.h>
 #include <SDL_mixer.h>
 #include <SDL_ttf.h>
 
-#include <fs.h>
-#include <fsInterface.h>
-
-// Not usual, but just includes these definitions directly.
-#include "keymap.h"
-
-// We define the font directly in memory since we only want to use one, and it
-// reduces the requirement of having seperate resource files.
-#include "ProFont.res"
-const int FontSize = 20;
-
-// We also include directly the wav for the sound effects.
-// Would like to reduce this size possibly.
-#include "se.res"
-
-// Keep this 1024 or lower to avoid excessive audio latency.
-#define AUDIO_BUFFER_SIZE 512
-
-// Field positional locations
-
-// Individual block length
-// The multiplier here should exactly divide the width of the field else we will
-// get black bards between squares.
-// 800 * 0.02625 = 21 for reference.
-#define BLOCK_SL (v->width * 0.02625)
-
-// Main field bounding rectangle
-#define FIELD_X (v->width * 0.13125)
-#define FIELD_Y (v->height * 0.15)
-#define FIELD_W (v->view->game->fieldWidth * BLOCK_SL)
-#define FIELD_H (v->view->game->fieldHeight * BLOCK_SL)
-
-// Preview bounding rectangle
-#define HOLDP_X (FIELD_X - (4.5f * BLOCK_SL))
-#define HOLDP_Y (FIELD_Y)
-#define HOLDP_W (BLOCK_SL * 4)
-#define HOLDP_H (BLOCK_SL * 4);
-
-// Preview area bounding rectangle
-#define PVIEW_X (FIELD_X + FIELD_W + 10)
-#define PVIEW_Y (FIELD_Y)
-#define PVIEW_W (BLOCK_SL * 4)
-#define PVIEW_H (FIELD_H)
-
-// Info section bounding rectangle
-#define INFOS_X (PVIEW_X + PVIEW_W + 20)
-#define INFOS_Y (FIELD_Y)
-#define INFOS_W (v->width * 0.125)
-#define INFOS_H (FIELD_H)
-
-// A platform-specific view.
-struct FSPSView {
-    // The generic backing view
-    FSView *view;
-
-    // Keymap mapping an action to a number of keycodes
-    SDL_Keycode keymap[VKEY_COUNT][FS_MAX_KEYS_PER_ACTION];
-
-    // Platform-specific render structures
-    //
-    // The window to render to
-    SDL_Window *window;
-
-    // The renderer that backs this window
-    SDL_Renderer *renderer;
-
-    // We a single font specification while rendering.
-    TTF_Font *font;
-
-    // Sound effect data
-    Mix_Chunk *seBuffer[FSSE_COUNT];
-
-    // The current width of the window
-    int width;
-
-    // The current height of the window
-    int height;
-
-    // Did we receive a restart event?
-    bool restart;
-
-    // Should we display the debug screen?
-    bool showDebug;
-};
+const char *fsiFrontendName = "sdl2";
 
 void initSDL(FSPSView *v)
 {
-    // Use for all rw ops in memory
     SDL_RWops *rw;
 
     v->width = 800;
@@ -104,11 +22,9 @@ void initSDL(FSPSView *v)
     v->showDebug = false;
     v->restart = false;
 
-    // Set keymap to -1 (empty) value.
-    // Note: Should define seperate value for this.
     for (int i = 0; i < VKEY_COUNT; ++i) {
         for (int j = 0; j < FS_MAX_KEYS_PER_ACTION; ++j) {
-            v->keymap[i][j] = -1;
+            v->keymap[i][j] = KEY_NONE;
         }
     }
 
@@ -123,9 +39,8 @@ void initSDL(FSPSView *v)
         exit(1);
     }
 
-    // Load the font defined in Unibody8.font
     rw = SDL_RWFromConstMem(ttfFontSpec, ttfFontSpecLen);
-    v->font = TTF_OpenFontRW(rw, 1, FontSize);
+    v->font = TTF_OpenFontRW(rw, 1, DEFAULT_FONT_SIZE);
     if (v->font == NULL) {
         fsLogFatal("TTF_OpenFontIndexRW error: %s", TTF_GetError());
         TTF_Quit();
@@ -133,6 +48,9 @@ void initSDL(FSPSView *v)
         exit(1);
     }
 
+    // TODO: Create the window after we have processed options if possible
+    // to allow for dynamically specified values. Should still match the
+    // given aspect ratio however.
     if (SDL_CreateWindowAndRenderer(v->width, v->height, SDL_WINDOW_SHOWN,
                                     &v->window, &v->renderer)) {
         fsLogFatal("SDL_CreateWindowAndRenderer error: %s", SDL_GetError());
@@ -148,8 +66,7 @@ void initSDL(FSPSView *v)
         exit(1);
     }
 
-    // Load audio files directly from memory.
-
+    // TODO: Find a cleaner way of performing this if possible.
     #define LoadWav(seName, enumName)                                   \
     do {                                                                \
         if (!(v->seBuffer[FSSEI_##enumName] = Mix_QuickLoad_WAV(seName##_wav))) {\
@@ -188,7 +105,7 @@ void initSDL(FSPSView *v)
 
 void destroySDL(FSPSView *v)
 {
-    // Just assume wav data is destroyed by OS
+    // Assume WAV data is reclaimed by the OS for now
     Mix_CloseAudio();
     SDL_DestroyRenderer(v->renderer);
     SDL_DestroyWindow(v->window);
@@ -211,16 +128,16 @@ FSLong fsiGetTime(FSPSView *v)
     return SDL_GetTicks() * 1000;
 }
 
-// Sleep for the specified number of microseconds.
 void fsiSleepUs(FSPSView *v, FSLong time)
 {
     (void) v;
     SDL_Delay(time / 1000);
 }
 
-// Handle window resize
-void handleWindowEvents(FSPSView *v, const Uint8 *state)
+void processSpecialEvents(FSPSView *v)
 {
+    const Uint8 *state = SDL_GetKeyboardState(NULL);
+
     // Handle quit event
     if (state[SDL_GetScancodeFromKey(SDLK_q)] || SDL_QuitRequested()) {
         // use a cancel flag
@@ -246,23 +163,20 @@ void handleWindowEvents(FSPSView *v, const Uint8 *state)
     }
 }
 
-// Return the set of virtual keys that were read from the physical device.
 FSBits fsiReadKeys(FSPSView *v)
 {
     (void) v;
     const Uint8 *state = SDL_GetKeyboardState(NULL);
 
-    // Check all associated keys for each virtual key
     FSBits keys = 0;
     for (int i = 0; i < VKEY_COUNT; ++i) {
         for (int j = 0; j < FS_MAX_KEYS_PER_ACTION; ++j) {
-            // -1 marks the end of an associated key set
-            if (v->keymap[i][j] == -1) {
+            if (v->keymap[i][j] == KEY_NONE) {
                 break;
             }
 
             if (state[SDL_GetScancodeFromKey(v->keymap[i][j])]) {
-                // Equivalent to mapping VKEYI -> VKEY
+                // TODO: Make a user-friendly macro.
                 keys |= (1 << i);
             }
         }
@@ -271,7 +185,7 @@ FSBits fsiReadKeys(FSPSView *v)
     return keys;
 }
 
-// We do not play audio if an existing track is still pending.
+// Audio is not buffered by default under SDL_Mixer which is what we want.
 void fsiPlaySe(FSPSView *v, FSBits se)
 {
     #define PlayWav(name)                                                   \
@@ -307,13 +221,9 @@ void fsiPlaySe(FSPSView *v, FSBits se)
 
 // Render the string to the specified coordinates
 //
-// Consider improving this to avoid software rendering.
-// We perform quite a few copies as every string render requires a new
-// surface to be created and destroyed.
-//
-// Should ideally pre-map each font to a texture and copy regions to the
-// text of the pre-rendered glyphs. Would take a bit of work, so will not
-// do unless it becomes a noticeable bottleneck/problem.
+// Notes:
+//  * This is really unoptimized. We should create a surface mapping on font
+//    load and simply reuse this for every character instead.
 static void renderString(FSPSView *v, const char *s, int x, int y)
 {
     SDL_Color color = { BLOCK_RGBA_TRIPLE(4) };
@@ -333,7 +243,6 @@ static void renderString(FSPSView *v, const char *s, int x, int y)
         exit(1);
     }
 
-    // Size the input method correctly
     int w, h;
     if (TTF_SizeText(v->font, s, &w, &h) == -1) {
         fsLogFatal("TTF_SizeText error: %s", TTF_GetError());
@@ -343,8 +252,7 @@ static void renderString(FSPSView *v, const char *s, int x, int y)
         exit(1);
     }
 
-    // We limit the debug space to the rightmost 20%. If the data is too long,
-    // it is simply truncated.
+    // We limit the debug space to the rightmost 20%, truncating if needed.
     const SDL_Rect dst = {
         .x = x, .y = y,
         .w = w, .h = h
@@ -355,20 +263,17 @@ static void renderString(FSPSView *v, const char *s, int x, int y)
     SDL_FreeSurface(textSurface);
 }
 
-// We only want to update new events once per frame, as we may read state
-// multiple times, so we do this in a pre frame hook.
+///
+// We only need to pump events once per frame.
 void fsiPreFrameHook(FSPSView *v)
 {
-    (void) v;
     SDL_PumpEvents();
-
-    // We handle these events potentially when the game isn't running
-    const Uint8 *state = SDL_GetKeyboardState(NULL);
-    handleWindowEvents(v, state);
+    processSpecialEvents(v);
 }
 
-
-// Called at the end of every frame
+///
+// Notes:
+//  * Remove this once the RenderEvent system is implemented.
 void fsiPostFrameHook(FSPSView *v)
 {
     // We want to render ready, go on top of the field so this **must** be
@@ -385,6 +290,8 @@ void fsiPostFrameHook(FSPSView *v)
     }
 }
 
+///
+// Draws a rudimentary debug screen in the upper right corner of the screen.
 void drawDebug(FSPSView *v)
 {
     const FSGame *f = v->view->game;
@@ -445,11 +352,6 @@ void drawDebug(FSPSView *v)
     snprintf(writeBuffer, writeBufferSize, "Field:");
     renderString(v, writeBuffer, ux, uy + c++ * lineSkipY);
 
-    /*
-    snprintf(writeBuffer, writeBufferSize, "      state: %s", fsStateToStr(f->state));
-    renderString(v, writeBuffer, ux, uy + c++ * lineSkipY);
-    */
-
     snprintf(writeBuffer, writeBufferSize, "    gravity: %.3f", f->gravity);
     renderString(v, writeBuffer, ux, uy + c++ * lineSkipY);
 
@@ -469,7 +371,6 @@ void drawDebug(FSPSView *v)
     renderString(v, writeBuffer, ux, uy + c++ * lineSkipY);
 }
 
-// Draw the hold piece
 static void drawHoldPiece(FSPSView *v)
 {
     SDL_Rect block = {
@@ -480,8 +381,9 @@ static void drawHoldPiece(FSPSView *v)
     };
 
     const FSBlock pid = v->view->game->holdPiece;
-    if (pid == FS_NONE)
+    if (pid == FS_NONE) {
         return;
+    }
 
     FSInt2 blocks[FS_NBP];
     fsPieceToBlocks(v->view->game, blocks, pid, 0, 0, 0);
@@ -498,10 +400,9 @@ static void drawHoldPiece(FSPSView *v)
     }
 }
 
-// Draw piece and its shadow to the field.
-//
-// This must be called AFTER drawField, since that will overwrite these
-// render calls.
+///
+// This **must** be called after drawField to ensure the piece and shadow
+// is above any lying pieces.
 static void drawPieceAndShadow(FSPSView *v)
 {
     // We need to draw the actual piece last in case there is overlap
@@ -514,9 +415,9 @@ static void drawPieceAndShadow(FSPSView *v)
 
     const FSBlock pid = v->view->game->piece;
 
-    // We have no piece to draw
-    if (pid == FS_NONE)
+    if (pid == FS_NONE) {
         return;
+    }
 
     FSInt2 blocks[FS_NBP];
     fsPieceToBlocks(v->view->game, blocks, pid, v->view->game->x,
@@ -650,8 +551,9 @@ static void drawInfoSection(FSPSView *v)
     char writeBuffer[writeBufferSize];
 
     int remaining = v->view->game->goal - v->view->game->linesCleared;
-    if (remaining < 0)
+    if (remaining < 0) {
         remaining = 0;
+    }
 
     snprintf(writeBuffer, writeBufferSize, "%d", remaining);
     renderString(v, writeBuffer, FIELD_X + FIELD_W / 2 - 10, FIELD_Y + FIELD_H + BLOCK_SL);
@@ -752,23 +654,20 @@ void fsiUnpackFrontendOption(FSPSView *v, const char *key, const char *value)
     (void) value;
 
     if (!strcmpi(key, "debug")) {
-        v->showDebug = false;
+        v->showDebug = true;
     }
 }
 
-// Clean up this main loop. It is really ugly right now.
+///
+// TODO: Clean-up this entire main loop. It is excessively ugly.
 int main(void)
 {
     FSGame game;
     FSControl control;
-    // Generic View
     FSView gView = { .game = &game, .control = &control, .totalFramesDrawn = 0 };
-    // Platform-Specific View
     FSPSView pView = { .view = &gView };
 
     initSDL(&pView);
-
-    // Initialize the game state with user options
     fsGameInit(&game);
     fsParseIniFile(&pView, &gView, FS_CONFIG_FILENAME);
 

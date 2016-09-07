@@ -1,17 +1,19 @@
 ///
-// terminal.h
+// frontend.h
+// ==========
 //
 // Header file for the FastStack terminal implementation. This is solely done
 // to seperate the many compile-time configuration variables and declarations
 // from the actual implementation.
 ///
 
+#include "keymap.h"
+
+#include "fs.h"
+#include "fsInterface.h"
+
 #include <stdint.h>
 #include <termios.h>
-
-#include <fs.h>
-#include <fsInterface.h>
-#include "keymap.h"
 
 ///
 // Offsets and lengths of the display field.
@@ -20,8 +22,8 @@
 #define FS_TERM_HEIGHT 26
 
 // Preview offsets
-#define HOLD_X  2
-#define HOLD_Y  2
+#define HOLD_X  (2)
+#define HOLD_Y  (2)
 #define HOLD_H  (3   + 2)
 #define HOLD_W  (2*3 + 2)
 
@@ -40,8 +42,8 @@
 // Info offsets
 #define INFO_X  (PVIEW_X + PVIEW_W + 2)
 #define INFO_Y  PVIEW_Y
-#define INFO_H  -1                      // Unused
-#define INFO_W  -1                      // Unused
+#define INFO_H  (-1)                      // Unused
+#define INFO_W  (-1)                      // Unused
 
 ///
 // Glyphs used to draw the field.

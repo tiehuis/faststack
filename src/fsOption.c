@@ -1,5 +1,6 @@
 ///
 // fsOption.c
+// ==========
 //
 // Handle parsing of configuration files and the associated setting of value
 // within a `FSGame` instance.
@@ -9,32 +10,38 @@
 // approaches into here.
 ///
 
+#include "fs.h"
+#include "fsInternal.h"
+#include "fsLog.h"
+
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
+#include <errno.h>
 #include <float.h>
 #include <limits.h>
-#include <errno.h>
 #include <math.h>
-#include "fs.h"
-#include "fsLog.h"
-#include "fsInternal.h"
+#include <string.h>
 
 ///
-// @impl in frontend code.
-// @decl in `fsInterface.h`.
+// This variable must be present in the frontend.
+///
+extern const char *fsiFrontendName;
+
+///
+// Implementation in frontend code.
+// Declaration in `fsInterface.h`.
 ///
 struct FSPSView;
 void fsiUnpackFrontendOption(struct FSPSView *v, const char *key, const char *value);
 void fsiAddToKeymap(struct FSPSView *v, const int vkey, const char *key);
 
-/// Helper: Case insensitive strcmp for configuration parsing.
 static int strcmpi(const char *a, const char *b)
 {
     for (;; a++, b++) {
         const int d = tolower(*a) - tolower(*b);
-        if (d || !*a)
+        if (d || !*a) {
             return d;
+        }
     }
 }
 
@@ -55,11 +62,16 @@ static int strcmpi(const char *a, const char *b)
 //  TS_INT_FUNC  - The value should be an integer after querying a user function.
 //
 //  We assume the following:
-//    - If we find a key match, there will be nothing else to do after assignment
-//    - Positive values are expected by default
-//    - `dst` is a pointer to a struct which contains the _id in question
-//    - `key` will store the key we are checking
-//    - `value` will store the value associated with this key
+//
+//    * If we find a key match, there will be nothing else to do after assignment
+//
+//    * Positive values are expected by default
+//
+//    * `dst` is a pointer to a struct which contains the _id in question
+//
+//    * `key` will store the key we are checking
+//
+//    * `value` will store the value associated with this key
 ///
 
 #define TS_INT(_id) TS_INT_RANGE(_id, 0, LLONG_MAX)
@@ -81,7 +93,7 @@ do {                                                                            
             if (*_endptr != '\0') {                                             \
                 fsLogWarning("Ignoring %s since it contains trailing garbage", value);\
             }                                                                   \
-            else if (_ival < _lo || _hi < _ival) {                              \
+            else if (_ival < (_lo) || (_hi) < _ival) {                          \
                 fsLogWarning("Ignoring %s since it is not in allowed range [%lld, %lld]",\
                         value, _lo, _hi);                                       \
             }                                                                   \
@@ -137,7 +149,7 @@ do {                                                                            
             else if (!isnormal(_ival)) {                                        \
                 fsLogWarning("Ignoring non-normal floating-point value of %s", value);\
             }                                                                   \
-            else if (_ival < _lo || _hi < _ival) {                              \
+            else if (_ival < (_lo) || (_hi) < _ival) {                          \
                 fsLogWarning("Ignoring %s since it is not in allowed range [%lf, %lf]",\
                         value, _lo, _hi);                                       \
             }                                                                   \
@@ -172,7 +184,6 @@ do {                                                                            
     }                                                                           \
 } while (0)
 
-// Convert a string representation of a randomizer to its symbolic constant
 static inline int fsRandomizerLookup(const char *value)
 {
     if (!strcmpi(value, "simple"))
@@ -187,8 +198,6 @@ static inline int fsRandomizerLookup(const char *value)
     return -1;
 }
 
-// Convert a string representation of a rotation system to its
-// symbolic constant.
 static inline int fsRotationSystemLookup(const char *value)
 {
     if (!strcmpi(value, "simple"))
@@ -205,7 +214,6 @@ static inline int fsRotationSystemLookup(const char *value)
     return -1;
 }
 
-// Convert a string representation of a lock style to its symbolic constant.
 static inline int fsLockStyleLookup(const char *value)
 {
     if (!strcmpi(value, "entry"))
@@ -218,7 +226,6 @@ static inline int fsLockStyleLookup(const char *value)
     return -1;
 }
 
-// Convert a string representation of a initial action style to its symbolic constant.
 static inline int fsInitialActionStyleLookup(const char *value)
 {
     if (!strcmpi(value, "none"))
@@ -231,12 +238,13 @@ static inline int fsInitialActionStyleLookup(const char *value)
     return -1;
 }
 
-// This is where option names are implicitly defined as encountered in
-// configuration files.
+///
+// This function defines which option names are valid within an `ini` file.
 //
 // All keys are case-insensitive.
-struct FSPSView;
-static void unpackOptionValue(struct FSPSView *p, FSView *v, const char *k, const char *value)
+///
+static void unpackOptionValue(struct FSPSView *p, FSView *v, const char *k,
+                              const char *value)
 {
     if (!strncmp(k, "game.", 5)) {
         const char *key = k + 5;
@@ -281,13 +289,18 @@ static void unpackOptionValue(struct FSPSView *p, FSView *v, const char *k, cons
         TS_KEY       (up, VKEYI_UP);
         TS_KEY       (hold, VKEYI_HOLD);
     }
-    // Hardcoded currently, may have to require frontend to do this.
-    // Can just extern a variable name and require it to be implemented by frontend.
-    else if (!strncmp(k, "frontend.sdl2", 13)) {
-        fsiUnpackFrontendOption(p, k + 13, value);
+    else {
+        /// NOTE: Clean up and use strncat
+        char buffer[32] = "frontend.";
+        strcat(buffer, fsiFrontendName);
+        const size_t slen = strlen(buffer);
 
-        // Handle non-existent options at the platform level
-        return;
+        // If we encounter a frontend-defined option do not warn that no key
+        // was found if nothing is parsed. Let the frontend manage this.
+        if (!strncmp(k, buffer, slen)) {
+            fsiUnpackFrontendOption(p, k + slen + 1, value);
+            return;
+        }
     }
 
     fsLogWarning("No suitable key found for option %s = %s", k, value);
@@ -296,26 +309,28 @@ static void unpackOptionValue(struct FSPSView *p, FSView *v, const char *k, cons
 ///
 // Parse an ini file into the specified view states.
 //
-// # Format
+// Format
+// ======
 //
-//  - Comments must appears at the start of the line (excluding whitespace).
+//  * Comments must appears at the start of the line (excluding whitespace).
 //
-//  - Invalid keys and values are warned and skipped.
+//  * Invalid keys and values are warned and skipped.
 //
-//  - Multiple values can be specified for a single key. These are
+//  * Multiple values can be specified for a single key. These are
 //    comma-seperated and will be treated as successive individual
 //    key-value pairs.
 //
-//  - The last value encountered will be the one that is usually set.
+//  * The last value encountered will be the one that is usually set.
 //    Exceptions for multi-valued items like keybindings.
 //
-//  - The maximum length of a group and key is 64 bytes.
+//  * The maximum length of a group and key is 64 bytes.
 //
-//  - The maximum length of a value is 32 bytes.
+//  * The maximum length of a value is 32 bytes.
 //
-//  - The maximum line length is 512 bytes.
+//  * The maximum line length is 512 bytes.
 //
-// # Example
+// Example
+// =======
 //
 // ```
 // [meta]
@@ -334,7 +349,6 @@ static void unpackOptionValue(struct FSPSView *p, FSView *v, const char *k, cons
 // ```
 ///
 
-// Assume a line is at most 512 bytes long
 #define MAX_LINE_LENGTH 512
 #define MAX_ID_LENGTH 32
 
@@ -351,10 +365,11 @@ static inline int eat_till(char **s, const char c)
 /// Consume all empty characters.
 static inline void eat_space(char **s)
 {
-    while (**s && isspace(**s)) (*s)++;
+    while (**s && isspace(**s)) {
+        (*s)++;
+    }
 }
 
-/// Perform the actual parsing of the file.
 void fsParseIniFile(struct FSPSView *p, FSView *v, const char *fname)
 {
     char buffer[MAX_LINE_LENGTH];
@@ -367,16 +382,13 @@ void fsParseIniFile(struct FSPSView *p, FSView *v, const char *fname)
         return;
     }
 
-    // group.key tag buffer
+    // `group.key` segment.
     char groupKey[2 * MAX_ID_LENGTH] = {0};
 
-    // Key segment with groupKey buffer
+    // Pointer to `key` segment.
     char *keySegment = groupKey;
 
-    // Value
     char value[MAX_ID_LENGTH] = {0};
-
-    // This is a very rudimentary line count.
     int line = 0;
 
     while (fgets(buffer, MAX_LINE_LENGTH, fd)) {
@@ -386,7 +398,7 @@ void fsParseIniFile(struct FSPSView *p, FSView *v, const char *fname)
 
         switch (*s) {
           case '[':
-            // Skip pending '['
+            // Expect '['
             s++;
 
             eat_space(&s);
@@ -420,16 +432,17 @@ void fsParseIniFile(struct FSPSView *p, FSView *v, const char *fname)
                 break;
             }
 
-            // Unpack all values in a comma-seperated list.
-            // A trailing comma is not an error.
+            // Unpack all values in a comma-seperated list. A trailing comma
+            // is not an error.
             optionsCounted = 0;
             while (*s != '\0') {
                 eat_space(&s);
 
                 // Skip comma from previous key.
                 if (*s == ',') {
-                    if (optionsCounted == 0)
+                    if (optionsCounted == 0) {
                         fsLogWarning("line %d: Comma seen before a value", line);
+                    }
                     s++;
                 }
 
@@ -446,7 +459,6 @@ void fsParseIniFile(struct FSPSView *p, FSView *v, const char *fname)
                 optionsCounted++;
             }
 
-            // Warn on no value present for key
             if (optionsCounted == 0) {
                 fsLogWarning("line %d: Key %s has no value", line, keySegment);
             }

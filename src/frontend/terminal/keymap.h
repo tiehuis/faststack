@@ -1,32 +1,43 @@
-// Definitions for mapped keys are in /usr/include/linux/input-event-codes.h
+///
+// keymap.h
+// ========
+//
+// Contains methods for converting fsKey's to physical keys that can be
+// queried for state.
+//
+// Mapped key definitions located in '/usr/include/linux/input-event-codes.h'.
+///
 
 #include <ctype.h>
-#include "linux/input.h"
-
-#define KEY_NONE -1
-
-// Match and return keycode
-#define M(x, y)                     \
-    do {                            \
-        if (!strcmpi(#x, str))      \
-            return KEY_##y;        \
-    } while (0)
-
-// Match where the values are the same
-#define S(x) M(x, x)
+#include <linux/input.h>
 
 static int strcmpi(const char *a, const char *b)
 {
     for (;; a++, b++) {
         const int d = tolower(*a) - tolower(*b);
-        if (d || !*a)
+        if (d || !*a) {
             return d;
+        }
     }
 }
 
-// Convert a fsKeyString to a physical key (SDL)
+#define KEY_NONE (-1)
+
+///
+// Convert an fsKey string to a physical key.
+//
+// Notes:
+//  * Could use a perfect hashmap here.
+///
 static int fsKeyToPhysicalKey(const char *str)
 {
+    #define S(x) M(x, x)
+    #define M(x, y)                     \
+        do {                            \
+            if (!strcmpi(#x, str))      \
+                return KEY_##y;         \
+        } while (0)
+
     // Number row
     S(0); S(1); S(2); S(3); S(4); S(5); S(6); S(7); S(8); S(9);
 
@@ -62,5 +73,8 @@ static int fsKeyToPhysicalKey(const char *str)
     M(KP_PLUS, KPPLUS);
     M(KP_PERIOD, KPDOT);
 
-    return 0;
+    return KEY_NONE;
+
+    #undef M
+    #undef S
 }

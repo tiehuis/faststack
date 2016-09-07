@@ -1,64 +1,48 @@
 ///
-// FastStack-Terminal
+// frontend.c
+// ==========
 //
 // Linux Terminal frontend for the FastStack engine.
 //
-// We utilize the following potentially platform specific functions:
-//
-//  termios            - Removing cursors and handling input
-//  vt100 escape codes - Terminal movement and colours
-//  linux/input        - keyboard state querying through ioctl
+// The following platform-specific functions are used:
+//  * Termios
+//  * VT100 Escape Codes
+//  * linux/input header
 ///
 
 #define _POSIX_C_SOURCE 199309L // For clock_gettime and nanosleep
 #define _XOPEN_SOURCE 500       // For SA_RESETHAND
 
-#include <errno.h>              // Standard headers
+#include "frontend.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <time.h>
 
-#include <fcntl.h>              // Platform headers
+#include <errno.h>
+#include <fcntl.h>
 #include <locale.h>
 #include <linux/input.h>
 #include <termios.h>
 #include <signal.h>
 #include <unistd.h>
 
-#include "terminal.h"
+const char *fsiFrontendName = "terminal";
 
-// Set on sigwinch receive.
-// We have a global here so we do not need to set our FSPSView as global.
-static bool caughtSigwinch = false;
+volatile sig_atomic_t caughtSigwinch = 0;
+volatile sig_atomic_t caughtSigint = 0;
 
-///
-// Signal handler for handling a terminal resize event.
-// If this occurs we must invalidate all buffers.
 static void sigwinchHandler(int signal)
 {
     (void) signal;
-    caughtSigwinch = true;
+    caughtSigwinch = 1;
 }
 
-///
-// Signal handler for interrupt signal.
-// We want to catch this so we can ensure that the entire screen
-// is properly displayed before exiting regardless of where the
-// cursor currently may be.
 static void sigintHandler(int signal)
 {
     (void) signal;
-
-    // Don't worry about restoring terminal state for now.
-    // Can do with a static variable which may be required, at least allow
-    // entire screen to be shown.
-    printf("\e[?25h");
-    printf("\e[%d;%dH", FS_TERM_HEIGHT, FS_TERM_WIDTH);
-    fflush(stdout);
-
-    // Reraise the actual sigint now
-    raise(SIGINT);
+    caughtSigint = 1;
 }
 
 static void initializeTerminal(FSPSView *v)
@@ -68,12 +52,12 @@ static void initializeTerminal(FSPSView *v)
         "/dev/input/by-path/platform-i8042-serio-0-event-kbd";
 
     v->inputFd = open(inputDeviceName, O_RDONLY);
-
-    // Handle access error as a special case
     if (v->inputFd == -1) {
+        // Access error is a common one so explicitly specify steps to fix.
         if (errno == EACCES) {
-            fsLogFatal("Insufficient permission to open device: %s", inputDeviceName);
-            fsLogFatal("Check the README for details to avoid this");
+            fsLogFatal("Insufficient permission to open device: %s",
+                       inputDeviceName);
+            fsLogFatal("Try adding yourself to the group 'input'");
         } else {
             fsLogFatal("Failed to open input device: %s", strerror(errno));
         }
@@ -81,18 +65,17 @@ static void initializeTerminal(FSPSView *v)
         exit(1);
     }
 
-    // Keymap must be empty before being filled
+    // We must explicitly clear the keymap else garbage keys could be pressed.
     for (int i = 0; i < VKEY_COUNT; ++i) {
         for (int j = 0; j < FS_MAX_KEYS_PER_ACTION; ++j) {
             v->keymap[i][j] = KEY_NONE;
         }
     }
 
-    // Hide the cursor
+    // Clear the cursor
     printf("\e[?25l");
     fflush(stdout);
 
-    // Initialize sigwinch handler
     struct sigaction action = {0};
     action.sa_handler = sigwinchHandler;
     sigaction(SIGWINCH, &action, NULL);
@@ -101,22 +84,20 @@ static void initializeTerminal(FSPSView *v)
     action.sa_flags = SA_RESETHAND;
     sigaction(SIGINT, &action, NULL);
 
-    // First draw must be a complete redraw
-    v->invalidateBuffers = true;
-
-    // Set appropriate terminal settings
     tcgetattr(STDIN_FILENO, &v->initialTerminalState);
     struct termios ns = v->initialTerminalState;
     ns.c_lflag &= ~(ECHO | ICANON);
     ns.c_cc[VMIN] = 0;
     tcsetattr(STDIN_FILENO, TCSANOW, &ns);
+
+    v->invalidateBuffers = true;
 }
 
 static void restoreTerminal(FSPSView *v)
 {
     tcsetattr(STDIN_FILENO, TCSANOW, &v->initialTerminalState);
 
-    // Restore cursor
+    // Show the cursor
     printf("\e[?25h");
     fflush(stdout);
 
@@ -126,8 +107,6 @@ static void restoreTerminal(FSPSView *v)
     }
 }
 
-///
-// Currently no sound is played.
 void fsiPlaySe(FSPSView *v, FSBits se)
 {
     (void) v;
@@ -135,7 +114,10 @@ void fsiPlaySe(FSPSView *v, FSBits se)
 }
 
 ///
-// Return the clock in microsecond granularity.
+// A monotonic clock with microsecond granularity.
+//
+// Notes:
+//  * Should use CLOCK_MONOTONIC_RAW where available.
 FSLong fsiGetTime(FSPSView *v)
 {
     (void) v;
@@ -147,7 +129,9 @@ FSLong fsiGetTime(FSPSView *v)
 
 ///
 // Sleep for the specified number of microseconds.
-// TODO: Use clock_nanosleep instead.
+//
+// Notes:
+//  * Should clock_nanosleep instead for consistency.
 void fsiSleepUs(FSPSView *v, FSLong time)
 {
     (void) v;
@@ -155,14 +139,15 @@ void fsiSleepUs(FSPSView *v, FSLong time)
     struct timespec rem;
     struct timespec req = { time / 1000000, 1000 * (time % 1000000) };
 
-    // Assumptions: Any signals that interrupt this sleep do not take
-    // excessively long to perform their operations.
+    // We assume that any signal interruptions do not take excessively long
+    // to perform their operations.
     while (1) {
         // Successful sleep with no interruption, continue.
-        if (nanosleep(&req, &rem) != -1)
+        if (nanosleep(&req, &rem) != -1) {
             break;
+        }
 
-        // Update the required sleep count and resleep.
+        // Update remaining sleep count and continue.
         if (errno == EINTR) {
             req = rem;
         } else {
@@ -173,8 +158,11 @@ void fsiSleepUs(FSPSView *v, FSLong time)
 }
 
 ///
-// Return the found keypresses, performing the conversion from physical
-// to virtual keys using the current keymap.
+// Return the found keypresses.
+//
+// Notes:
+//  * Can we replace the required getchar() with an ioctl call to mute the
+//    output on this terminal?
 FSBits fsiReadKeys(FSPSView *v)
 {
     char keystate[(KEY_MAX + 7) / 8] = {0};
@@ -189,25 +177,23 @@ FSBits fsiReadKeys(FSPSView *v)
         ioctl(STDOUT_FILENO, FIONREAD, &bp);
 
         // If no bytes are pending stop getting input
-        if (bp == 0)
+        if (bp == 0) {
             break;
+        }
 
         (void) getchar();
     }
 
-    // Read physical key state
+    // Fills buffer with current keystate
     ioctl(v->inputFd, EVIOCGKEY(sizeof(keystate)), keystate);
 
-    // Check the status of all physical keys associated with each virtual key
     FSBits keys = 0;
     for (int i = 0; i < VKEY_COUNT; ++i) {
         for (int j = 0; j < FS_MAX_KEYS_PER_ACTION; ++j) {
             // Keystate is stored as a bitset in the array of chars
             const int key = v->keymap[i][j];
-
             if (keystate[key >> 3] & (1 << (key & 7))) {
-                // This is valid since we have a bit-mask associated
-                // with each index. Make a macro here though.
+                // TODO: Make this a macro
                 keys |= (1 << i);
             }
         }
@@ -238,14 +224,14 @@ static uint16_t attr_colour(int piece)
     return attrmap[piece];
 }
 
-// Draw the hold piece buffer.
 static void drawHold(FSPSView *v)
 {
     FSInt2 blocks[4];
     const FSGame *f = v->view->game;
 
-    if (f->holdPiece == FS_NONE)
+    if (f->holdPiece == FS_NONE) {
         return;
+    }
 
     fsPieceToBlocks(f, blocks, f->holdPiece, 0, 0, 0);
     for (int i = 0; i < FS_NBP; ++i) {
@@ -262,8 +248,6 @@ static void drawHold(FSPSView *v)
     }
 }
 
-// Draw the main field state. This is everything with the bounding box of
-// the actual field.
 static void drawField(FSPSView *v)
 {
     FSInt2 blocks[4];
@@ -297,49 +281,50 @@ static void drawField(FSPSView *v)
         }
     }
 
-    // Only print piece if valid
-    if (f->piece != FS_NONE) {
-        ///
-        // Current piece ghost
-        fsPieceToBlocks(f, blocks, f->piece, f->x, f->hardDropY, f->theta);
-        for (int i = 0; i < FS_NBP; ++i) {
-            v->bbuf[FIELD_Y + blocks[i].y][FIELD_X + 2*blocks[i].x + 2] = (TerminalCell) {
-                .value = GLYPH_LBLOCK,
-                .attrs = ATTR_REVERSE | ATTR_DIM | attr_colour(f->piece)
-            };
-            v->bbuf[FIELD_Y + blocks[i].y][FIELD_X + 2*blocks[i].x + 3] = (TerminalCell) {
-                .value = GLYPH_RBLOCK,
-                .attrs = ATTR_REVERSE | ATTR_DIM | attr_colour(f->piece)
-            };
-        }
+    if (f->piece == FS_NONE) {
+        return;
+    }
 
-        ///
-        // Current piece
-        fsPieceToBlocks(f, blocks, f->piece, f->x, f->y, f->theta);
-        for (int i = 0; i < FS_NBP; ++i) {
-            v->bbuf[FIELD_Y + blocks[i].y][FIELD_X + 2*blocks[i].x + 2] = (TerminalCell) {
-                .value = GLYPH_LBLOCK,
-                .attrs = ATTR_REVERSE | attr_colour(f->piece)
-            };
-            v->bbuf[FIELD_Y + blocks[i].y][FIELD_X + 2*blocks[i].x + 3] = (TerminalCell) {
-                .value = GLYPH_RBLOCK,
-                .attrs = ATTR_REVERSE | attr_colour(f->piece)
-            };
-        }
+    ///
+    // Current piece ghost
+    fsPieceToBlocks(f, blocks, f->piece, f->x, f->hardDropY, f->theta);
+    for (int i = 0; i < FS_NBP; ++i) {
+        v->bbuf[FIELD_Y + blocks[i].y][FIELD_X + 2*blocks[i].x + 2] = (TerminalCell) {
+            .value = GLYPH_LBLOCK,
+            .attrs = ATTR_REVERSE | ATTR_DIM | attr_colour(f->piece)
+        };
+        v->bbuf[FIELD_Y + blocks[i].y][FIELD_X + 2*blocks[i].x + 3] = (TerminalCell) {
+            .value = GLYPH_RBLOCK,
+            .attrs = ATTR_REVERSE | ATTR_DIM | attr_colour(f->piece)
+        };
+    }
+
+    ///
+    // Current piece
+    fsPieceToBlocks(f, blocks, f->piece, f->x, f->y, f->theta);
+    for (int i = 0; i < FS_NBP; ++i) {
+        v->bbuf[FIELD_Y + blocks[i].y][FIELD_X + 2*blocks[i].x + 2] = (TerminalCell) {
+            .value = GLYPH_LBLOCK,
+            .attrs = ATTR_REVERSE | attr_colour(f->piece)
+        };
+        v->bbuf[FIELD_Y + blocks[i].y][FIELD_X + 2*blocks[i].x + 3] = (TerminalCell) {
+            .value = GLYPH_RBLOCK,
+            .attrs = ATTR_REVERSE | attr_colour(f->piece)
+        };
     }
 }
 
 ///
-// Draw preview piece buffer.
+// Draw preview piece.
+//
+// Notes:
+//  * Extend the maximum preview count beyond four in some way.
 static void drawPreview(FSPSView *v)
 {
     FSInt2 blocks[FS_NBP];
     const FSGame *f = v->view->game;
-
-    // Not printing correctly!
     const int previewCount = f->nextPieceCount > 4 ? 4 : f->nextPieceCount;
 
-    // Print 4 preview pieces max for now (where do we render if higher?)
     for (int i = 0; i < previewCount; ++i) {
         fsPieceToBlocks(f, blocks, f->nextPiece[i], 0, 0, 0);
         const int xpo = f->nextPiece[i] == FS_I || f->nextPiece[i] == FS_O ? 0 : 1;
@@ -362,16 +347,20 @@ static void drawPreview(FSPSView *v)
 
 ///
 // Copy a string into the backbuffer at the specified coordinates.
+//
+// If this extends beyond the maximum terminal width then the string will be
+// clipped to fit.
 static void putStrAt(FSPSView *v, const char *s, int y, int x, int attrs)
 {
-    if (y < 0 || FS_TERM_HEIGHT <= y || x < 0 || FS_TERM_WIDTH <= x)
+    if (y < 0 || FS_TERM_HEIGHT <= y || x < 0 || FS_TERM_WIDTH <= x) {
         return;
+    }
 
     const int slen = strlen(s);
     for (int i = 0; i < slen; ++i) {
-        // Truncate edges that are too long
-        if (x + i > FS_TERM_WIDTH)
+        if (x + i > FS_TERM_WIDTH) {
             break;
+        }
 
         v->bbuf[y][x + i] = (TerminalCell) {
             .value = s[i],
@@ -380,20 +369,18 @@ static void putStrAt(FSPSView *v, const char *s, int y, int x, int attrs)
     }
 }
 
-///
-// Draw info segment.
 static void drawInfo(FSPSView *v)
 {
     const FSGame *f = v->view->game;
 
-    // Limit this to the specified length for now
-    const int bufsiz = 32;
+    const int bufsiz = FS_TERM_WIDTH;
     char buf[bufsiz];
 
-    // Target beneath field
+    // Target Goal is special and is drawn under the field.
     int remaining = v->view->game->goal - v->view->game->linesCleared;
-    if (remaining < 0)
+    if (remaining < 0) {
         remaining = 0;
+    }
 
     snprintf(buf, bufsiz, "%d", remaining);
     putStrAt(v, buf, FIELD_Y + FIELD_H + 1,
@@ -401,6 +388,8 @@ static void drawInfo(FSPSView *v)
 
     const int msElapsed = f->msPerTick * f->totalTicks;
 
+
+    // Remaining items are drawn on the right-side of the field.
     snprintf(buf, bufsiz, "Time");
     putStrAt(v, buf, INFO_Y + 1, INFO_X, ATTR_UNDERLINE);
 
@@ -429,28 +418,37 @@ static void drawInfo(FSPSView *v)
     putStrAt(v, buf, INFO_Y + 11, INFO_X, ATTR_BRIGHT);
 }
 
+///
+// Perform the actual draw for any pending operations.
+//
+// This uses a double-buffer system and will only draw segments of the screen
+// which changed since the last draw.
+//
+// A complete redraw is performed if the invalidateBuffers flag is set. This
+// will be unset after the function completes.
 void fsiBlit(FSPSView *v)
 {
-    // If sigwinch was caught invalidate buffers (kind of pointless doing this
-    // set but it may be changed in the future).
+    // This seems pointless (and is!) but may be slightly tweaked in future.
     if (caughtSigwinch) {
         v->invalidateBuffers = true;
-        caughtSigwinch = false;
+        caughtSigwinch = 0;
     }
 
-    // Clear entire screen if invalid buffers and restart
-    if (v->invalidateBuffers)
+    // Clear the entire screen on redraw
+    if (v->invalidateBuffers) {
         printf("\e[H\e[2J");
+    }
 
+    // We have to perform some minor optimizations so that a complete redraw
+    // can consistently occur within the draw limit.
     int lx = -1, ly = -1;
-
     for (int y = 0; y < FS_TERM_HEIGHT; ++y) {
         for (int x = 0; x < FS_TERM_WIDTH; ++x) {
             if (v->invalidateBuffers
                     || v->bbuf[y][x].value != v->fbuf[y][x].value
                     || v->bbuf[y][x].attrs != v->fbuf[y][x].attrs) {
 
-                // Apply all attributes for the current block (only if non-zero)
+                // Only update the attribute set if it is non-zero (default).
                 bool attr_set = false;
                 if (v->bbuf[y][x].attrs) {
                     for (int i = 0; i < ATTR_COUNT; ++i) {
@@ -461,10 +459,9 @@ void fsiBlit(FSPSView *v)
                     }
                 }
 
-                // Only update the cursor position if we are not in the right.
-                // This optimization drastically reduces the cursor movement
-                // escape sequences being processed and without it early frames
-                // may not be rendered in time.
+                // Only update the cursor position if it is not in the correct
+                // position already. This an essential optimizations for entire
+                // redraws.
                 if (x != lx + 1 || y != ly) {
                     printf("\e[%d;%dH", y + 1, x + 1);
                 }
@@ -472,11 +469,9 @@ void fsiBlit(FSPSView *v)
                 lx = x;
                 ly = y;
 
-                // Print the actual value
                 printf("%c", (char) v->bbuf[y][x].value);
 
-                // Reset attributes for the piece.
-                // Only do this if an attribute was actually set.
+                // Only reset attributes if they were altered.
                 if (attr_set) {
                     printf("\e[0m");
                 }
@@ -486,43 +481,48 @@ void fsiBlit(FSPSView *v)
         }
     }
 
-    // We need to flush since we don't print any newlines
+    // Always explcitly flush since we never print any newlines.
     fflush(stdout);
     v->invalidateBuffers = false;
 }
 
+///
+// Add a trigger for the physical key from this virtual key.
 void fsiAddToKeymap(FSPSView *v, int virtualKey, const char *keyValue)
 {
     const int kc = fsKeyToPhysicalKey(keyValue);
     if (kc) {
         for (int i = 0; i < FS_MAX_KEYS_PER_ACTION; ++i) {
-            // Found an empty slot to fill
             if (v->keymap[virtualKey][i] == KEY_NONE) {
                 v->keymap[virtualKey][i] = kc;
                 return;
             }
         }
 
-        // Keymap was full, warn user
         fsLogWarning("Could not insert key %s into full keymap", keyValue);
     }
 }
 
-// parse ini will call this function and pass appropriate values
+///
+// Called by the internal ini parser if a frontend option is encountered.
+//
+// Notes:
+//  * There is quite a bit of redirection with this interface and would be nice
+//    if we could adjust this slightly.
+//
+//  * This should be placed in a seperate file for better containment. (along
+//    with future command line parsing).
 void fsiUnpackFrontendOption(FSPSView *v, const char *key, const char *value)
 {
     (void) v;
+    (void) key;
     (void) value;
-
-    if (!strncmp(key, "frontend.terminal.", 18)) {
-        // Handle other specific options
-    }
 }
 
-// Peform an entire draw, blit loop
+///
+// Perform a complete render -> blit loop.
 void fsiDraw(FSPSView *v)
 {
-    // Empty backbuffer for redraw
     for (int y = 0; y < FS_TERM_HEIGHT; ++y) {
         for (int x = 0; x < FS_TERM_WIDTH; ++x) {
             v->bbuf[y][x] = (TerminalCell) {
@@ -538,13 +538,30 @@ void fsiDraw(FSPSView *v)
     drawInfo(v);
 }
 
-// Run before any user code is processed in a tick
+///
+// Run before every tick.
+//
+// Signal flags are handled here and not within the handlers themselves to
+// avoid any unforeseen behaviour.
 void fsiPreFrameHook(FSPSView *v)
 {
     (void) v;
+
+    // If we encountered a SIGINT, then we want to reset the screen before we
+    // re-raise it so the user can see the game content on exit.
+    if (caughtSigint) {
+        printf("\e[?25h");
+        printf("\e[%d;%dH", FS_TERM_HEIGHT, FS_TERM_WIDTH);
+        fflush(stdout);
+        raise(SIGINT);
+    }
 }
 
-// Run after we have slept for the specified period of time
+///
+// Run after every tick.
+//
+// Notes:
+//  * This should be removed once the RenderEvent functionality is in place.
 void fsiPostFrameHook(FSPSView *v)
 {
     const FSGame *f = v->view->game;
@@ -568,21 +585,20 @@ int main(void)
 {
     FSGame game;
     FSControl control;
+
     // Generic View
     FSView gView = { .game = &game, .control = &control, .totalFramesDrawn = 0 };
+
     // Platform-Specific View
     FSPSView pView = { .view = &gView };
 
     initializeTerminal(&pView);
-
     fsGameInit(&game);
-    fsParseIniFile(&pView, &gView, "fs.ini");
+    fsParseIniFile(&pView, &gView, FS_CONFIG_FILENAME);
     fsGameLoop(&pView, &gView);
 
-    // Give some space after the screen so we can still view it nicely after a
-    // game has completed.
-    // Cursor is ALWAYS at the end after a draw so we are in the correct spot
-    // to print.
+    // Cursor is guaranteed to be at the end of the screen, so print some extra
+    // lines on exit to better display score.
     printf("\n\n");
 
     restoreTerminal(&pView);

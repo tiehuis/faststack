@@ -1,31 +1,42 @@
+///
+// keymap.h
+// ========
+//
+// Contains methods for converting fsKey's to physical keys that can be
+// queried for state.
+//
+// Mapped key definitions are those provided by SDL.
+///
+
 #include <SDL_keycode.h>
-
-///
-// Attempt to match against the input string, returning the SDL_Keycode if
-// successful.
-#define M(x, y)                     \
-    do {                            \
-        if (!strcmpi(#x, str))   \
-            return SDLK_##y;        \
-    } while (0)
-
-///
-// Shorthand for M when the fsKey matches the SDL_Keycode spec.
-#define S(x) M(x, x)
 
 static int strcmpi(const char *a, const char *b)
 {
     for (;; a++, b++) {
         const int d = tolower(*a) - tolower(*b);
-        if (d || !*a)
+        if (d || !*a) {
             return d;
+        }
     }
 }
 
+#define KEY_NONE (-1)
+
 ///
-// Converts an fsKey to an SDL_Keycode.
+// Convert an fsKey string to a physical key.
+//
+// Notes:
+//  * Could use a perfect hashmap here.
+///
 static SDL_Keycode fsKeyToPhysicalKey(const char *str)
 {
+    #define S(x) M(x, x)
+    #define M(x, y)                     \
+        do {                            \
+            if (!strcmpi(#x, str))      \
+                return SDLK_##y;        \
+        } while (0)
+
     // Number conversion.
     S(0); S(1); S(2); S(3); S(4); S(5); S(6); S(7); S(8); S(9);
 
@@ -56,8 +67,8 @@ static SDL_Keycode fsKeyToPhysicalKey(const char *str)
     M(kpPlus, KP_PLUS); M(kpMultiply, KP_MULTIPLY); M(kpDot, KP_PERIOD);
 
     // Unknown keycode encountered.
-    return 0;
-}
+    return KEY_NONE;
 
-#undef S
-#undef M
+    #undef M
+    #undef S
+}

@@ -1,5 +1,6 @@
 ///
 // fsInterface.h
+// =============
 //
 // The main interface between frontend and engine code.
 //
@@ -7,20 +8,21 @@
 // frontend.
 //
 // Notes:
-//  - Do we require microsecond granularity for `fsiGetTime` and `fsiSleepUs`?.
+//  * Do we require microsecond granularity for `fsiGetTime` and `fsiSleepUs`?.
 //    Millisecond is probably sufficient for our purposes.
 //
-//  - Could we weak-link some potentially unimplemented functions such as the
+//  * Could we weak-link some potentially unimplemented functions such as the
 //    pre/post frame hooks?
 ///
 
 #ifndef FSINTERFACE_H
 #define FSINTERFACE_H
 
+#include "fs.h"
 #include "fsTypes.h"
 
 ///
-// @impl in frontend code.
+// Implementation in frontend.
 //
 // The definition there **must** not be a typedef.
 ///
@@ -40,7 +42,8 @@ void fsParseIniFile(FSPSView *p, FSView *v, const char *fname);
 
 
 ///*********************/
-// # Frontend Interface
+// Frontend Interface
+// ==================
 //
 // The following functions **must** be implemented by any frontend. If they are
 // omitted, a linker error will occur.

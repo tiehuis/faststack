@@ -1,20 +1,18 @@
 ///
 // fsInterface.c
+// =============
 //
 // Main game loop and interface between frontend and engine code.
 //
 // All functions prefixed with fsi* **must** be implemented by a
 // frontend.
-//
-// Notes:
-//  - Test dropping tick input instead of overclocking. Potentially
-//    allow as an option?
 ///
+
+#include "fs.h"
+#include "fsInterface.h"
 
 #include <stdio.h>
 #include <math.h>
-#include "fs.h"
-#include "fsInterface.h"
 
 static void updateGameLogic(FSPSView *v, FSView *g)
 {
@@ -30,8 +28,6 @@ static void updateGameView(FSPSView *v, FSView *g)
 {
     fsiDraw(v);
     fsiPlaySe(v, g->game->se);
-
-    // Acknowledge that we played the sound effects
     g->totalFramesDrawn += 1;
 }
 
@@ -43,13 +39,11 @@ void fsGameLoop(FSPSView *v, FSView *g)
     FSLong lastTime = fsiGetTime(v);
     FSLong lag = 0;
 
-    // Determine the rate at which draws occur per tick
-
-    // The game loop here uses a fixed timestep approach with lag reduction
-    // in case we accumulate to much extra time.
+    // The game loop here uses a fixed timestep with lag reduction. The render
+    // phase is synced and occurs every `ticksPerDraw` frames.
     //
-    // We do not account at all for the game running too slow. We should always
-    // be able to perform a logic->render cycle in the specified time.
+    // NOTE: This loop does not account for running too slow. We always assume
+    // we can perform a `logic` -> `render` cycle within `tickRate`.
     while (1) {
         FSLong startTime = fsiGetTime(v);
         FSLong elapsed = startTime - lastTime;
@@ -58,14 +52,11 @@ void fsGameLoop(FSPSView *v, FSView *g)
 
         fsiPreFrameHook(v);
 
-        // If we accumulate more than tickRate lag, then perform an
-        // extra frame of input. This will reuse the same input so some
-        // odd things could potentially happen here that may not be
-        // optimal.
+        // We need handle at most only one frame of lag at a time. This
+        // is enough for correcting the clock sleep lag.
         //
-        // Another option to test is whether just that we made up the tick
-        // is viable. This would have the effect of ensuring we don't get
-        // repeated inputs, but at the cost of potential lost inputs.
+        // NOTE: Test whether dropping input during lag is works as an
+        // alternative to doubling input.
         {
             updateGameLogic(v, g);
             lag -= tickRate;
@@ -75,34 +66,26 @@ void fsGameLoop(FSPSView *v, FSView *g)
             lag -= tickRate;
         }
 
-        // Check the last frame early so we can print if we encounter it. This
-        // is to ensure we don't finish between frame draws and get an incomplete
-        // result set back on end.
-        const bool lastFrame = f->state == FSS_GAMEOVER || f->state == FSS_QUIT;
+        const bool lastFrame = f->state == FSS_GAMEOVER ||
+                               f->state == FSS_QUIT;
 
+        // We always want to draw the final frame, even if we were in between
+        // ticks.
         if (f->totalTicks % f->ticksPerDraw == 0 || lastFrame) {
             updateGameView(v, g);
-
-            // Currently only used for draw so can put in here.
-            // TODO: Remove all draw code from postFrameHook and place
-            // into fsiDraw calls at end if possible.
             fsiPostFrameHook(v);
-
-            // Blit after postFrameHook to allow final rendering
             fsiBlit(v);
         }
 
-        // Update actual game time
         FSLong currentTime = fsiGetTime(v);
         f->actualTime = currentTime - gameStart;
 
-        // If we received an end event, finish before sleeping. This
-        // saves one tick of lag (minor).
-        if (lastFrame)
+        // Break early if we know we are finished to save `tickRate` us of lag.
+        if (lastFrame) {
             break;
+        }
 
-        // If we fail to process within allotted time don't do anything special currently.
-        // This shouldn't happen often, but at least warn if it does.
+        // NOTE: This should try to do more corrections if possible.
         if (startTime + tickRate < currentTime) {
             fsLogDebug("Tick %ld took %ld but tickrate is only %ld",
                         f->totalTicks, currentTime - startTime, tickRate);
@@ -112,7 +95,8 @@ void fsGameLoop(FSPSView *v, FSView *g)
         }
     }
 
-    // Check if the game ran at an appropriate rate.
+    // Cross-reference the in-game time (as calculated from the number of
+    // elapsed ticks) to a reference clock to ensure it runs accurately.
     const double actualElapsed = (double) f->actualTime / 1000000;
     const double ingameElapsed = (double) (f->totalTicks * f->msPerTick) / 1000;
 

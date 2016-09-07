@@ -1,5 +1,6 @@
 ///
 // fsConfig.h
+// ==========
 //
 // Compile-Time configuration variables.
 //
@@ -12,7 +13,7 @@
 
 /// Maximum height of a playfield.
 //
-//  - Constraints
+//  * Constraints
 //      FS_MAX_HEIGHT <= sizeof(FSBits) * 8
 //
 //      Due to the current algorithm used for clearing lines.

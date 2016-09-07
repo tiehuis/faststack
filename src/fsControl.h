@@ -14,7 +14,7 @@
 #include "fsTypes.h"
 
 ///
-// @impl in `fs.c`
+// Implementation in fs.c.
 struct FSGame;
 
 ///
@@ -105,7 +105,7 @@ typedef struct FSControl {
 typedef struct FSInput {
     /// A Rotation action.
     //
-    //  - Constraints
+    //  * Constraints
     //      One of 'RotationAmount' (in fs.h)
     FSInt rotation;
 
@@ -128,16 +128,16 @@ typedef struct FSInput {
 ///
 // Transforms virtual key input to specific actions using an FSControl instance.
 //
-//  - FSInput *dst
+//  * FSInput *dst
 //      FSInput structure to fill with the calculated actions.
 //
-//  - FSBits keys
+//  * FSBits keys
 //      Current keystate.
 //
-//  - const FSGame *f
+//  * const FSGame *f
 //      Game instance to use options from.
 //
-//  - FSControl *c
+//  * FSControl *c
 //      Control structure to use for calculating target actions.
 ///
 void fsVirtualKeysToInput(FSInput *dst, FSBits keys, const struct FSGame *f, FSControl *c);

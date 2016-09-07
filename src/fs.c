@@ -1,25 +1,24 @@
 ///
-// `fs.c`
+// fs.c
+// ====
 //
 // FastStack Engine implementation.
+///
+
+#include "fs.h"
+#include "fsDefault.h"
+#include "fsInternal.h"
 
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <time.h>
 
-#include "fs.h"
-#include "fsDefault.h"
-#include "fsInternal.h"
-
 ///
-// @impl in `fsRand.c`
+// Implementation in `fsRand.c`.
 //
-// Return the next randomly generated piece.
 FSBlock fsNextRandomPiece(FSGame *f);
-// Initialize a randomizer instance with a seed
 void fsRandSeed(FSRandCtx *ctx, uint32_t seed);
-
 
 ///
 // Static piece offsets.
@@ -75,7 +74,7 @@ static const FSInt2 pieceOffsets[FS_NPT][FS_NPR][FS_NBP] = {
     }
 };
 
-/* Specifies the value stored in each cell. Not currently utilized much. */
+/// Specifies the value stored in each cell. Not currently utilized much.
 const FSInt pieceColors[7] = {
     0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70
 };
@@ -90,18 +89,17 @@ static FSBlock nextPreviewPiece(FSGame *f)
     if (f->nextPieceCount == 0) {
         return newPiece;
     }
-    else {
-        const FSBlock pendingPiece = f->nextPiece[0];
-        memmove(f->nextPiece, f->nextPiece + 1, f->nextPieceCount - 1);
-        f->nextPiece[f->nextPieceCount - 1] = newPiece;
-        return pendingPiece;
-    }
+
+    const FSBlock pendingPiece = f->nextPiece[0];
+    memmove(f->nextPiece, f->nextPiece + 1, f->nextPieceCount - 1);
+    f->nextPiece[f->nextPieceCount - 1] = newPiece;
+    return pendingPiece;
 }
 
 void fsGameReset(FSGame *f)
 {
-    // Zero all required internal values. We cannot simply memset the entire
-    // structure since we want to preserve existing option (@O) values.
+    // We cannot simply memset the entire structure since we want to preserve
+    // existing option (@O) values.
     //
     // Typically any added @I or @E piece needs to be added here as well.
     memset(f->b, 0, sizeof(f->b));
@@ -121,30 +119,30 @@ void fsGameReset(FSGame *f)
     f->linesCleared = 0;
     f->blocksPlaced = 0;
 
-    // Initialize game-specific random context
     fsRandSeed(&f->randomContext, time(NULL));
 
     // Signal that we are changing the randomizer and need to reinitialize
     f->lastRandomizer = FSRAND_UNDEFINED;
 
-    // Internal defaults
     f->state = FSS_READY;
     f->holdAvailable = true;
     f->holdPiece = FS_NONE;
 
-    // We only initialize the current piece after the ready/go is complete.
-    // This ensures we don't render it to the field until we begin.
+    // We do not generate a new piece here since we do not want to render it
+    // during the ready/go phase.
     f->piece = FS_NONE;
     for (int i = 0; i < f->nextPieceCount; ++i) {
         f->nextPiece[i] = fsNextRandomPiece(f);
     }
 }
 
-/// Initialize a game state.
+///
+// Initialize a game state.
+//
+// We want this seperate from standard initialization so we can reset a game
+// without discarding user options.
 void fsGameInit(FSGame *f)
 {
-    // Set default values on initialization. We want this seperate since we want
-    // to be able to reset a game without discarding any user read options.
     f->fieldWidth = FSD_FIELD_WIDTH;
     f->fieldHeight = FSD_FIELD_HEIGHT;
     f->msPerTick = FSD_MS_PER_TICK;
@@ -165,15 +163,13 @@ void fsGameInit(FSGame *f)
     f->oneShotSoftDrop = FSD_ONE_SHOT_SOFT_DROP;
     f->goal = FSD_GOAL;
 
-    // We must set our defaults before resetting to ensure that the random
-    // state has appropriate values to generate.
     fsGameReset(f);
 }
 
 
-// Could extend to store colour here as well.
-// If we want to allow specific piece colouring as an option. Not essential
-// right now, manage in frontend.
+///
+// Return the set of `FS_NBP` locations the specified piece fills.
+///
 void fsPieceToBlocks(const FSGame *f, FSInt2 *dst, FSInt piece, int x, int y, int theta)
 {
     // A rotation system could be offset
@@ -187,19 +183,21 @@ void fsPieceToBlocks(const FSGame *f, FSInt2 *dst, FSInt piece, int x, int y, in
 }
 
 ///
-// Is the specified location on the field occupied?
-//
+// Return whether the specified position is occupied by a block/field.
+///
 // If the coordinates are outside the field, false is returned.
 static bool isOccupied(const FSGame *f, int x, int y)
 {
-    if (x < 0 || x >= f->fieldWidth || y < 0 || y >= f->fieldHeight)
+    if (x < 0 || x >= f->fieldWidth || y < 0 || y >= f->fieldHeight) {
         return true;
+    }
 
     return f->b[y][x] > 1;
 }
 
 ///
 // Does the current piece collide at the specified coordinates/rotation.
+///
 static bool isCollision(const FSGame *f, int x, int y, int theta)
 {
     FSInt2 blocks[FS_NBP];
@@ -214,9 +212,9 @@ static bool isCollision(const FSGame *f, int x, int y, int theta)
     return false;
 }
 
-// Lock the active piece to the playfield and perform any required
-// routines.
-// NOTE: Finesse is currently a bit off.
+///
+// Lock the current piece and perform post-piece specific routines.
+///
 static void lockPiece(FSGame *f)
 {
     FSInt2 blocks[FS_NBP];
@@ -257,6 +255,7 @@ static void lockPiece(FSGame *f)
 
 ///
 // Generate a new piece and 'spawn' it to the field.
+///
 static void newPiece(FSGame *f)
 {
     // NOTE: Should use wallkick entryOffset here probably, and entryTheta?
@@ -275,11 +274,10 @@ static void newPiece(FSGame *f)
 }
 
 ///
-// Try to rotate the current piece in the specified direction using the
-// existing rotation system.
+// Attempt to perform a rotation, returning whether the rotation succeeded.
+///
 static bool doRotate(FSGame *f, FSInt direction)
 {
-    // Get the appropriate table and theta
     FSInt newDir = (f->theta + 4 + direction) & 3;
     const FSRotationSystem *rs = rotationSystems[f->rotationSystem];
 
@@ -302,12 +300,12 @@ static bool doRotate(FSGame *f, FSInt direction)
                                     ? &rs->kickTables[tableNo]
                                     : &emptyWallkickTable;
 
+    // The `.z` field stores special wallkick flags.
     for (int k = 0; k < FS_MAX_KICK_LEN; ++k) {
         // NOTE: Check which theta we should be using here
         // We need to reverse the kick rotation here
         const FSInt3 kickData = (*table)[f->theta][k];
 
-        // Early break if no more kicks are available
         if (kickData.z == WK_END) {
             break;
         }
@@ -327,26 +325,29 @@ static bool doRotate(FSGame *f, FSInt direction)
 }
 
 ///
-// Apply the specified gravity. To the piece.
+// Apply the specified gravity to the piece.
+//
+// `gravity` is includes the calculated soft drop amount.
+///
 static void doPieceGravity(FSGame *f, FSInt gravity)
 {
     f->actualY += (f->msPerTick * f->gravity) + gravity;
 
-    // If we will go beyond the bottom of the screen we have landed
+    // If we overshoot the bottom of the field, fix to the lowest possible y
+    // value the piece is valid at instead.
     if (f->actualY >= f->hardDropY) {
         f->actualY = f->hardDropY;
         f->y = f->hardDropY;
 
-        // Change the state accordingly
         if (f->state == FSS_FALLING) {
             f->state = FSS_LANDED;
         }
     }
     else {
-        // Check if we have moved a square and reset lock delay if so
         if ((f->lockStyle == FSLOCK_STEP || f->lockStyle == FSLOCK_MOVE) &&
-                (int) f->actualY > f->y)
+                (int) f->actualY > f->y) {
             f->lockTimer = 0;
+        }
 
         f->y = (FSInt) f->actualY;
         f->state = FSS_FALLING;
@@ -366,14 +367,14 @@ static void doPieceGravity(FSGame *f, FSInt gravity)
 ///
 static FSInt clearLines(FSGame *f)
 {
-    // This limits the maximum field height to 32
+    // This effectively limits the maximum possible height to 32 rows.
     FSBits foundLines = 0;
     FSInt filledLineCount = 0;
 
+    // 1: Mark filled rows.
     for (int y = 0; y < f->fieldHeight; ++y) {
         for (int x = 0; x < f->fieldWidth; ++x) {
             if (f->b[y][x] == 0) {
-                // Push lines on so bottom row is LSB
                 goto next_row;
             }
         }
@@ -384,10 +385,10 @@ next_row:
         foundLines <<= 1;
     }
 
-    // We need to not shift the last row else we will be off by one.
+    // Fix the last extra shift that isn't required
     foundLines >>= 1;
 
-    // Perform a second pass, copying rows down the stack directly into place
+    // 2. Shift and replace filled rows.
     int dst = f->fieldHeight - 1;
     for (int src = dst; src >= 0; --src, foundLines >>= 1) {
         if (foundLines & 1) {
@@ -408,8 +409,9 @@ next_row:
     return filledLineCount;
 }
 
-// Compute the maximum y this piece can be before colliding in its current
-// rotation state.
+///
+// Recalculate and set the lowest valid Y position for the current piece.
+///
 void updateHardDropY(FSGame *f)
 {
     int y = f->y;
@@ -433,7 +435,7 @@ static bool tryHold(FSGame *f)
             f->holdAvailable = false;
         }
         else {
-            // Abstract into new piece of type theta
+            // NOTE: Abstract into new piece of type theta
             f->x = f->fieldWidth / 2 - 1;
             f->y = 0;
             f->actualY = 0;
@@ -450,13 +452,12 @@ static bool tryHold(FSGame *f)
         f->se |= FSSE_HOLD;
         return true;
     }
-    else {
-        return false;
-    }
+
+    return false;
 }
 
 ///
-// A single game tick.
+// Perform a single game tick.
 //
 // This is just a state machine which is repeatedly called from the main
 // game loop. We do not want a 1 frame delay for some actions so we allow
@@ -467,29 +468,25 @@ void fsGameTick(FSGame *f, const FSInput *i)
     FSInt distance;
     bool moved = false, rotated = false;
 
-    // Always clear any previous sound effects.
     f->se = 0;
-
-    // Store the input encountered so we can debug it on the
-    // frontend if required.
     f->lastInput = *i;
 
 beginTick:
     switch (f->state) {
-        // We still want to handle hold during the start phase
       case FSS_READY:
       case FSS_GO:
+
+        // Ready, Go has has slightly different hold mechanics. Since we do not
+        // yet have a piece we need to copy directly from the next queue to the
+        // hold piece. Further, we can optionally hold as many times as we want
+        // so need to discard the hold piece if required.
         if ((i->extra & FSI_HOLD) && f->holdAvailable) {
-            // Hold action pre-game is slightly different since we do not
-            // actually have a piece here yet.
-            //
-            // Move our pending piece directly into hold and shift
-            // preview segment.
             f->holdPiece = nextPreviewPiece(f);
             f->se |= FSSE_HOLD;
 
-            if (!f->infiniteReadyGoHold)
+            if (!f->infiniteReadyGoHold) {
                 f->holdAvailable = false;
+            }
         }
 
         if (f->genericCounter == 0) {
@@ -502,12 +499,14 @@ beginTick:
         }
 
         // This cannot be an `else if` since goPhaseLength could be 0.
-        if (f->genericCounter == TICKS(f->readyPhaseLength) + TICKS(f->goPhaseLength)) {
+        if (f->genericCounter == TICKS(f->readyPhaseLength) +
+                                 TICKS(f->goPhaseLength)) {
             f->state = FSS_NEW_PIECE;
         }
 
-        // Return so we don't increment totalTicks and update game clock
         f->genericCounter++;
+
+        // We need an explicit return here to avoid incrementing `totalTicks
         return;
 
       case FSS_ARE:
@@ -534,30 +533,34 @@ beginTick:
             // We need an implicit ordering here so are slightly biased. May want to
             // give an option to adjust this ordering or have a stricter
             // order.
-            if (i->currentKeys & VKEY_ROTR)
+            if (i->currentKeys & VKEY_ROTR) {
                 f->irsAmount = FSROT_CLOCKWISE;
-            else if (i->currentKeys & VKEY_ROTL)
+            }
+            else if (i->currentKeys & VKEY_ROTL) {
                 f->irsAmount = FSROT_ANTICLOCKWISE;
-            else if (i->currentKeys & VKEY_ROTH)
+            }
+            else if (i->currentKeys & VKEY_ROTH) {
                 f->irsAmount = FSROT_HALFTURN;
-            else
+            }
+            else {
                 f->irsAmount = FSROT_NONE;
+            }
 
-            if (i->currentKeys & VKEY_HOLD)
+            if (i->currentKeys & VKEY_HOLD) {
                 f->ihsFlag = true;
-            else
+            }
+            else {
                 f->ihsFlag = false;
+            }
         }
 
-        // Allow ARE to be skipped if any input is found. This is slightly laggy
-        // on certain inputs and needs to be refined.
         if (f->areCancellable && (
                 i->rotation != 0 ||
                 i->movement != 0 ||
                 i->gravity  != 0 ||
                 i->extra    != 0 ||
-                // We also need to check irs/ihs state since this is based solely
-                // on new key state and may not be picked up
+                // We need to check ihs/irs since this is solely based on new
+                // key state and otherwise may not be picked up.
                 f->ihsFlag || f->irsAmount
                 )
         ) {
@@ -576,20 +579,18 @@ beginTick:
       case FSS_NEW_PIECE:
         newPiece(f);
 
-        // Apply IHS/IRS before checking lockout if this was triggered in ARE phase.
+        // Apply ihs/irs before checking lockout.
         if (f->irsAmount != FSROT_NONE) {
             doRotate(f, f->irsAmount);
         }
         if (f->ihsFlag) {
-            // We still want to trigger the hold flag
             tryHold(f);
         }
 
-        // Always reset irs/ihs on new piece
         f->irsAmount = FSROT_NONE;
         f->ihsFlag = false;
 
-        // Check for lockout on spawn now IRS/IHS has been applied
+        // Check lockout (irs/ihs has been applied already)
         if (isCollision(f, f->x, f->y, f->theta)) {
             f->state = FSS_GAMEOVER;
             goto beginTick;
@@ -601,12 +602,10 @@ beginTick:
 
       case FSS_FALLING:
       case FSS_LANDED:
-        // Handle hold
         if (i->extra & FSI_HOLD) {
             tryHold(f);
         }
 
-        // Check finesse counters
         if (i->extra & FSI_FINESSE_DIRECTION) {
             f->finessePieceDirection += 1;
         }
@@ -615,13 +614,12 @@ beginTick:
         }
 
         if (i->rotation) {
-            // We should allow for a true 180 or stepped 180
             if (doRotate(f, i->rotation)) {
                 rotated = true;
             }
         }
 
-        // Handle left/right movement
+        // Left movement
         distance = i->movement;
         for (; distance < 0; ++distance) {
             if (!isCollision(f, f->x - 1, f->y, f->theta)) {
@@ -630,6 +628,7 @@ beginTick:
             }
         }
 
+        // Right movement
         for (; distance > 0; --distance) {
             if (!isCollision(f, f->x + 1, f->y, f->theta)) {
                 f->x += 1;
@@ -638,47 +637,48 @@ beginTick:
         }
 
         if (moved || rotated) {
-            if (moved)
+            if (moved) {
                 f->se |= FSSE_MOVE;
-            if (rotated)
+            }
+            if (rotated) {
                 f->se |= FSSE_ROTATE;
+            }
 
             updateHardDropY(f);
 
-            // Note: Do we want O rotation to be always succesful?
-            if (f->lockStyle == FSLOCK_MOVE)
+            if (f->lockStyle == FSLOCK_MOVE) {
                 f->lockTimer = 0;
+            }
         }
 
-        // Reset lock timer depending on the style
-
-        // Next frame we clear lines if we landed with this piece
         doPieceGravity(f, i->gravity);
 
-        // Check if we are now in a landed state. If a hard drop action was
-        // input then bypass this and go directly to line clear.
         if ((i->extra & FSI_HARD_DROP) ||
-                // We need to recheck state here since moving out of LANDED to
-                // FALLING on the last lockDelay frame will lock the piece in
-                // mid-air.
+                // We must recheck the lock timer state here since we may have
+                // moved back to FALLING from LANDED on the last frame and do
+                // **not** want to lock in mid-air!
                 (f->lockTimer > TICKS(f->lockDelay) && f->state == FSS_LANDED)) {
             f->state = FSS_LINES;
         }
 
-        if (f->state == FSS_LANDED)
+        if (f->state == FSS_LANDED) {
             f->lockTimer++;
+        }
 
         break;
 
       case FSS_LINES:
-        // Clear the lines in 0 frames (instant) currently
         lockPiece(f);
-        f->se |= (1 << (FSSEI_IPIECE + f->piece)); // Ordering is same for FSSE vs FS_PIECE
-        f->piece = FS_NONE; // Invalidate piece so it is not drawn
+
+        // NOTE: Make this conversion less *magic*
+        f->se |= (1 << (FSSEI_IPIECE + f->piece));
+        f->piece = FS_NONE;
 
         const int lines = clearLines(f);
-        if (0 < lines && lines <= 4)
+        if (0 < lines && lines <= 4) {
+            // NOTE: Make this conversion less *magic*
             f->se |= (FSSE_ERASE1 << (lines - 1));
+        }
 
         f->linesCleared += lines;
         f->state = f->linesCleared < f->goal ? FSS_ARE : FSS_GAMEOVER;
@@ -686,6 +686,8 @@ beginTick:
 
       case FSS_GAMEOVER:
         f->se |= FSSE_GAMEOVER;
+        /* FALLTHROUGH */
+
       case FSS_QUIT:
       default:
         break;

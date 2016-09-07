@@ -1,12 +1,9 @@
 ///
 // fsTypes.h
-//
-// Types used internally and externally.
+// =========
 //
 // Notes:
-//  - Consider using the stdint types directly instead of creating typedefs.
-//    The benefit is only if targetting a different platform or micro
-//    optimization for space.
+//  * Consider using types from stdint.h directly where required.
 ///
 
 #ifndef FSTYPES_H

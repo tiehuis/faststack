@@ -1,5 +1,6 @@
 ///
 // fsRand.c
+// ========
 //
 // Implements a number of different types of randomizers.
 //
@@ -7,14 +8,17 @@
 // 'randomInternal' and 'randomInternalIndex'.
 //
 // The PRNG used is found here: http://burtleburtle.net/bob/rand/smallprng.html.
-// We do not use stdlib's implementation so that we can ensure that we regenerate
-// specific piece sequences across any platform just from an initial seed.
+//
+// We do not use stdlib's implementation so that we can ensure that we
+// regenerate specific piece sequences across any platform just from an initial
+// seed.
 ///
+
+#include "fs.h"
 
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include "fs.h"
 
 ///
 // Generate the next value for this PRNG context.
@@ -145,7 +149,7 @@ static FSBlock fromTGM1or2(FSGame *f, int noOfRolls)
             }
         }
 
-        // Failed to find the piec in history, break early
+        // Failed to find the piece in history, break early
         if (j == 4) {
             break;
         }
@@ -214,6 +218,4 @@ FSBlock fsNextRandomPiece(FSGame *f)
         fsLogFatal("Unknown randomizer: %d", f->randomizer);
         exit(1);
     }
-
-    fsLogFatal("Unreachable code encountered");
 }

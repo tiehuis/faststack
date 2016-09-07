@@ -1,5 +1,6 @@
 ///
 // fsDefault.h
+// ===========
 //
 // Defualt parameters used for every FSGame instance.
 //

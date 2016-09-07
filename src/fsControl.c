@@ -1,28 +1,31 @@
 ///
 // fsControl.c
+// ===========
 //
 // Implementation of the function to convert key input into simplified actions
 // for the FastStack engine.
+///
 
 #include "fs.h"
 #include "fsControl.h"
 #include "fsInternal.h"
 
+///
+// Transform the current input state into a simple set of actions for the
+// engine to apply.
+//
 // `keys` is an integer with bits set depending on the state of the specified
-// key. The bits set correspond to the `VKEY` enum in `fsControl.h`.
+//  key. The bits set correspond to the `VKEY` enum in `fsControl.h`.
+///
 void fsVirtualKeysToInput(struct FSInput *dst, FSBits keys, const FSGame *f, FSControl *c)
 {
     FSBits lastTickKeys = c->lastKeys;
     FSBits newKeys = keys & ~lastTickKeys;
     c->lastKeys = keys;
 
-    FSBits releasedKeys = ~keys & lastTickKeys;
-    releasedKeys &= ~c->currentKeys;
     c->currentKeys &= keys;
     keys &= ~c->currentKeys;
     newKeys &= keys;
-
-    // Store current keystate just in case
     dst->currentKeys = keys;
 
     if (keys & VKEY_LEFT) {

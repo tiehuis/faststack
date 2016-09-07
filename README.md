@@ -1,10 +1,9 @@
-# FastStack
+FastStack
+=========
 
-A simple version of the tetris game intended for line-race modes.
+A customisable tetris game aimed at line-race modes.
 
 ![SDL Frontend](/res/sdl-example.png)
-
-**Note: Currently can be much refined, but it is playable.**
 
 This is largely adapted from LockJaw. Many existing features have been removed
 such as support for the DS/GBA and block connections amongst others. This was
@@ -28,7 +27,8 @@ Maybe in the future I'll even adapt it to run on an embedded device?
 Also, there weren't any good serious terminal based tetris games. They usually
 offered really poor input choices in my experience.
 
-# Frontends
+Frontends
+---------
 
 The current frontend uses the SDL2 library. There is an in-progress terminal
 frontend which is assumes linux and vt100 but otherwise doesn't have any other
@@ -39,12 +39,19 @@ things such as keybindings and options are configured through an INI file.
 If it remains lean and quick there is little reason to configure it any other
 way.
 
-# Contributing
+See the specific README files for details.
+
+ * [SDL2](./src/frontend/SDL/README.md)
+ * [Terminal](./src/frontend/terminal/README.md)
+
+Contributing
+------------
 
 I'd like to keep this fairly active. If you are reading this let me know if you
 have any ideas and/or requests and I may think about implementing them.
 
-# License
+License
+-------
 
 GPLv3 licensed. I'm usually an MIT sort of person, but Lockjaw was GPLv2
 (or later) and for a simple application, it fits okay anyway.

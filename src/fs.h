@@ -1,5 +1,6 @@
 ///
-// `fs.c`
+// fs.c
+// ====
 //
 // Header file for the FastStack engine.
 //
@@ -10,13 +11,14 @@
 #ifndef FS_H
 #define FS_H
 
+#include "fsConfig.h"
+#include "fsControl.h"
+#include "fsLog.h"
+#include "fsTypes.h"
+
 #include <ctype.h>
 #include <stdbool.h>
 #include <string.h>
-#include "fsConfig.h"
-#include "fsControl.h"
-#include "fsTypes.h"
-#include "fsLog.h"
 
 /// Name of configuration file.
 #define FS_CONFIG_FILENAME "fs.ini"
@@ -197,29 +199,29 @@ typedef FSInt3 WallkickTable[FS_NPR][FS_MAX_KICK_LEN];
 //
 // A rotation system is comprised of three main parts:
 //
-//  - Entry Offsets
+//  * Entry Offsets
 //      Specifies x, y offsets of a piece when it initially spawns.
 //
-//  - Entry Theta
+//  * Entry Theta
 //      Specifies the rotation state of a piece when it initially spawns.
 //
-//  - Kick Tables and Kick Indexes
+//  * Kick Tables and Kick Indexes
 //      Specifies individual wallkick tables for a given piece. Tables can
 //      be shared amongst types by reusing the index.
 ///
 typedef struct FSRotationSystem {
-    /* Initial x, y offsets. */
+    /// Initial x, y offsets.
     FSInt entryOffset[FS_NPT];
 
-    /* Initial theta offets. */
+    /// Initial theta offets.
     FSInt entryTheta[FS_NPT];
 
-    /* Indexes into 'kickTables'. */
+    /// Indexes into 'kickTables'.
     FSInt kicksL[FS_NPT];
     FSInt kicksR[FS_NPT];
     FSInt kicksH[FS_NPT];
 
-    /* A sequence of wallkick tests. */
+    /// A sequence of wallkick tests.
     WallkickTable kickTables[FS_MAX_NO_OF_WALLKICK_TABLES];
 } FSRotationSystem;
 
@@ -240,14 +242,14 @@ extern const WallkickTable emptyWallkickTable;
 // Stores all internal variables and options pertaining to a field.
 // Values can be broken down into one of three classes.
 //
-//  - Internal Status (@I)
+//  * Internal Status (@I)
 //      Only used internally and never required to be read by a platform.
 //
-//  - External Status (@E)
+//  * External Status (@E)
 //      Calculated internally by the engine, but expected to be read by a
 //      user.
 //
-//  - Fixed Option (@O)
+//  * Fixed Option (@O)
 //      Can be set by the user. Typically unsafe to change during execution.
 //
 //  We document which of the following variables belongs to which class. These
@@ -262,14 +264,14 @@ typedef struct FSGame {
 
     /// @O: Current field width.
     //
-    //  - Constraints
-    //      - fieldWidth < FS_MAX_WIDTH
+    //  * Constraints
+    //      * fieldWidth < FS_MAX_WIDTH
     FSInt fieldWidth;
 
     /// @O: Current field height.
     //
-    //  - Constraints
-    //      - fieldHeight < FS_MAX_HEIGHT
+    //  * Constraints
+    //      * fieldHeight < FS_MAX_HEIGHT
     FSInt fieldHeight;
 
     /// @E: Next available pieces.
@@ -304,8 +306,8 @@ typedef struct FSGame {
     // To calculate soft drop and gravity we need more precision than an
     // integer can provide.
     //
-    //  - Constraints
-    //      - y == (float) actualY
+    //  * Constraints
+    //      * y == (float) actualY
     float actualY;
 
     /// @I: Greatest 'y' the current piece can exist at without a collision.
@@ -453,7 +455,7 @@ typedef struct FSView {
 // options. This is suitable to call when a new game is wanted to be started
 // without reloading an options file/keeping track of options elsewhere.
 //
-//  - FSGame *f
+//  * FSGame *f
 //      The instance to clear.
 ///
 void fsGameReset(FSGame *f);
@@ -469,10 +471,10 @@ void fsGameInit(FSGame *f);
 ///
 // Perform a single game update.
 //
-//  - FSGame *f
+//  * FSGame *f
 //      The instance to update
 //
-//  - const FSInput *i
+//  * const FSInput *i
 //      The input for the instance to compute.
 ///
 void fsGameTick(FSGame *f, const FSInput *i);
@@ -480,24 +482,24 @@ void fsGameTick(FSGame *f, const FSInput *i);
 ///
 // Convert the specified into its individual blocks.
 //
-//  - const FSGame *f
+//  * const FSGame *f
 //      The instance which options are used
 //
-//  - FSInt2 *dst
+//  * FSInt2 *dst
 //      The destination buffer to store the pieces in.
 //
 //      Note: **must** be greater than or equal to FS_NBP in size.
 //
-//  - FSInt piece
+//  * FSInt piece
 //      Type of piece to generate.
 //
-//  - int x
+//  * int x
 //      X coordinate of the piece
 //
-//  - int y
+//  * int y
 //      Y coordinate of the piece
 //
-//  - int theta
+//  * int theta
 //      Rotation state of the piece.
 //
 ///
