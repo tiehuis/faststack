@@ -14,9 +14,9 @@
 #include "fsConfig.h"
 #include "fsControl.h"
 #include "fsLog.h"
+#include "fsOption.h"
 #include "fsTypes.h"
 
-#include <ctype.h>
 #include <stdbool.h>
 #include <string.h>
 

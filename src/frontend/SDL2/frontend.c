@@ -651,11 +651,11 @@ void fsiAddToKeymap(FSPSView *v, int virtualKey, const char *keyValue)
 // parse ini will call this function and pass appropriate values
 void fsiUnpackFrontendOption(FSPSView *v, const char *key, const char *value)
 {
-    (void) value;
+    FSPSView *dst = v;
 
-    if (!strcmpi(key, "debug")) {
-        v->showDebug = true;
-    }
+    TS_BOOL(showDebug);
+
+    fsLogWarning("No suitable key found for option %s = %s", key, value);
 }
 
 ///
