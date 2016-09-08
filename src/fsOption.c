@@ -22,6 +22,10 @@
 #include <math.h>
 #include <string.h>
 
+// Maximum values for input when parsing ini options
+#define MAX_LINE_LENGTH 512
+#define MAX_ID_LENGTH 32
+
 ///
 // This variable must be present in the frontend.
 ///
@@ -290,9 +294,8 @@ static void unpackOptionValue(struct FSPSView *p, FSView *v, const char *k,
         TS_KEY       (hold, VKEYI_HOLD);
     }
     else {
-        /// NOTE: Clean up and use strncat
-        char buffer[32] = "frontend.";
-        strcat(buffer, fsiFrontendName);
+        char buffer[2 * MAX_ID_LENGTH] = "frontend.";
+        strncat(buffer, fsiFrontendName, 2 * MAX_ID_LENGTH - 9);
         const size_t slen = strlen(buffer);
 
         // If we encounter a frontend-defined option do not warn that no key
@@ -348,9 +351,6 @@ static void unpackOptionValue(struct FSPSView *p, FSView *v, const char *k,
 // meta.multi_valued_key, item3
 // ```
 ///
-
-#define MAX_LINE_LENGTH 512
-#define MAX_ID_LENGTH 32
 
 /// Consume non-empty characters until the specified is found.
 static inline int eat_till(char **s, const char c)
