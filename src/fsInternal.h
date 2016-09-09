@@ -3,10 +3,12 @@
 // ============
 //
 // Internal macros and definitions that are used across multiple files.
+//
+// This is not included in the public header `fs.h`.
 ///
 
-#ifndef FSINTERNAL_H
-#define FSINTERNAL_H
+#ifndef FS_INTERNAL_H
+#define FS_INTERNAL_H
 
 /// Wallkick: Sentinel value indicating no more wallkick tests are left.
 #define WK_END 0x71
@@ -18,4 +20,4 @@
 /// General: Convert milliseconds value to ticks.
 #define TICKS(x) ((x) / (f->msPerTick))
 
-#endif
+#endif // FS_INTERNAL_H

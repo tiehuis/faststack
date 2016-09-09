@@ -15,8 +15,8 @@
 //    pre/post frame hooks?
 ///
 
-#ifndef FSINTERFACE_H
-#define FSINTERFACE_H
+#ifndef FS_INTERFACE_H
+#define FS_INTERFACE_H
 
 #include "fs.h"
 #include "fsTypes.h"
@@ -104,4 +104,4 @@ void fsiAddToKeymap(FSPSView *v, const int vkey, const char *key);
 ///
 void fsiUnpackFrontendOption(FSPSView *v, const char *key, const char *value);
 
-#endif
+#endif // FS_INTERFACE_H

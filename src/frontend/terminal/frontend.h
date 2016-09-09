@@ -103,7 +103,7 @@ struct FSPSView {
     FSView *view;
 
     /// Mapping from virtual keycode to physical keycode.
-    int keymap[VKEY_COUNT][FS_MAX_KEYS_PER_ACTION];
+    int keymap[FST_VK_COUNT][FS_MAX_KEYS_PER_ACTION];
 
     /// File descriptor of currently open input device.
     int inputFd;

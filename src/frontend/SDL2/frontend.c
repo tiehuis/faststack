@@ -22,7 +22,7 @@ void initSDL(FSPSView *v)
     v->showDebug = false;
     v->restart = false;
 
-    for (int i = 0; i < VKEY_COUNT; ++i) {
+    for (int i = 0; i < FST_VK_COUNT; ++i) {
         for (int j = 0; j < FS_MAX_KEYS_PER_ACTION; ++j) {
             v->keymap[i][j] = KEY_NONE;
         }
@@ -69,7 +69,7 @@ void initSDL(FSPSView *v)
     // TODO: Find a cleaner way of performing this if possible.
     #define LoadWav(seName, enumName)                                   \
     do {                                                                \
-        if (!(v->seBuffer[FSSEI_##enumName] = Mix_QuickLoad_WAV(seName##_wav))) {\
+        if (!(v->seBuffer[FST_SE_##enumName] = Mix_QuickLoad_WAV(seName##_wav))) {\
             fsLogFatal("Mix_QuickLoadWAV error: %s", Mix_GetError());     \
             SDL_DestroyRenderer(v->renderer);                           \
             SDL_DestroyWindow(v->window);                               \
@@ -169,15 +169,14 @@ FSBits fsiReadKeys(FSPSView *v)
     const Uint8 *state = SDL_GetKeyboardState(NULL);
 
     FSBits keys = 0;
-    for (int i = 0; i < VKEY_COUNT; ++i) {
+    for (int i = 0; i < FST_VK_COUNT; ++i) {
         for (int j = 0; j < FS_MAX_KEYS_PER_ACTION; ++j) {
             if (v->keymap[i][j] == KEY_NONE) {
                 break;
             }
 
             if (state[SDL_GetScancodeFromKey(v->keymap[i][j])]) {
-                // TODO: Make a user-friendly macro.
-                keys |= (1 << i);
+                keys |= FS_TO_FLAG(i);
             }
         }
     }
@@ -190,8 +189,8 @@ void fsiPlaySe(FSPSView *v, FSBits se)
 {
     #define PlayWav(name)                                                   \
     do {                                                                    \
-        if (se & FSSE_##name) {                                             \
-            if (Mix_PlayChannel(-1, v->seBuffer[FSSEI_##name], 0) == -1) {  \
+        if (se & FST_SE_FLAG_##name) {                                      \
+            if (Mix_PlayChannel(-1, v->seBuffer[FST_SE_##name], 0) == -1) { \
                 fsLogWarning("Mix_PlayChannel error: %s", Mix_GetError());  \
             }                                                               \
         }                                                                   \

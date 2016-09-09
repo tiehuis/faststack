@@ -8,8 +8,8 @@
 // keyboard state and options are stored in an 'FSControl' struct.
 ///
 
-#ifndef FSCONTROL_H
-#define FSCONTROL_H
+#ifndef FS_CONTROL_H
+#define FS_CONTROL_H
 
 #include "fsTypes.h"
 
@@ -23,19 +23,19 @@ struct FSGame;
 // These label special actions which are understood by the engine.
 enum InputExtraFlag {
     /// A hard drop action.
-    FSI_HARD_DROP = 0x1,
+    FST_INPUT_HARD_DROP = 0x1,
 
     /// A hold action.
-    FSI_HOLD      = 0x2,
+    FST_INPUT_HOLD      = 0x2,
 
     /// A locking action.
-    FSI_LOCK      = 0x4,
+    FST_INPUT_LOCK      = 0x4,
 
     /// Action indicating a new directional keypress.
-    FSI_FINESSE_DIRECTION = 0x8,
+    FST_INPUT_FINESSE_DIRECTION = 0x8,
 
     /// Action indicating a new rotation keypress.
-    FSI_FINESSE_ROTATION  = 0x10
+    FST_INPUT_FINESSE_ROTATION  = 0x10
 };
 
 ///
@@ -45,31 +45,31 @@ enum InputExtraFlag {
 // key input definitions from a configuration file.
 ///
 enum VirtualKeyIndex {
-    VKEYI_UP,
-    VKEYI_DOWN,
-    VKEYI_LEFT,
-    VKEYI_RIGHT,
-    VKEYI_ROTL,
-    VKEYI_ROTR,
-    VKEYI_ROTH,
-    VKEYI_HOLD,
-    VKEYI_START,
-    VKEY_COUNT
+    FST_VK_UP,
+    FST_VK_DOWN,
+    FST_VK_LEFT,
+    FST_VK_RIGHT,
+    FST_VK_ROTL,
+    FST_VK_ROTR,
+    FST_VK_ROTH,
+    FST_VK_HOLD,
+    FST_VK_START,
+    FST_VK_COUNT
 };
 
 ///
 // A virtual key flag representing an input state.
 ///
 enum VirtualKey {
-    VKEY_UP    = (1 << VKEYI_UP),
-    VKEY_DOWN  = (1 << VKEYI_DOWN),
-    VKEY_LEFT  = (1 << VKEYI_LEFT),
-    VKEY_RIGHT = (1 << VKEYI_RIGHT),
-    VKEY_ROTL  = (1 << VKEYI_ROTL),
-    VKEY_ROTR  = (1 << VKEYI_ROTR),
-    VKEY_ROTH  = (1 << VKEYI_ROTH),
-    VKEY_HOLD  = (1 << VKEYI_HOLD),
-    VKEY_START = (1 << VKEYI_START)
+    FST_VK_FLAG_UP    = (1 << FST_VK_UP),
+    FST_VK_FLAG_DOWN  = (1 << FST_VK_DOWN),
+    FST_VK_FLAG_LEFT  = (1 << FST_VK_LEFT),
+    FST_VK_FLAG_RIGHT = (1 << FST_VK_RIGHT),
+    FST_VK_FLAG_ROTL  = (1 << FST_VK_ROTL),
+    FST_VK_FLAG_ROTR  = (1 << FST_VK_ROTR),
+    FST_VK_FLAG_ROTH  = (1 << FST_VK_ROTH),
+    FST_VK_FLAG_HOLD  = (1 << FST_VK_HOLD),
+    FST_VK_FLAG_START = (1 << FST_VK_START)
 };
 
 ///
@@ -142,4 +142,4 @@ typedef struct FSInput {
 ///
 void fsVirtualKeysToInput(FSInput *dst, FSBits keys, const struct FSGame *f, FSControl *c);
 
-#endif
+#endif // FS_CONTROL_H

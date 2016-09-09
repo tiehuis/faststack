@@ -5,8 +5,8 @@
 // Header file for logging messages.
 ///
 
-#ifndef FSLOG_H
-#define FSLOG_H
+#ifndef FS_LOG_H
+#define FS_LOG_H
 
 ///
 // We want to allow any client to set this variable to alter all logging.
@@ -46,4 +46,4 @@ void fsLog(int level, const char *format, ...);
 #define fsLogError(format, ...) fsLog(FS_LOG_LEVEL_ERROR, format, ## __VA_ARGS__)
 #define fsLogFatal(format, ...) fsLog(FS_LOG_LEVEL_FATAL, format, ## __VA_ARGS__)
 
-#endif
+#endif // FS_LOG_H

@@ -76,7 +76,7 @@ struct FSPSView {
     FSView *view;
 
     // Keymap mapping an action to a number of keycodes
-    SDL_Keycode keymap[VKEY_COUNT][FS_MAX_KEYS_PER_ACTION];
+    SDL_Keycode keymap[FST_VK_COUNT][FS_MAX_KEYS_PER_ACTION];
 
     // Platform-specific render structures
     //
@@ -90,7 +90,7 @@ struct FSPSView {
     TTF_Font *font;
 
     // Sound effect data
-    Mix_Chunk *seBuffer[FSSE_COUNT];
+    Mix_Chunk *seBuffer[FST_SE_COUNT];
 
     // The current width of the window
     int width;

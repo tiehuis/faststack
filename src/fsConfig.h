@@ -11,6 +11,9 @@
 // Note: Do not include this directly. 'fs.h' includes this.
 ///
 
+#ifndef FS_CONFIG_H
+#define FS_CONFIG_H
+
 /// Maximum height of a playfield.
 //
 //  * Constraints
@@ -37,3 +40,5 @@
 
 /// Maximum number of keys an action can be triggered by.
 #define FS_MAX_KEYS_PER_ACTION 3
+
+#endif // FS_CONFIG_H

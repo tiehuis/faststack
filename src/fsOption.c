@@ -51,13 +51,13 @@ int strcmpi(const char *a, const char *b)
 static inline int fsRandomizerLookup(const char *value)
 {
     if (!strcmpi(value, "simple"))
-        return FSRAND_SIMPLE;
+        return FST_RAND_SIMPLE;
     else if (!strcmpi(value, "noszobag7"))
-        return FSRAND_NOSZO_BAG7;
+        return FST_RAND_NOSZO_BAG7;
     else if (!strcmpi(value, "tgm1"))
-        return FSRAND_TGM1;
+        return FST_RAND_TGM1;
     else if (!strcmpi(value, "tgm2"))
-        return FSRAND_TGM2;
+        return FST_RAND_TGM2;
 
     return -1;
 }
@@ -65,15 +65,15 @@ static inline int fsRandomizerLookup(const char *value)
 static inline int fsRotationSystemLookup(const char *value)
 {
     if (!strcmpi(value, "simple"))
-        return FSROT_SIMPLE;
+        return FST_ROTSYS_SIMPLE;
     else if (!strcmpi(value, "srs"))
-        return FSROT_SRS;
+        return FST_ROTSYS_SRS;
     else if (!strcmpi(value, "arikasrs"))
-        return FSROT_ARIKA_SRS;
+        return FST_ROTSYS_ARIKA_SRS;
     else if (!strcmpi(value, "tgm12"))
-        return FSROT_TGM12;
+        return FST_ROTSYS_TGM12;
     else if (!strcmpi(value, "dtet"))
-        return FSROT_DTET;
+        return FST_ROTSYS_DTET;
 
     return -1;
 }
@@ -81,11 +81,11 @@ static inline int fsRotationSystemLookup(const char *value)
 static inline int fsLockStyleLookup(const char *value)
 {
     if (!strcmpi(value, "entry"))
-        return FSLOCK_ENTRY;
+        return FST_LOCK_ENTRY;
     if (!strcmpi(value, "step"))
-        return FSLOCK_STEP;
+        return FST_LOCK_STEP;
     if (!strcmpi(value, "move"))
-        return FSLOCK_MOVE;
+        return FST_LOCK_MOVE;
 
     return -1;
 }
@@ -93,9 +93,9 @@ static inline int fsLockStyleLookup(const char *value)
 static inline int fsInitialActionStyleLookup(const char *value)
 {
     if (!strcmpi(value, "none"))
-        return FSIA_NONE;
+        return FST_IA_NONE;
     if (!strcmpi(value, "persistent"))
-        return FSIA_PERSISTENT;
+        return FST_IA_PERSISTENT;
     if (!strcmpi(value, "trigger"))
         fsLogWarning("initialActionStyle = trigger is not implemented!");
 
@@ -144,14 +144,14 @@ static void unpackOptionValue(struct FSPSView *p, FSView *v, const char *k,
     else if (!strncmp(k, "keybind.", 8)) {
         const char *key = k + 8;
 
-        TS_KEY       (rotateRight, VKEYI_ROTR);
-        TS_KEY       (rotateLeft, VKEYI_ROTL);
-        TS_KEY       (rotate180, VKEYI_ROTH);
-        TS_KEY       (left, VKEYI_LEFT);
-        TS_KEY       (right, VKEYI_RIGHT);
-        TS_KEY       (down, VKEYI_DOWN);
-        TS_KEY       (up, VKEYI_UP);
-        TS_KEY       (hold, VKEYI_HOLD);
+        TS_KEY       (rotateRight, FST_VK_ROTR);
+        TS_KEY       (rotateLeft, FST_VK_ROTL);
+        TS_KEY       (rotate180, FST_VK_ROTH);
+        TS_KEY       (left, FST_VK_LEFT);
+        TS_KEY       (right, FST_VK_RIGHT);
+        TS_KEY       (down, FST_VK_DOWN);
+        TS_KEY       (up, FST_VK_UP);
+        TS_KEY       (hold, FST_VK_HOLD);
     }
     else {
         char buffer[2 * MAX_ID_LENGTH] = "frontend.";

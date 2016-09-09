@@ -1,11 +1,18 @@
 ///
-// fs.c
+// fs.h
 // ====
 //
 // Header file for the FastStack engine.
 //
 // The engine is mostly opaque to an outside user. A number of functions are
 // provided which provide some convenience when performing certain tasks.
+//
+// Naming
+// ------
+// We use the following prefixes for enums.
+//
+//  FST_* - FastStack Type
+//  FSS_* - FastStack State
 ///
 
 #ifndef FS_H
@@ -35,6 +42,11 @@
 /// Number of blocks in a piece.
 #define FS_NBP 4
 
+///
+// Convert an arbitrary index type (e.g. FST_SE_*) into its corresponding flag
+// value (FST_SE_FLAG_*).
+#define FS_TO_FLAG(x) (1 << (x))
+
 /// Piece types
 enum PieceType {
     FS_I,
@@ -49,84 +61,84 @@ enum PieceType {
 
 /// Randomizer type
 enum RandomizerType {
-    FSRAND_UNDEFINED,
-    FSRAND_SIMPLE,
-    FSRAND_NOSZO_BAG7,
-    FSRAND_TGM1,
-    FSRAND_TGM2
+    FST_RAND_UNDEFINED,
+    FST_RAND_SIMPLE,
+    FST_RAND_NOSZO_BAG7,
+    FST_RAND_TGM1,
+    FST_RAND_TGM2
 };
 
 /// Rotation System type
 enum RotationSystemType {
-    FSROT_SIMPLE,
-    FSROT_SRS,
-    FSROT_ARIKA_SRS,
-    FSROT_TGM12,
-    FSROT_DTET
+    FST_ROTSYS_SIMPLE,
+    FST_ROTSYS_SRS,
+    FST_ROTSYS_ARIKA_SRS,
+    FST_ROTSYS_TGM12,
+    FST_ROTSYS_DTET
 };
 
 /// Rotation amount
 enum RotationAmount {
-    FSROT_NONE = 0,
-    FSROT_CLOCKWISE = 1,
-    FSROT_ANTICLOCKWISE = -1,
-    FSROT_HALFTURN = 2
+    FST_ROT_NONE = 0,
+    FST_ROT_CLOCKWISE = 1,
+    FST_ROT_ANTICLOCKWISE = -1,
+    FST_ROT_HALFTURN = 2
 };
 
 enum SoundEffectIndex {
-    FSSEI_GAMEOVER,
-    FSSEI_READY,
-    FSSEI_GO,
-    FSSEI_IPIECE,
-    FSSEI_JPIECE,
-    FSSEI_LPIECE,
-    FSSEI_OPIECE,
-    FSSEI_SPIECE,
-    FSSEI_TPIECE,
-    FSSEI_ZPIECE,
-    FSSEI_MOVE,
-    FSSEI_ROTATE,
-    FSSEI_HOLD,
-    FSSEI_ERASE1,
-    FSSEI_ERASE2,
-    FSSEI_ERASE3,
-    FSSEI_ERASE4,
-    FSSE_COUNT
+    FST_SE_GAMEOVER,
+    FST_SE_READY,
+    FST_SE_GO,
+    FST_SE_IPIECE,
+    FST_SE_JPIECE,
+    FST_SE_LPIECE,
+    FST_SE_OPIECE,
+    FST_SE_SPIECE,
+    FST_SE_TPIECE,
+    FST_SE_ZPIECE,
+    FST_SE_MOVE,
+    FST_SE_ROTATE,
+    FST_SE_HOLD,
+    FST_SE_ERASE1,
+    FST_SE_ERASE2,
+    FST_SE_ERASE3,
+    FST_SE_ERASE4,
+    FST_SE_COUNT
 };
 
 /// Types of sound effects
 enum SoundEffect {
-    FSSE_GAMEOVER = (1 << FSSEI_GAMEOVER),
-    FSSE_READY    = (1 << FSSEI_READY),
-    FSSE_GO       = (1 << FSSEI_GO),
-    FSSE_IPIECE   = (1 << FSSEI_IPIECE),
-    FSSE_JPIECE   = (1 << FSSEI_JPIECE),
-    FSSE_LPIECE   = (1 << FSSEI_LPIECE),
-    FSSE_OPIECE   = (1 << FSSEI_OPIECE),
-    FSSE_SPIECE   = (1 << FSSEI_SPIECE),
-    FSSE_TPIECE   = (1 << FSSEI_TPIECE),
-    FSSE_ZPIECE   = (1 << FSSEI_ZPIECE),
-    FSSE_MOVE     = (1 << FSSEI_MOVE),
-    FSSE_ROTATE   = (1 << FSSEI_ROTATE),
-    FSSE_HOLD     = (1 << FSSEI_HOLD),
-    FSSE_ERASE1   = (1 << FSSEI_ERASE1),
-    FSSE_ERASE2   = (1 << FSSEI_ERASE2),
-    FSSE_ERASE3   = (1 << FSSEI_ERASE3),
-    FSSE_ERASE4   = (1 << FSSEI_ERASE4)
+    FST_SE_FLAG_GAMEOVER = (1 << FST_SE_GAMEOVER),
+    FST_SE_FLAG_READY    = (1 << FST_SE_READY),
+    FST_SE_FLAG_GO       = (1 << FST_SE_GO),
+    FST_SE_FLAG_IPIECE   = (1 << FST_SE_IPIECE),
+    FST_SE_FLAG_JPIECE   = (1 << FST_SE_JPIECE),
+    FST_SE_FLAG_LPIECE   = (1 << FST_SE_LPIECE),
+    FST_SE_FLAG_OPIECE   = (1 << FST_SE_OPIECE),
+    FST_SE_FLAG_SPIECE   = (1 << FST_SE_SPIECE),
+    FST_SE_FLAG_TPIECE   = (1 << FST_SE_TPIECE),
+    FST_SE_FLAG_ZPIECE   = (1 << FST_SE_ZPIECE),
+    FST_SE_FLAG_MOVE     = (1 << FST_SE_MOVE),
+    FST_SE_FLAG_ROTATE   = (1 << FST_SE_ROTATE),
+    FST_SE_FLAG_HOLD     = (1 << FST_SE_HOLD),
+    FST_SE_FLAG_ERASE1   = (1 << FST_SE_ERASE1),
+    FST_SE_FLAG_ERASE2   = (1 << FST_SE_ERASE2),
+    FST_SE_FLAG_ERASE3   = (1 << FST_SE_ERASE3),
+    FST_SE_FLAG_ERASE4   = (1 << FST_SE_ERASE4)
 };
 
 ///
 // Locking System type.
-///
+///,
 enum LockStyle {
     /// Lock delay is reset only on entry of a new piece.
-    FSLOCK_ENTRY,
+    FST_LOCK_ENTRY,
 
     /// Lock delay is reset on any downwards movement.
-    FSLOCK_STEP,
+    FST_LOCK_STEP,
 
     /// Lock delay is reset on any **successful** movement.
-    FSLOCK_MOVE
+    FST_LOCK_MOVE
 };
 
 ///
@@ -134,13 +146,13 @@ enum LockStyle {
 ///
 enum InitialActionType {
     /// IHS/IRS is disabled.
-    FSIA_NONE,
+    FST_IA_NONE,
 
     /// IHS/IRS can be triggered from a last frame action
-    FSIA_PERSISTENT,
+    FST_IA_PERSISTENT,
 
     /// IHS/IRS must get a new event to trigger
-    FSIA_TRIGGER
+    FST_IA_TRIGGER
 };
 
 ///
@@ -505,4 +517,4 @@ void fsGameTick(FSGame *f, const FSInput *i);
 ///
 void fsPieceToBlocks(const FSGame *f, FSInt2 *dst, FSInt piece, int x, int y, int theta);
 
-#endif
+#endif // FS_H

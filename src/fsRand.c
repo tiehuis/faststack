@@ -191,28 +191,28 @@ FSBlock fsNextRandomPiece(FSGame *f)
     if (f->randomizer != f->lastRandomizer) {
         f->lastRandomizer = f->randomizer;
         switch (f->randomizer) {
-          case FSRAND_SIMPLE:
+          case FST_RAND_SIMPLE:
             break;
-          case FSRAND_NOSZO_BAG7:
+          case FST_RAND_NOSZO_BAG7:
             initNoSZOBag7(f);
             break;
-          case FSRAND_TGM1:
+          case FST_RAND_TGM1:
             initTGM1(f);
             break;
-          case FSRAND_TGM2:
+          case FST_RAND_TGM2:
             initTGM2(f);
             break;
         }
     }
 
     switch (f->randomizer) {
-      case FSRAND_SIMPLE:
+      case FST_RAND_SIMPLE:
         return fromSimple(f);
-      case FSRAND_NOSZO_BAG7:
+      case FST_RAND_NOSZO_BAG7:
         return fromNoSZOBag7(f);
-      case FSRAND_TGM1:
+      case FST_RAND_TGM1:
         return fromTGM1or2(f, 4);
-      case FSRAND_TGM2:
+      case FST_RAND_TGM2:
         return fromTGM1or2(f, 6);
       default:
         fsLogFatal("Unknown randomizer: %d", f->randomizer);

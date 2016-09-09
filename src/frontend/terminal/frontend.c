@@ -66,7 +66,7 @@ static void initializeTerminal(FSPSView *v)
     }
 
     // We must explicitly clear the keymap else garbage keys could be pressed.
-    for (int i = 0; i < VKEY_COUNT; ++i) {
+    for (int i = 0; i < FST_VK_COUNT; ++i) {
         for (int j = 0; j < FS_MAX_KEYS_PER_ACTION; ++j) {
             v->keymap[i][j] = KEY_NONE;
         }
@@ -188,13 +188,12 @@ FSBits fsiReadKeys(FSPSView *v)
     ioctl(v->inputFd, EVIOCGKEY(sizeof(keystate)), keystate);
 
     FSBits keys = 0;
-    for (int i = 0; i < VKEY_COUNT; ++i) {
+    for (int i = 0; i < FST_VK_COUNT; ++i) {
         for (int j = 0; j < FS_MAX_KEYS_PER_ACTION; ++j) {
             // Keystate is stored as a bitset in the array of chars
             const int key = v->keymap[i][j];
             if (keystate[key >> 3] & (1 << (key & 7))) {
-                // TODO: Make this a macro
-                keys |= (1 << i);
+                keys |= FS_TO_FLAG(i);
             }
         }
     }

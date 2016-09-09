@@ -6,8 +6,8 @@
 //  * Consider using types from stdint.h directly where required.
 ///
 
-#ifndef FSTYPES_H
-#define FSTYPES_H
+#ifndef FS_TYPES_H
+#define FS_TYPES_H
 
 #include <stdint.h>
 
@@ -36,4 +36,4 @@ typedef struct FSInt3 {
     FSInt z;
 } FSInt3;
 
-#endif
+#endif // FS_TYPES_H

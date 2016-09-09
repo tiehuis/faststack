@@ -7,10 +7,11 @@
 // NOTE: Not thread-safe.
 ///
 
+#include "fsLog.h"
+
 #include <stdarg.h>
 #include <stdio.h>
 #include <time.h>
-#include "fsLog.h"
 
 ///
 // Global variable used to filter which messages are printed.

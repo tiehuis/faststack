@@ -122,7 +122,7 @@ void fsGameReset(FSGame *f)
     fsRandSeed(&f->randomContext, time(NULL));
 
     // Signal that we are changing the randomizer and need to reinitialize
-    f->lastRandomizer = FSRAND_UNDEFINED;
+    f->lastRandomizer = FST_RAND_UNDEFINED;
 
     f->state = FSS_READY;
     f->holdAvailable = true;
@@ -283,13 +283,13 @@ static bool doRotate(FSGame *f, FSInt direction)
 
     FSInt tableNo;
     switch (direction) {
-      case FSROT_CLOCKWISE:
+      case FST_ROT_CLOCKWISE:
         tableNo = rs->kicksR[f->piece];
         break;
-      case FSROT_ANTICLOCKWISE:
+      case FST_ROT_ANTICLOCKWISE:
         tableNo = rs->kicksL[f->piece];
         break;
-      case FSROT_HALFTURN:
+      case FST_ROT_HALFTURN:
         tableNo = rs->kicksH[f->piece];
         break;
       default:
@@ -344,7 +344,7 @@ static void doPieceGravity(FSGame *f, FSInt gravity)
         }
     }
     else {
-        if ((f->lockStyle == FSLOCK_STEP || f->lockStyle == FSLOCK_MOVE) &&
+        if ((f->lockStyle == FST_LOCK_STEP || f->lockStyle == FST_LOCK_MOVE) &&
                 (int) f->actualY > f->y) {
             f->lockTimer = 0;
         }
@@ -449,7 +449,7 @@ static bool tryHold(FSGame *f)
         }
 
         updateHardDropY(f);
-        f->se |= FSSE_HOLD;
+        f->se |= FST_SE_FLAG_HOLD;
         return true;
     }
 
@@ -480,9 +480,9 @@ beginTick:
         // yet have a piece we need to copy directly from the next queue to the
         // hold piece. Further, we can optionally hold as many times as we want
         // so need to discard the hold piece if required.
-        if ((i->extra & FSI_HOLD) && f->holdAvailable) {
+        if ((i->extra & FST_INPUT_HOLD) && f->holdAvailable) {
             f->holdPiece = nextPreviewPiece(f);
-            f->se |= FSSE_HOLD;
+            f->se |= FST_SE_FLAG_HOLD;
 
             if (!f->infiniteReadyGoHold) {
                 f->holdAvailable = false;
@@ -490,11 +490,11 @@ beginTick:
         }
 
         if (f->genericCounter == 0) {
-            f->se |= FSSE_READY;
+            f->se |= FST_SE_FLAG_READY;
         }
 
         if (f->genericCounter == TICKS(f->readyPhaseLength)) {
-            f->se |= FSSE_GO;
+            f->se |= FST_SE_FLAG_GO;
             f->state = FSS_GO;
         }
 
@@ -524,7 +524,7 @@ beginTick:
         // frame with the piece already playable.
         // This may need some more tweaking since during fast play initial stack
         // far too easily.
-        if (f->initialActionStyle == FSIA_PERSISTENT) {
+        if (f->initialActionStyle == FST_IA_PERSISTENT) {
             // Only check the current key state.
             // This is only dependent on the value on the final frame before the
             // piece spawns. Could adjust to allow any mid-ARE initial action to
@@ -533,20 +533,20 @@ beginTick:
             // We need an implicit ordering here so are slightly biased. May want to
             // give an option to adjust this ordering or have a stricter
             // order.
-            if (i->currentKeys & VKEY_ROTR) {
-                f->irsAmount = FSROT_CLOCKWISE;
+            if (i->currentKeys & FST_VK_FLAG_ROTR) {
+                f->irsAmount = FST_ROT_CLOCKWISE;
             }
-            else if (i->currentKeys & VKEY_ROTL) {
-                f->irsAmount = FSROT_ANTICLOCKWISE;
+            else if (i->currentKeys & FST_VK_FLAG_ROTL) {
+                f->irsAmount = FST_ROT_ANTICLOCKWISE;
             }
-            else if (i->currentKeys & VKEY_ROTH) {
-                f->irsAmount = FSROT_HALFTURN;
+            else if (i->currentKeys & FST_VK_FLAG_ROTH) {
+                f->irsAmount = FST_ROT_HALFTURN;
             }
             else {
-                f->irsAmount = FSROT_NONE;
+                f->irsAmount = FST_ROT_NONE;
             }
 
-            if (i->currentKeys & VKEY_HOLD) {
+            if (i->currentKeys & FST_VK_FLAG_HOLD) {
                 f->ihsFlag = true;
             }
             else {
@@ -580,14 +580,14 @@ beginTick:
         newPiece(f);
 
         // Apply ihs/irs before checking lockout.
-        if (f->irsAmount != FSROT_NONE) {
+        if (f->irsAmount != FST_ROT_NONE) {
             doRotate(f, f->irsAmount);
         }
         if (f->ihsFlag) {
             tryHold(f);
         }
 
-        f->irsAmount = FSROT_NONE;
+        f->irsAmount = FST_ROT_NONE;
         f->ihsFlag = false;
 
         // Check lockout (irs/ihs has been applied already)
@@ -602,14 +602,14 @@ beginTick:
 
       case FSS_FALLING:
       case FSS_LANDED:
-        if (i->extra & FSI_HOLD) {
+        if (i->extra & FST_INPUT_HOLD) {
             tryHold(f);
         }
 
-        if (i->extra & FSI_FINESSE_DIRECTION) {
+        if (i->extra & FST_INPUT_FINESSE_DIRECTION) {
             f->finessePieceDirection += 1;
         }
-        if (i->extra & FSI_FINESSE_ROTATION) {
+        if (i->extra & FST_INPUT_FINESSE_ROTATION) {
             f->finessePieceRotation += 1;
         }
 
@@ -638,22 +638,22 @@ beginTick:
 
         if (moved || rotated) {
             if (moved) {
-                f->se |= FSSE_MOVE;
+                f->se |= FST_SE_FLAG_MOVE;
             }
             if (rotated) {
-                f->se |= FSSE_ROTATE;
+                f->se |= FST_SE_FLAG_ROTATE;
             }
 
             updateHardDropY(f);
 
-            if (f->lockStyle == FSLOCK_MOVE) {
+            if (f->lockStyle == FST_LOCK_MOVE) {
                 f->lockTimer = 0;
             }
         }
 
         doPieceGravity(f, i->gravity);
 
-        if ((i->extra & FSI_HARD_DROP) ||
+        if ((i->extra & FST_INPUT_HARD_DROP) ||
                 // We must recheck the lock timer state here since we may have
                 // moved back to FALLING from LANDED on the last frame and do
                 // **not** want to lock in mid-air!
@@ -671,13 +671,13 @@ beginTick:
         lockPiece(f);
 
         // NOTE: Make this conversion less *magic*
-        f->se |= (1 << (FSSEI_IPIECE + f->piece));
+        f->se |= (1 << (FST_SE_IPIECE + f->piece));
         f->piece = FS_NONE;
 
         const int lines = clearLines(f);
         if (0 < lines && lines <= 4) {
             // NOTE: Make this conversion less *magic*
-            f->se |= (FSSE_ERASE1 << (lines - 1));
+            f->se |= (FST_SE_FLAG_ERASE1 << (lines - 1));
         }
 
         f->linesCleared += lines;
@@ -685,7 +685,7 @@ beginTick:
         goto beginTick;
 
       case FSS_GAMEOVER:
-        f->se |= FSSE_GAMEOVER;
+        f->se |= FST_SE_FLAG_GAMEOVER;
         /* FALLTHROUGH */
 
       case FSS_QUIT:

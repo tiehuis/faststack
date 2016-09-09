@@ -15,7 +15,7 @@
 // engine to apply.
 //
 // `keys` is an integer with bits set depending on the state of the specified
-//  key. The bits set correspond to the `VKEY` enum in `fsControl.h`.
+//  key. The bits set correspond to the `FST_VK_FLAG` enum in `fsControl.h`.
 ///
 void fsVirtualKeysToInput(struct FSInput *dst, FSBits keys, const FSGame *f, FSControl *c)
 {
@@ -28,7 +28,7 @@ void fsVirtualKeysToInput(struct FSInput *dst, FSBits keys, const FSGame *f, FSC
     newKeys &= keys;
     dst->currentKeys = keys;
 
-    if (keys & VKEY_LEFT) {
+    if (keys & FST_VK_FLAG_LEFT) {
         if (c->dasCounter > TICKS(-c->dasDelay)) {
             if (c->dasCounter >= 0) {
                 c->dasCounter = -1;
@@ -49,7 +49,7 @@ void fsVirtualKeysToInput(struct FSInput *dst, FSBits keys, const FSGame *f, FSC
             }
         }
     }
-    else if (keys & VKEY_RIGHT) {
+    else if (keys & FST_VK_FLAG_RIGHT) {
         if (c->dasCounter < TICKS(c->dasDelay)) {
             if (c->dasCounter <= 0) {
                 c->dasCounter = 1;
@@ -75,34 +75,34 @@ void fsVirtualKeysToInput(struct FSInput *dst, FSBits keys, const FSGame *f, FSC
     }
 
     const int sdKeysToCheck = f->oneShotSoftDrop ? newKeys : keys;
-    if (sdKeysToCheck & VKEY_DOWN) {
+    if (sdKeysToCheck & FST_VK_FLAG_DOWN) {
         dst->gravity = f->msPerTick * f->softDropGravity;
     }
 
-    if (newKeys & VKEY_ROTL) {
+    if (newKeys & FST_VK_FLAG_ROTL) {
         dst->rotation -= 1;
-        dst->extra |= FSI_FINESSE_ROTATION;
+        dst->extra |= FST_INPUT_FINESSE_ROTATION;
     }
-    if (newKeys & VKEY_ROTR) {
+    if (newKeys & FST_VK_FLAG_ROTR) {
         dst->rotation += 1;
-        dst->extra |= FSI_FINESSE_ROTATION;
+        dst->extra |= FST_INPUT_FINESSE_ROTATION;
     }
     // A 180 degree rotation takes priority over any 90 degree rotations
-    if (newKeys & VKEY_ROTH) {
+    if (newKeys & FST_VK_FLAG_ROTH) {
         dst->rotation = 2;
     }
-    if (newKeys & VKEY_HOLD) {
-        dst->extra |= FSI_HOLD;
+    if (newKeys & FST_VK_FLAG_HOLD) {
+        dst->extra |= FST_INPUT_HOLD;
     }
-    if (newKeys & VKEY_UP) {
+    if (newKeys & FST_VK_FLAG_UP) {
         dst->gravity = f->fieldHeight;
-        dst->extra |= FSI_HARD_DROP;
-        dst->extra |= FSI_LOCK;
+        dst->extra |= FST_INPUT_HARD_DROP;
+        dst->extra |= FST_INPUT_LOCK;
     }
-    if (newKeys & VKEY_LEFT) {
-        dst->extra |= FSI_FINESSE_DIRECTION;
+    if (newKeys & FST_VK_FLAG_LEFT) {
+        dst->extra |= FST_INPUT_FINESSE_DIRECTION;
     }
-    if (newKeys & VKEY_RIGHT) {
-        dst->extra |= FSI_FINESSE_DIRECTION;
+    if (newKeys & FST_VK_FLAG_RIGHT) {
+        dst->extra |= FST_INPUT_FINESSE_DIRECTION;
     }
 }

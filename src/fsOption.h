@@ -7,8 +7,8 @@
 // the same manner as the engine code for better consistency.
 ///
 
-#ifndef FSOPTION_H
-#define FSOPTION_H
+#ifndef FS_OPTION_H
+#define FS_OPTION_H
 
 #include <ctype.h>
 
@@ -155,4 +155,4 @@ do {                                                                            
     }                                                                           \
 } while (0)
 
-#endif
+#endif // FS_OPTION_H
