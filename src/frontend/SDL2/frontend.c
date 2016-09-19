@@ -379,17 +379,18 @@ static void drawHoldPiece(FSPSView *v)
         .h = BLOCK_SL
     };
 
-    const FSBlock pid = v->view->game->holdPiece;
-    if (pid == FS_NONE) {
+    const FSGame *f = v->view->game;
+
+    if (f->holdPiece == FS_NONE) {
         return;
     }
 
     FSInt2 blocks[FS_NBP];
-    fsPieceToBlocks(v->view->game, blocks, pid, 0, 0, 0);
-    SDL_SetRenderDrawColor(v->renderer, BLOCK_RGBA_TRIPLE(pid));
+    fsPieceToBlocks(f, blocks, f->holdPiece, 0, 0, 0);
+    SDL_SetRenderDrawColor(v->renderer, BLOCK_RGBA_TRIPLE(f->holdPiece));
 
-    int bxoff = pid != FS_O && pid != 0 ? BLOCK_SL / 2 : 0;
-    int byoff = pid == FS_I ? BLOCK_SL / 2 : 0;
+    int bxoff = f->holdPiece != FS_O && f->holdPiece != 0 ? BLOCK_SL / 2 : 0;
+    int byoff = f->holdPiece == FS_I ? BLOCK_SL / 2 : 0;
 
     for (int i = 0; i < FS_NBP; ++i) {
         block.x = bxoff + HOLDP_X + blocks[i].x * BLOCK_SL;
@@ -412,15 +413,15 @@ static void drawPieceAndShadow(FSPSView *v)
         .h = BLOCK_SL
     };
 
-    const FSBlock pid = v->view->game->piece;
+    const FSGame *f = v->view->game;
+    const FSBlock pid = f->piece;
 
     if (pid == FS_NONE) {
         return;
     }
 
     FSInt2 blocks[FS_NBP];
-    fsPieceToBlocks(v->view->game, blocks, pid, v->view->game->x,
-            v->view->game->hardDropY, v->view->game->theta);
+    fsPieceToBlocks(f, blocks, pid, f->x, f->hardDropY, f->theta);
 
     for (int i = 0; i < FS_NBP; ++i) {
         block.x = FIELD_X + blocks[i].x * BLOCK_SL;
@@ -435,8 +436,7 @@ static void drawPieceAndShadow(FSPSView *v)
         SDL_RenderFillRect(v->renderer, &block);
     }
 
-    fsPieceToBlocks(v->view->game, blocks, pid, v->view->game->x,
-            v->view->game->y, v->view->game->theta);
+    fsPieceToBlocks(f, blocks, pid, f->x, f->y, f->theta);
 
     for (int i = 0; i < FS_NBP; ++i) {
         block.x = FIELD_X + blocks[i].x * BLOCK_SL;
@@ -456,6 +456,8 @@ static void drawPieceAndShadow(FSPSView *v)
 //  We assume a width and height of 10, 20 for the moment.
 void drawField(FSPSView *v)
 {
+    const FSGame *f = v->view->game;
+
     const SDL_Rect border = {
         .x = FIELD_X - 1,
         .y = FIELD_Y - 1,
@@ -477,18 +479,14 @@ void drawField(FSPSView *v)
         .h = BLOCK_SL
     };
 
-    for (int y = 0; y < v->view->game->fieldHeight; ++y){
+    for (int y = 0; y < f->fieldHeight; ++y){
         block.y = FIELD_Y + y * BLOCK_SL;
-        for (int x = 0; x < v->view->game->fieldWidth; ++x) {
+        for (int x = 0; x < f->fieldWidth; ++x) {
             block.x = FIELD_X + x * BLOCK_SL;
-            if (v->view->game->b[y][x] > 0) {
+            if (f->b[y][x] > 0) {
                 // Grey colour
                 SDL_SetRenderDrawColor(v->renderer, 140, 140, 140, 255);
                 SDL_RenderFillRect(v->renderer, &block);
-            }
-            else {
-                SDL_SetRenderDrawColor(v->renderer, BLOCK_RGBA_TRIPLE(1));
-                SDL_RenderDrawRect(v->renderer, &block);
             }
         }
     }
@@ -521,7 +519,7 @@ static void drawPreviewSection(FSPSView *v)
     for (int i = 0; i < previewCount; ++i) {
         FSInt2 blocks[FS_NBP];
         const FSBlock pid = f->nextPiece[i];
-        fsPieceToBlocks(v->view->game, blocks, pid, 0, 0, 0);
+        fsPieceToBlocks(f, blocks, pid, 0, 0, 0);
 
         // Set field to grey currently
         const int by = PVIEW_Y + BLOCK_SL * (i * 4);
@@ -545,11 +543,13 @@ static void drawPreviewSection(FSPSView *v)
 
 static void drawInfoSection(FSPSView *v)
 {
+    const FSGame *f = v->view->game;
+
     // Render text to bottom of the screen signalling goal
     const int writeBufferSize = 64;
     char writeBuffer[writeBufferSize];
 
-    int remaining = v->view->game->goal - v->view->game->linesCleared;
+    int remaining = f->goal - f->linesCleared;
     if (remaining < 0) {
         remaining = 0;
     }
@@ -577,7 +577,7 @@ static void drawInfoSection(FSPSView *v)
     snprintf(writeBuffer, writeBufferSize, "Time");
     renderString(v, writeBuffer, INFOS_X, INFOS_Y + c++ * lineSkipY);
 
-    const int msElapsed = v->view->game->msPerTick * v->view->game->totalTicks;
+    const int msElapsed = f->msPerTick * f->totalTicks;
     snprintf(writeBuffer, writeBufferSize, "%.3f", (float) msElapsed / 1000);
     renderString(v, writeBuffer, INFOS_X, INFOS_Y + c++ * lineSkipY);
 
@@ -586,7 +586,7 @@ static void drawInfoSection(FSPSView *v)
     snprintf(writeBuffer, writeBufferSize, "Blocks Placed");
     renderString(v, writeBuffer, INFOS_X, INFOS_Y + c++ * lineSkipY);
 
-    snprintf(writeBuffer, writeBufferSize, "%d", v->view->game->blocksPlaced);
+    snprintf(writeBuffer, writeBufferSize, "%d", f->blocksPlaced);
     renderString(v, writeBuffer, INFOS_X, INFOS_Y + c++ * lineSkipY);
 
     ++c;
@@ -596,7 +596,7 @@ static void drawInfoSection(FSPSView *v)
 
     snprintf(writeBuffer, writeBufferSize, "%.5f",
             msElapsed != 0
-             ? (float) v->view->game->blocksPlaced / ((float) msElapsed / 1000)
+             ? (float) f->blocksPlaced / ((float) msElapsed / 1000)
              : 0);
     renderString(v, writeBuffer, INFOS_X, INFOS_Y + c++ * lineSkipY);
 
@@ -604,7 +604,7 @@ static void drawInfoSection(FSPSView *v)
 
     snprintf(writeBuffer, writeBufferSize, "Finesse");
     renderString(v, writeBuffer, INFOS_X, INFOS_Y + c++ * lineSkipY);
-    snprintf(writeBuffer, writeBufferSize, "%d", v->view->game->finesse);
+    snprintf(writeBuffer, writeBufferSize, "%d", f->finesse);
     renderString(v, writeBuffer, INFOS_X, INFOS_Y + c++ * lineSkipY);
 }
 
