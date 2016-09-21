@@ -314,6 +314,9 @@ static bool doRotate(FSGame *f, FSInt direction)
         int kickY = kickData.y + f->y;
 
         if (!isCollision(f, kickX, kickY, newDir)) {
+            // Preserve the fractional y drop during rotation to disallow
+            // implicit lock reset.
+            f->actualY = (float) kickY + (f->actualY - (int) f->actualY);
             f->y = kickY;
             f->x = kickX;
             f->theta = newDir;
