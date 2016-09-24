@@ -1,3 +1,6 @@
+sudo: required
+dist: trusty
+
 language: c
 
 branches:
@@ -17,8 +20,8 @@ addons:
       - libsdl2-ttf-dev
 
 script:
-  - make sdl
-  - make term
+  - make sdl2
+  - make terminal
 
 notifications:
   email: false
