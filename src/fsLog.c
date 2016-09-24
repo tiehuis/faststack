@@ -62,14 +62,15 @@ static int logLevelColorCode(int level)
 ///
 // Main logging function.
 ///
-void fsLog(int level, const char *format, ...)
+void fsLog(int level, ...)
 {
     if (level >= fsCurrentLogLevel) {
-        fprintf(stderr, "\e[%dm[%s] [%s]:\e[0m ",
+        fprintf(stderr, "\033[%dm[%s] [%s]:\033[0m ",
                 logLevelColorCode(level), ctimeStr(), logLevelStr(level));
 
         va_list args;
-        va_start(args, format);
+        va_start(args, level);
+        const char *format = va_arg(args, const char*);
         vfprintf(stderr, format, args);
         va_end(args);
 

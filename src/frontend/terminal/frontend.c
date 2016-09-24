@@ -73,7 +73,7 @@ static void initializeTerminal(FSPSView *v)
     }
 
     // Clear the cursor
-    printf("\e[?25l");
+    printf("\033[?25l");
     fflush(stdout);
 
     struct sigaction action = {0};
@@ -98,7 +98,7 @@ static void restoreTerminal(FSPSView *v)
     tcsetattr(STDIN_FILENO, TCSANOW, &v->initialTerminalState);
 
     // Show the cursor
-    printf("\e[?25h");
+    printf("\033[?25h");
     fflush(stdout);
 
     if (close(v->inputFd) == -1) {
@@ -435,7 +435,7 @@ void fsiBlit(FSPSView *v)
 
     // Clear the entire screen on redraw
     if (v->invalidateBuffers) {
-        printf("\e[H\e[2J");
+        printf("\033[H\033[2J");
     }
 
     // We have to perform some minor optimizations so that a complete redraw
@@ -452,7 +452,7 @@ void fsiBlit(FSPSView *v)
                 if (v->bbuf[y][x].attrs) {
                     for (int i = 0; i < ATTR_COUNT; ++i) {
                         if (v->bbuf[y][x].attrs & (1 << i)) {
-                            printf("\e[%dm", attributes[i]);
+                            printf("\033[%dm", attributes[i]);
                             attr_set = true;
                         }
                     }
@@ -462,7 +462,7 @@ void fsiBlit(FSPSView *v)
                 // position already. This an essential optimizations for entire
                 // redraws.
                 if (x != lx + 1 || y != ly) {
-                    printf("\e[%d;%dH", y + 1, x + 1);
+                    printf("\033[%d;%dH", y + 1, x + 1);
                 }
 
                 lx = x;
@@ -472,7 +472,7 @@ void fsiBlit(FSPSView *v)
 
                 // Only reset attributes if they were altered.
                 if (attr_set) {
-                    printf("\e[0m");
+                    printf("\033[0m");
                 }
             }
 
@@ -549,8 +549,8 @@ void fsiPreFrameHook(FSPSView *v)
     // If we encountered a SIGINT, then we want to reset the screen before we
     // re-raise it so the user can see the game content on exit.
     if (caughtSigint) {
-        printf("\e[?25h");
-        printf("\e[%d;%dH", FS_TERM_HEIGHT, FS_TERM_WIDTH);
+        printf("\033[?25h");
+        printf("\033[%d;%dH", FS_TERM_HEIGHT, FS_TERM_WIDTH);
         fflush(stdout);
         raise(SIGINT);
     }

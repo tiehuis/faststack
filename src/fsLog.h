@@ -38,12 +38,12 @@ enum FS_LOG_LEVEL {
 //
 // This should not usually be used, prefer the specific defines.
 ///
-void fsLog(int level, const char *format, ...);
+void fsLog(int level, ...);
 
-#define fsLogDebug(format, ...) fsLog(FS_LOG_LEVEL_DEBUG, format, ## __VA_ARGS__)
-#define fsLogInfo(format, ...) fsLog(FS_LOG_LEVEL_INFO, format, ## __VA_ARGS__)
-#define fsLogWarning(format, ...) fsLog(FS_LOG_LEVEL_WARNING, format, ## __VA_ARGS__)
-#define fsLogError(format, ...) fsLog(FS_LOG_LEVEL_ERROR, format, ## __VA_ARGS__)
-#define fsLogFatal(format, ...) fsLog(FS_LOG_LEVEL_FATAL, format, ## __VA_ARGS__)
+#define fsLogDebug(...) fsLog(FS_LOG_LEVEL_DEBUG, __VA_ARGS__)
+#define fsLogInfo(...) fsLog(FS_LOG_LEVEL_INFO, __VA_ARGS__)
+#define fsLogWarning(...) fsLog(FS_LOG_LEVEL_WARNING, __VA_ARGS__)
+#define fsLogError(...) fsLog(FS_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define fsLogFatal(...) fsLog(FS_LOG_LEVEL_FATAL, __VA_ARGS__)
 
 #endif // FS_LOG_H
