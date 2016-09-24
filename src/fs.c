@@ -118,6 +118,7 @@ void fsGameReset(FSGame *f)
     f->lastState = FSS_UNKNOWN;
     f->linesCleared = 0;
     f->blocksPlaced = 0;
+    f->floorkickCount = 0;
 
     fsRandSeed(&f->randomContext, time(NULL));
 
@@ -155,6 +156,7 @@ void fsGameInit(FSGame *f)
     f->gravity = FSD_GRAVITY;
     f->softDropGravity = FSD_SOFT_DROP_GRAVITY;
     f->randomizer = FSD_RANDOMIZER;
+    f->floorkickLimit = FSD_FLOORKICK_LIMIT;
     f->infiniteReadyGoHold = FSD_INFINITE_READY_GO_HOLD;
     f->nextPieceCount = FSD_NEXT_PIECE_COUNT;
     f->areCancellable = FSD_ARE_CANCELLABLE;
@@ -165,7 +167,6 @@ void fsGameInit(FSGame *f)
 
     fsGameReset(f);
 }
-
 
 ///
 // Return the set of `FS_NBP` locations the specified piece fills.
@@ -263,14 +264,95 @@ static void newPiece(FSGame *f)
     // themselves are generated. Think about this.
 
     f->x = f->fieldWidth / 2 - 1;
-    f->y = 0;
-    f->actualY = 0;
+
+    // We cannot spawn at 0, else Z, S cannot rotate under sega rules.
+    // NOTE: Adjust hidden value on render side potentially to account.
+    f->y = 1;
+    f->actualY = f->y;
     f->theta = 0;
     f->lockTimer = 0;
     f->finessePieceRotation = 0;
     f->finessePieceDirection = 0;
+    f->floorkickCount = 0;
     f->piece = nextPreviewPiece(f);
     f->holdAvailable = true;
+}
+
+///
+// Check the arika LJT wallkick rotation special case.
+//
+// Return true if a rotation is valid with this field state and direction
+// else false.
+//
+// Notes:
+//  * These conditionals are a little hard to parse.
+///
+static bool wkCondArikaLJT(const FSGame *f, int direction)
+{
+    // The following states are invalid if the x slot is occupied AND
+    // the o slot is not occupied and traveling the specified
+    switch (f->piece) {
+      ///
+      //  (cw)               (aw)
+      //     o    x     x      o
+      //   @@@   @@@   @     @x
+      //    x@     @   @@@   @@@
+      ///
+      case FS_J:
+        if (f->theta == 0 && (isOccupied(f, f->x + 1, f->y) ||
+                (isOccupied(f, f->x + 1, f->y + 2) &&
+                (direction == FST_ROT_CLOCKWISE ||
+                 !isOccupied(f, f->x + 2, f->y))))) {
+            return true;
+        }
+        if (f->theta == 2 && (isOccupied(f, f->x + 1, f->y) ||
+                (isOccupied(f, f->x + 1, f->y + 1) &&
+                (direction == FST_ROT_ANTICLOCKWISE ||
+                 !isOccupied(f, f->x + 2, f->y))))) {
+            return true;
+        }
+        break;
+
+      ///
+      //  (cw)        (aw)
+      //   o      x    o      x
+      //   @@@   @@@    x@     @
+      //   @x    @     @@@   @@@
+      ///
+      case FS_L:
+        if (f->theta == 0 && (isOccupied(f, f->x + 1, f->y) ||
+                (isOccupied(f, f->x + 1, f->y + 2) &&
+                (direction == FST_ROT_ANTICLOCKWISE ||
+                 !isOccupied(f, f->x, f->y))))) {
+            return true;
+        }
+        if (f->theta == 2 && (isOccupied(f, f->x + 1, f->y - 1) ||
+                (isOccupied(f, f->x + 1, f->y) &&
+                (direction == FST_ROT_CLOCKWISE ||
+                 !isOccupied(f, f->x, f->y - 1))))) {
+            return true;
+        }
+        break;
+
+      ///
+      //    x     x
+      //    @    @@@
+      //   @@@    @
+      ///
+      case FS_T:
+        if (f->theta == 0 && isOccupied(f, f->x + 1, f->y)) {
+            return true;
+        }
+        if (f->theta == 2 && isOccupied(f, f->x + 1, f->y - 1)) {
+            return true;
+        }
+        break;
+
+      default:
+        break;
+    }
+
+    return false;
 }
 
 ///
@@ -310,10 +392,29 @@ static bool doRotate(FSGame *f, FSInt direction)
             break;
         }
 
+        // Handle special TGM123 rotation which is based on field state.
+        if (kickData.z == WK_ARIKA_LJT && wkCondArikaLJT(f, direction)) {
+            break;
+        }
+
         int kickX = kickData.x + f->x;
         int kickY = kickData.y + f->y;
 
         if (!isCollision(f, kickX, kickY, newDir)) {
+            // To determine a floorkick, we cannot just check the kickData.y
+            // value since this may be adjusted for a different rotation system
+            // (i.e. sega).
+            //
+            // We need to compute the difference between the current kickData.y
+            // and the initial kickData.y instead to get an accurate reading.
+            const int adjKickY = kickData.y - (*table)[f->theta][0].y;
+
+            if (f->floorkickLimit && adjKickY < 0) {
+                if (f->floorkickCount++ >= f->floorkickLimit) {
+                    f->lockTimer = TICKS(f->lockDelay);
+                }
+            }
+
             // Preserve the fractional y drop during rotation to disallow
             // implicit lock reset.
             f->actualY = (float) kickY + (f->actualY - (int) f->actualY);
@@ -440,10 +541,13 @@ static bool tryHold(FSGame *f)
         else {
             // NOTE: Abstract into new piece of type theta
             f->x = f->fieldWidth / 2 - 1;
-            f->y = 0;
-            f->actualY = 0;
+            f->y = 1;
+            f->actualY = f->y;
             f->theta = 0;
-            f->lockTimer = 0;
+
+            // NOTE: Utilize new piece here to reset variables
+            //       consistently.
+            f->floorkickCount = 0;
 
             // Swap block types
             FSBlock t = f->holdPiece;
@@ -648,10 +752,6 @@ beginTick:
             }
 
             updateHardDropY(f);
-
-            if (f->lockStyle == FST_LOCK_MOVE) {
-                f->lockTimer = 0;
-            }
         }
 
         doPieceGravity(f, i->gravity);
@@ -660,8 +760,16 @@ beginTick:
                 // We must recheck the lock timer state here since we may have
                 // moved back to FALLING from LANDED on the last frame and do
                 // **not** want to lock in mid-air!
-                (f->lockTimer > TICKS(f->lockDelay) && f->state == FSS_LANDED)) {
+                (f->lockTimer >= TICKS(f->lockDelay) && f->state == FSS_LANDED)) {
             f->state = FSS_LINES;
+        }
+
+        // This must occur after we process the lockTimer to allow floorkick
+        // limits to be processed correctly. If we encounter a floorkick limit
+        // we set the lockTimer to max to allow a lock next frame, while still
+        // giving the user an option to perform a move/rotate input.
+        if ((moved || rotated) && f->lockStyle == FST_LOCK_MOVE) {
+            f->lockTimer = 0;
         }
 
         if (f->state == FSS_LANDED) {

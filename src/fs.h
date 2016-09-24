@@ -34,7 +34,7 @@
 #define FS_NPT 7
 
 /// Number of rotation systems.
-#define FS_NRS 5
+#define FS_NRS 7
 
 /// Number of rotation states.
 #define FS_NPR 4
@@ -71,9 +71,11 @@ enum RandomizerType {
 /// Rotation System type
 enum RotationSystemType {
     FST_ROTSYS_SIMPLE,
+    FST_ROTSYS_SEGA,
     FST_ROTSYS_SRS,
     FST_ROTSYS_ARIKA_SRS,
     FST_ROTSYS_TGM12,
+    FST_ROTSYS_TGM3,
     FST_ROTSYS_DTET
 };
 
@@ -384,6 +386,12 @@ typedef struct FSGame {
 
     /// @I: Counter for locking.
     FSLong lockTimer;
+
+    /// @O: Maximum number of floorkicks allowed per piece.
+    FSInt floorkickLimit;
+
+    /// @I: Count for how many floorkicks have occured.
+    FSInt floorkickCount;
 
     /// @O: Should soft drop be a single shot on each key press.
     bool oneShotSoftDrop;

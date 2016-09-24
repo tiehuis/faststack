@@ -36,7 +36,7 @@
 #define FS_RAND_BUFFER_LEN (2 * 7)
 
 /// Maximum number of wallkick tests allowed.
-#define FS_MAX_NO_OF_WALLKICK_TABLES 5
+#define FS_MAX_NO_OF_WALLKICK_TABLES 10
 
 /// Maximum number of keys an action can be triggered by.
 #define FS_MAX_KEYS_PER_ACTION 3

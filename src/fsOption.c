@@ -66,12 +66,16 @@ static inline int fsRotationSystemLookup(const char *value)
 {
     if (!strcmpi(value, "simple"))
         return FST_ROTSYS_SIMPLE;
+    else if (!strcmpi(value, "sega"))
+        return FST_ROTSYS_SEGA;
     else if (!strcmpi(value, "srs"))
         return FST_ROTSYS_SRS;
     else if (!strcmpi(value, "arikasrs"))
         return FST_ROTSYS_ARIKA_SRS;
     else if (!strcmpi(value, "tgm12"))
         return FST_ROTSYS_TGM12;
+    else if (!strcmpi(value, "tgm3"))
+        return FST_ROTSYS_TGM3;
     else if (!strcmpi(value, "dtet"))
         return FST_ROTSYS_DTET;
 
@@ -124,6 +128,7 @@ static void unpackOptionValue(struct FSPSView *p, FSView *v, const char *k,
         TS_INT_RANGE (fieldHeight, 0, FS_MAX_HEIGHT);
         TS_INT_RANGE (fieldWidth, 0, FS_MAX_WIDTH);
         TS_INT_FUNC  (lockStyle, fsLockStyleLookup);
+        TS_INT       (floorkickLimit);
         TS_BOOL      (infiniteReadyGoHold);
         TS_BOOL      (oneShotSoftDrop);
         TS_INT       (readyPhaseLength);

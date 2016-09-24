@@ -131,20 +131,256 @@ static const FSRotationSystem rotArikaSRS = {
 };
 
 ///
+// Sega
+//
+// Sega rotation system. This has no wallkicks, the only complication is
+// mapping the SRS internal rotation system to the sega one.
+///
+static const FSRotationSystem rotSega = {
+    .entryTheta = {0, 2, 2, 0, 0, 2, 0},
+    .kicksR = {0, 2, 2,-1, 4, 2, 6},
+    .kicksL = {1, 3, 3,-1, 5, 3, 7},
+    .kicksH = {NO_KICKS},
+    .kickTables = {
+        // 0: I clockwise
+        {
+            {{ 0, 0}, WKE},  // 0 -> R
+            {{ 0,-1}, WKE},  // R -> 2
+            {{ 1, 1}, WKE},  // 2 -> L
+            {{-1, 0}, WKE}   // L -> 0
+        },
+
+        // 1: I anticlockwise
+        {
+            {{ 1, 0}, WKE},  // 0 -> L
+            {{ 0, 0}, WKE},  // R -> 0
+            {{ 0, 1}, WKE},  // 2 -> R
+            {{-1,-1}, WKE}   // L -> 2
+        },
+
+        // 2: JLT clockwise
+        {
+            {{ 0, 0}, WKE},  // 0 -> R
+            {{ 0, 1}, WKE},  // R -> 2
+            {{ 0,-1}, WKE},  // 2 -> L
+            {{ 0, 0}, WKE},  // L -> 0
+        },
+
+        // 3: JLT anticlockwise
+        {
+            {{ 0, 0}, WKE},  // 0 -> L
+            {{ 0, 0}, WKE},  // R -> 0
+            {{ 0,-1}, WKE},  // 2 -> R
+            {{ 0, 1}, WKE},  // L -> 2
+        },
+
+        // 4: S clockwise
+        {   {{-1,-1}, WKE},  // 0 -> R
+            {{ 1, 0}, WKE},  // R -> 2
+            {{ 0, 0}, WKE},  // 2 -> L
+            {{ 0, 1}, WKE}   // L -> 0
+        },
+
+        // 5: S anticlockwise
+        {
+            {{ 0,-1}, WKE},  // 0 -> L
+            {{ 1, 1}, WKE},  // R -> 0
+            {{-1, 0}, WKE},  // 2 -> R
+            {{ 0, 0}, WKE}   // L -> 2
+        },
+
+        // 6: Z clockwise
+        {
+            {{ 0,-1}, WKE},  // 0 -> R
+            {{ 0, 0}, WKE},  // R -> 2
+            {{ 1, 0}, WKE},  // 2 -> L
+            {{-1, 1}, WKE}   // L -> 0
+        },
+
+        // 7: Z anticlockwise
+        {
+            {{ 1,-1}, WKE},  // 0 -> L
+            {{ 0, 1}, WKE},  // R -> 0
+            {{ 0, 0}, WKE},  // 2 -> R
+            {{-1, 0}, WKE}   // L -> 2
+        },
+    }
+};
+
+///
 // TGM1/2
 //
 // An extension of the Sega rotation system.
 ///
 static const FSRotationSystem rotTGM12 = {
-    .kicksR = {0, 0, 0, -1, 0, 0, 0},
-    .kicksL = {0, 0, 0, -1, 0, 0, 0},
+    .entryTheta = {0, 2, 2, 0, 0, 2, 0},
+    .kicksR = {0, 2, 2,-1, 4, 2, 6},
+    .kicksL = {1, 3, 3,-1, 5, 3, 7},
     .kicksH = {NO_KICKS},
     .kickTables = {
+        // 0: I clockwise
         {
-            {{ 0, 0}, { 1, 0}, {.z = WK_ARIKA_LJT}, {-1, 0}, WKE}, // 0
-            {{ 0, 0}, { 1, 0},                      {-1, 0}, WKE}, // R
-            {{ 0, 0}, { 1, 0}, {.z = WK_ARIKA_LJT}, {-1, 0}, WKE}, // 2
-            {{ 0, 0}, { 1, 0},                      {-1, 0}, WKE}, // L
+            {{ 0, 0}, WKE},  // 0 -> R
+            {{ 0,-1}, WKE},  // R -> 2
+            {{ 1, 1}, WKE},  // 2 -> L
+            {{-1, 0}, WKE}   // L -> 0
+        },
+
+        // 1: I anticlockwise
+        {
+            {{ 1, 0}, WKE},  // 0 -> L
+            {{ 0, 0}, WKE},  // R -> 0
+            {{ 0, 1}, WKE},  // 2 -> R
+            {{-1,-1}, WKE}   // L -> 2
+        },
+
+        // 2: JLT clockwise
+        {
+            {{ 0, 0}, {.z = WK_ARIKA_LJT}, { 1, 0}, {-1, 0}, WKE},  // 0 -> R
+            {{ 0, 1},                      { 1, 1}, {-1, 1}, WKE},  // R -> 2
+            {{ 0,-1}, {.z = WK_ARIKA_LJT}, { 1,-1}, {-1,-1}, WKE},  // 2 -> L
+            {{ 0, 0},                      { 1, 0}, {-1, 0}, WKE},  // L -> 0
+        },
+
+        // 3: JLT anticlockwise
+        {
+            {{ 0, 0}, {.z = WK_ARIKA_LJT}, { 1, 0}, {-1, 0}, WKE},  // 0 -> L
+            {{ 0, 0},                      { 1, 0}, {-1, 0}, WKE},  // R -> 0
+            {{ 0,-1}, {.z = WK_ARIKA_LJT}, { 1,-1}, {-1,-1}, WKE},  // 2 -> R
+            {{ 0, 1},                      { 1, 1}, {-1, 1}, WKE},  // L -> 2
+        },
+
+        // 4: S clockwise
+        {   {{-1,-1}, { 0,-1}, {-2,-1}, WKE},  // 0 -> R
+            {{ 1, 0}, { 2, 0}, { 0, 0}, WKE},  // R -> 2
+            {{ 0, 0}, { 1, 0}, {-1, 0}, WKE},  // 2 -> L
+            {{ 0, 1}, { 1, 1}, {-1, 1}, WKE}   // L -> 0
+        },
+
+        // 5: S anticlockwise
+        {
+            {{ 0,-1}, { 1,-1}, {-1,-1}, WKE},  // 0 -> L
+            {{ 1, 1}, { 2, 1}, { 0, 1}, WKE},  // R -> 0
+            {{-1, 0}, { 0, 0}, { 2, 0}, WKE},  // 2 -> R
+            {{ 0, 0}, { 1, 0}, {-1, 0}, WKE}   // L -> 2
+        },
+
+        // 6: Z clockwise
+        {
+            {{ 0,-1}, { 1,-1}, {-1,-1}, WKE},  // 0 -> R
+            {{ 0, 0}, { 1, 0}, {-1, 0}, WKE},  // R -> 2
+            {{ 1, 0}, { 2, 0}, { 0, 0}, WKE},  // 2 -> L
+            {{-1, 1}, { 0, 1}, {-2,-1}, WKE}   // L -> 0
+        },
+
+        // 7: Z anticlockwise
+        {
+            {{ 1,-1}, { 2,-1}, { 0,-1}, WKE},  // 0 -> L
+            {{ 0, 1}, { 1, 1}, {-1, 1}, WKE},  // R -> 0
+            {{ 0, 0}, { 1, 0}, {-1, 0}, WKE},  // 2 -> R
+            {{-1, 0}, { 0, 0}, {-2, 0}, WKE}   // L -> 2
+        }
+    }
+};
+
+///
+// TGM3
+//
+// An extension to the Sega rotation system.
+//
+// This is the same as TGM1/2 with the addition of
+//  * I wallkicks
+//  * T, I floorkicks
+//
+// Notes:
+//  * Current implementation does not handle two-shot floorkicks. This needs to
+//    be done in the actual engine.
+//
+//    ADD CORRECT LR I WALLKICK
+///
+static const FSRotationSystem rotTGM3 = {
+    .entryTheta = {0, 2, 2, 0, 0, 2, 0},
+    .kicksR = {0, 2, 2,-1, 4, 8, 6},
+    .kicksL = {1, 3, 3,-1, 5, 9, 7},
+    .kicksH = {NO_KICKS},
+    .kickTables = {
+        // 0: I clockwise
+        {
+            {{ 0, 0}, { 0,-1}, { 0,-2},          WKE},  // 0 -> R
+            {{ 0,-1}, { 1,-1}, { 2,-1}, {-1,-1}, WKE},  // R -> 2
+            {{ 1, 1}, { 1, 0}, { 1,-1},          WKE},  // 2 -> L
+            {{-1, 0}, { 0, 0}, { 1, 0}, {-2, 0}, WKE}   // L -> 0
+        },
+
+        // 1: I anticlockwise
+        {
+            {{ 1, 0}, { 1,-1}, { 1,-2},          WKE},  // 0 -> L
+            {{ 0, 0}, { 1, 0}, { 2, 0}, {-1, 0}, WKE},  // R -> 0
+            {{ 0, 1}, { 0, 0}, { 0,-1},          WKE},  // 2 -> R
+            {{-1,-1}, { 0,-1}, { 1,-1}, {-2,-1}, WKE}   // L -> 2
+        },
+
+        // 2: JL clockwise
+        {
+            {{ 0, 0}, {.z = WK_ARIKA_LJT}, { 1, 0}, {-1, 0}, WKE},  // 0 -> R
+            {{ 0, 1},                      { 1, 1}, {-1, 1}, WKE},  // R -> 2
+            {{ 0,-1}, {.z = WK_ARIKA_LJT}, { 1,-1}, {-1,-1}, WKE},  // 2 -> L
+            {{ 0, 0},                      { 1, 0}, {-1, 0}, WKE},  // L -> 0
+        },
+
+        // 3: JL anticlockwise
+        {
+            {{ 0, 0}, {.z = WK_ARIKA_LJT}, { 1, 0}, {-1, 0}, WKE},  // 0 -> L
+            {{ 0, 0},                      { 1, 0}, {-1, 0}, WKE},  // R -> 0
+            {{ 0,-1}, {.z = WK_ARIKA_LJT}, { 1,-1}, {-1,-1}, WKE},  // 2 -> R
+            {{ 0, 1},                      { 1, 1}, {-1, 1}, WKE},  // L -> 2
+        },
+
+        // 4: S clockwise
+        {   {{-1,-1}, { 0,-1}, {-2,-1}, WKE},  // 0 -> R
+            {{ 1, 0}, { 2, 0}, { 0, 0}, WKE},  // R -> 2
+            {{ 0, 0}, { 1, 0}, {-1, 0}, WKE},  // 2 -> L
+            {{ 0, 1}, { 1, 1}, {-1, 1}, WKE}   // L -> 0
+        },
+
+        // 5: S anticlockwise
+        {
+            {{ 0,-1}, { 1,-1}, {-1,-1}, WKE},  // 0 -> L
+            {{ 1, 1}, { 2, 1}, { 0, 1}, WKE},  // R -> 0
+            {{-1, 0}, { 0, 0}, { 2, 0}, WKE},  // 2 -> R
+            {{ 0, 0}, { 1, 0}, {-1, 0}, WKE}   // L -> 2
+        },
+
+        // 6: Z clockwise
+        {
+            {{ 0,-1}, { 1,-1}, {-1,-1}, WKE},  // 0 -> R
+            {{ 0, 0}, { 1, 0}, {-1, 0}, WKE},  // R -> 2
+            {{ 1, 0}, { 2, 0}, { 0, 0}, WKE},  // 2 -> L
+            {{-1, 1}, { 0, 1}, {-2,-1}, WKE}   // L -> 0
+        },
+
+        // 7: Z anticlockwise
+        {
+            {{ 1,-1}, { 2,-1}, { 0,-1}, WKE},  // 0 -> L
+            {{ 0, 1}, { 1, 1}, {-1, 1}, WKE},  // R -> 0
+            {{ 0, 0}, { 1, 0}, {-1, 0}, WKE},  // 2 -> R
+            {{-1, 0}, { 0, 0}, {-2, 0}, WKE}   // L -> 2
+        },
+
+        // 8: T clockwise
+        {
+            {{ 0, 0}, {.z = WK_ARIKA_LJT}, { 1, 0}, {-1, 0},         WKE},  // 0 -> R
+            {{ 0, 1},                      { 1, 1}, {-1, 1}, {0, 0}, WKE},  // R -> 2
+            {{ 0,-1}, {.z = WK_ARIKA_LJT}, { 1,-1}, {-1,-1},         WKE},  // 2 -> L
+            {{ 0, 0},                      { 1, 0}, {-1, 0}, {0,-1}, WKE},  // L -> 0
+        },
+
+        // 9: T anticlockwise
+        {
+            {{ 0, 0}, {.z = WK_ARIKA_LJT}, { 1, 0}, {-1, 0},         WKE},  // 0 -> L
+            {{ 0, 0},                      { 1, 0}, {-1, 0}, {0,-1}, WKE},  // R -> 0
+            {{ 0,-1}, {.z = WK_ARIKA_LJT}, { 1,-1}, {-1,-1},         WKE},  // 2 -> R
+            {{ 0, 1},                      { 1, 1}, {-1, 1}, {0, 0}, WKE},  // L -> 2
         },
     }
 };
@@ -183,5 +419,5 @@ static const FSRotationSystem rotDTET = {
 // List of all available rotation systems.
 ///
 const FSRotationSystem *rotationSystems[FS_NRS] = {
-    &rotSimple, &rotSRS, &rotArikaSRS, &rotTGM12, &rotDTET
+    &rotSimple, &rotSega, &rotSRS, &rotArikaSRS, &rotTGM12, &rotTGM3, &rotDTET
 };

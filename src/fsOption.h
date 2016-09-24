@@ -117,9 +117,6 @@ do {                                                                            
             if (*_endptr != '\0') {                                             \
                 fsLogWarning("Ignoring %s since it contains trailing garbage", value);\
             }                                                                   \
-            else if (!isnormal(_ival)) {                                        \
-                fsLogWarning("Ignoring non-normal floating-point value of %s", value);\
-            }                                                                   \
             else if (_ival < (_lo) || (_hi) < _ival) {                          \
                 fsLogWarning("Ignoring %s since it is not in allowed range [%lf, %lf]",\
                         value, _lo, _hi);                                       \
