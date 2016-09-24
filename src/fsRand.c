@@ -19,6 +19,18 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <time.h>
+
+///
+// Return a decent seed value.
+//
+// This is only intended to change often enough to be recalculated on
+// game restart.
+uint32_t fsGetRoughSeed(void)
+{
+    uint32_t seed = time(NULL);
+    return seed * (uint32_t) clock();
+}
 
 ///
 // Generate the next value for this PRNG context.

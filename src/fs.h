@@ -417,6 +417,9 @@ typedef struct FSGame {
     /// @O: Current randomizer in play. */
     FSInt randomizer;
 
+    /// @I: Randomizer seed
+    uint32_t seed;
+
     /// @I: The randomizer in use during the last game update.
     //
     // Used to determine if reinitialization of a randomizer is required.

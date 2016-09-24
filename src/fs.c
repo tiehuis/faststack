@@ -18,6 +18,7 @@
 // Implementation in `fsRand.c`.
 //
 FSBlock fsNextRandomPiece(FSGame *f);
+uint32_t fsGetRoughSeed(void);
 void fsRandSeed(FSRandCtx *ctx, uint32_t seed);
 
 ///
@@ -120,7 +121,10 @@ void fsGameReset(FSGame *f)
     f->blocksPlaced = 0;
     f->floorkickCount = 0;
 
-    fsRandSeed(&f->randomContext, time(NULL));
+    // We want each game to have a unique seed to ensure we can replicate it
+    // during replays.
+    f->seed = fsGetRoughSeed();
+    fsRandSeed(&f->randomContext, f->seed);
 
     // Signal that we are changing the randomizer and need to reinitialize
     f->lastRandomizer = FST_RAND_UNDEFINED;
