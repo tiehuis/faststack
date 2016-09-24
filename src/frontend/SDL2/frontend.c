@@ -7,10 +7,6 @@
 
 #include "frontend.h"
 
-#include <SDL.h>
-#include <SDL_mixer.h>
-#include <SDL_ttf.h>
-
 const char *fsiFrontendName = "sdl2";
 
 void initSDL(FSPSView *v)
@@ -58,6 +54,7 @@ void initSDL(FSPSView *v)
         exit(1);
     }
 
+#ifdef USE_SOUND
     if (Mix_OpenAudio(22050, AUDIO_S16LSB, 1, AUDIO_BUFFER_SIZE) < 0) {
         fsLogFatal("Mix_OpenAudio error: %s", Mix_GetError());
         SDL_DestroyRenderer(v->renderer);
@@ -97,6 +94,7 @@ void initSDL(FSPSView *v)
     LoadWav(erase4, ERASE4);
 
     #undef LoadWav
+#endif
 
     SDL_SetWindowTitle(v->window, "FastStack");
     SDL_SetRenderDrawColor(v->renderer, 0, 0, 0, 255);
@@ -105,8 +103,11 @@ void initSDL(FSPSView *v)
 
 void destroySDL(FSPSView *v)
 {
+#ifdef USE_SOUND
     // Assume WAV data is reclaimed by the OS for now
     Mix_CloseAudio();
+#endif
+
     SDL_DestroyRenderer(v->renderer);
     SDL_DestroyWindow(v->window);
     TTF_CloseFont(v->font);
@@ -187,6 +188,7 @@ FSBits fsiReadKeys(FSPSView *v)
 // Audio is not buffered by default under SDL_Mixer which is what we want.
 void fsiPlaySe(FSPSView *v, FSBits se)
 {
+#ifdef USE_SOUND
     #define PlayWav(name)                                                   \
     do {                                                                    \
         if (se & FST_SE_FLAG_##name) {                                      \
@@ -216,6 +218,10 @@ void fsiPlaySe(FSPSView *v, FSBits se)
     PlayWav(ERASE4);
 
     #undef PlayWav
+#else
+    (void) v;
+    (void) se;
+#endif
 }
 
 // Render the string to the specified coordinates

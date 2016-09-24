@@ -13,7 +13,6 @@
 
 #include <stdio.h>
 #include <SDL.h>
-#include <SDL_mixer.h>
 #include <SDL_ttf.h>
 
 // Font and sound effect resources are embedded in the binary itself.
@@ -21,8 +20,12 @@
 // Notes:
 //  * Determine if we ever want to dynamically load at any point.
 //
+#ifdef USE_SOUND
+#   include <SDL_mixer.h>
+#   include "sound.inc"
+#endif
+
 #include "font.inc"
-#include "sound.inc"
 
 // Specifies the pt value of the font to load
 #define DEFAULT_FONT_SIZE 20
@@ -89,8 +92,10 @@ struct FSPSView {
     // We a single font specification while rendering.
     TTF_Font *font;
 
+#ifdef USE_SOUND
     // Sound effect data
     Mix_Chunk *seBuffer[FST_SE_COUNT];
+#endif
 
     // The current width of the window
     int width;
