@@ -804,7 +804,10 @@ beginTick:
         /* FALLTHROUGH */
 
       case FSS_QUIT:
+        break;
+
       default:
+        fsLogError("Unknown state entered!");
         break;
     }
 

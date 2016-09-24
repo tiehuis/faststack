@@ -529,8 +529,11 @@ static void drawPreviewSection(FSPSView *v)
             block.y = by + BLOCK_SL * blocks[j].y;
             block.x = PVIEW_X + BLOCK_SL * blocks[j].x;
 
+            // These offsets are only valid if the entryTheta is standard.
+            // Sega entryTheta's have incorrect spacing still, but we'll
+            // consider this okay since it is less used.
             if (f->nextPiece[i] == FS_I) {
-                block.y += BLOCK_SL / 2;
+                block.y -= BLOCK_SL / 2;
             }
             else if (f->nextPiece[i] != FS_O) {
                 block.x += BLOCK_SL / 2;
