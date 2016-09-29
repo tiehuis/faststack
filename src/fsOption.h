@@ -17,6 +17,10 @@
 int strcmpi(const char *a, const char *b);
 
 ///
+// Parse an option string.
+void fsParseOptString(int argc, char **argv);
+
+///
 // The following macros provide more robust parsing of key-value pairs into
 // their associated variables.
 //

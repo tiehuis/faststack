@@ -211,13 +211,14 @@ start:;
 end:;
 }
 
-int main(void)
+int main(int argc, char **argv)
 {
     FSGame game;
     FSControl control;
     FSView gView = { .game = &game, .control = &control, .totalFramesDrawn = 0 };
     FSPSView pView = { .view = &gView };
 
+    fsParseOptString(argc, argv);
     fsiInit(&pView);
     fsGameInit(&game);
     fsParseIniFile(&pView, &gView, FS_CONFIG_FILENAME);

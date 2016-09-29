@@ -177,13 +177,45 @@ static void unpackOptionValue(struct FSPSView *p, FSView *v, const char *k,
     fsLogWarning("No suitable key found for option %s = %s", k, value);
 }
 
+const char *usage =
+"FastStack [-v]\n"
+"\n"
+"Options:\n"
+"   -v  Increase the logging level\n";
+
 ///
 // Parse a command-line argument string.
 //
-// Do we want this generic or just specify the options here?
-// Probably generic, really.
+// Notes:
+//
+//  * Currently this edits values here, but we should return an appropriate
+//    structure with the read values instead.
+//
+//  * Consider a generic getopt implementation and handling in the actual main
+//    function instead?
+//
+//  * Potential options/commands that may be added:
+//      - `replay [filename]`
 ///
-void fsParseOptString(int argc, char **argv);
+void fsParseOptString(int argc, char **argv)
+{
+    for (int i = 1; i < argc; ++i) {
+        if (!strcmp("-vv", argv[i])) {
+            fsCurrentLogLevel = FS_LOG_LEVEL_DEBUG;
+        }
+        else if (!strcmp("-v", argv[i])) {
+            fsCurrentLogLevel = FS_LOG_LEVEL_INFO;
+        }
+        else if (!strcmp("-h", argv[i])) {
+            printf("%s\n", usage);
+            exit(0);
+        }
+        else {
+            printf("Unknown argument: %s\n", argv[i]);
+            exit(1);
+        }
+    }
+}
 
 ///
 // Parse an ini file into the specified view states.
@@ -345,3 +377,11 @@ void fsParseIniFile(struct FSPSView *p, FSView *v, const char *fname)
 
     fclose(fd);
 }
+
+///
+// Parse a set of command line options.
+//
+// These arguments are consumed in their entirety. This could change in the
+// future as the commands required to support grows but not currently.
+///
+

@@ -16,7 +16,7 @@
 ///
 // Global variable used to filter which messages are printed.
 ///
-int fsCurrentLogLevel = FS_LOG_LEVEL_INFO;
+int fsCurrentLogLevel = FS_LOG_LEVEL_WARNING;
 
 ///
 // Return a string with the current time.
