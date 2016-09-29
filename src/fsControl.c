@@ -10,6 +10,8 @@
 #include "fsControl.h"
 #include "fsInternal.h"
 
+#include <stdio.h>
+
 ///
 // Transform the current input state into a simple set of actions for the
 // engine to apply.
@@ -104,5 +106,11 @@ void fsVirtualKeysToInput(struct FSInput *dst, FSBits keys, const FSGame *f, FSC
     }
     if (newKeys & FST_VK_FLAG_RIGHT) {
         dst->extra |= FST_INPUT_FINESSE_DIRECTION;
+    }
+    if (newKeys & FST_VK_FLAG_RESTART) {
+        dst->extra |= FST_INPUT_RESTART;
+    }
+    if (newKeys & FST_VK_FLAG_QUIT) {
+        dst->extra |= FST_INPUT_QUIT;
     }
 }

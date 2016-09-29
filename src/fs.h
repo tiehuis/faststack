@@ -188,6 +188,9 @@ enum GameState {
     /// Occurs when the user lost (topped out).
     FSS_GAMEOVER,
 
+    /// Occurs when the user restarts.
+    FSS_RESTART,
+
     /// Unknown state
     FSS_UNKNOWN
 };

@@ -157,6 +157,8 @@ static void unpackOptionValue(struct FSPSView *p, FSView *v, const char *k,
         TS_KEY       (down, FST_VK_DOWN);
         TS_KEY       (up, FST_VK_UP);
         TS_KEY       (hold, FST_VK_HOLD);
+        TS_KEY       (quit, FST_VK_QUIT);
+        TS_KEY       (restart, FST_VK_RESTART);
     }
     else {
         char buffer[2 * MAX_ID_LENGTH] = "frontend.";
@@ -164,7 +166,8 @@ static void unpackOptionValue(struct FSPSView *p, FSView *v, const char *k,
         const size_t slen = strlen(buffer);
 
         // If we encounter a frontend-defined option do not warn that no key
-        // was found if nothing is parsed. Let the frontend manage this.
+        // was found if nothing is parsed. Let the frontend manage this if
+        // it needs to.
         if (!strncmp(k, buffer, slen)) {
             fsiUnpackFrontendOption(p, k + slen + 1, value);
             return;
@@ -173,6 +176,14 @@ static void unpackOptionValue(struct FSPSView *p, FSView *v, const char *k,
 
     fsLogWarning("No suitable key found for option %s = %s", k, value);
 }
+
+///
+// Parse a command-line argument string.
+//
+// Do we want this generic or just specify the options here?
+// Probably generic, really.
+///
+void fsParseOptString(int argc, char **argv);
 
 ///
 // Parse an ini file into the specified view states.

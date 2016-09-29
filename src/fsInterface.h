@@ -50,6 +50,33 @@ void fsParseIniFile(FSPSView *p, FSView *v, const char *fname);
 //************/
 
 ///
+// Initialize the FSPSView structure.
+///
+void fsiInit(FSPSView *v);
+
+///
+// Free any data of a FSPSView structure.
+///
+void fsiFree(FSPSView *v);
+
+///
+// TODO:
+// This would be less efficient than readKeys but can be used by the menu-like
+// keys which do not support rebinding themselves.
+// int fsiKeyIsPressed(FSPSView *v);
+
+///
+// Render the specified string in the center of the field.
+//
+// This is used for strings such as:
+//
+//  * "READY"
+//  * "GO"
+//  * "EXCELLENT"
+///
+void fsiRenderFieldString(FSPSView *v, const char *msg);
+
+///
 // Return the current time with microsecond granularity.
 //
 // The reference clock should be monotonic.

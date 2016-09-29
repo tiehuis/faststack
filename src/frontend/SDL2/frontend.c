@@ -7,9 +7,15 @@
 
 #include "frontend.h"
 
+#include "font.inc"
+
+#ifdef USE_SOUND
+#   include "sound.inc"
+#endif
+
 const char *fsiFrontendName = "sdl2";
 
-void initSDL(FSPSView *v)
+void fsiInit(FSPSView *v)
 {
     SDL_RWops *rw;
 
@@ -50,6 +56,7 @@ void initSDL(FSPSView *v)
     if (SDL_CreateWindowAndRenderer(v->width, v->height, SDL_WINDOW_SHOWN,
                                     &v->window, &v->renderer)) {
         fsLogFatal("SDL_CreateWindowAndRenderer error: %s", SDL_GetError());
+        TTF_Quit();
         SDL_Quit();
         exit(1);
     }
@@ -57,6 +64,7 @@ void initSDL(FSPSView *v)
 #ifdef USE_SOUND
     if (Mix_OpenAudio(22050, AUDIO_S16LSB, 1, AUDIO_BUFFER_SIZE) < 0) {
         fsLogFatal("Mix_OpenAudio error: %s", Mix_GetError());
+        TTF_Quit();
         SDL_DestroyRenderer(v->renderer);
         SDL_DestroyWindow(v->window);
         SDL_Quit();
@@ -101,7 +109,7 @@ void initSDL(FSPSView *v)
     SDL_RenderClear(v->renderer);
 }
 
-void destroySDL(FSPSView *v)
+void fsiFree(FSPSView *v)
 {
 #ifdef USE_SOUND
     // Assume WAV data is reclaimed by the OS for now
@@ -135,38 +143,10 @@ void fsiSleepUs(FSPSView *v, FSLong time)
     SDL_Delay(time / 1000);
 }
 
-void processSpecialEvents(FSPSView *v)
-{
-    const Uint8 *state = SDL_GetKeyboardState(NULL);
-
-    // Handle quit event
-    if (state[SDL_GetScancodeFromKey(SDLK_q)] || SDL_QuitRequested()) {
-        // use a cancel flag
-        v->view->game->state = FSS_QUIT;
-    }
-
-    // Handle restart event.
-    // It would be nice to handle this within a game for a number of reasons.
-    if (state[SDL_GetScancodeFromKey(SDLK_RSHIFT)]) {
-        v->view->game->state = FSS_QUIT;
-        v->restart = true; // Signal this is a restart event
-    }
-
-    // We are only interested in the single press
-    static bool uWasJustPressed = false;
-
-    if (state[SDL_GetScancodeFromKey(SDLK_u)] && !uWasJustPressed) {
-        uWasJustPressed = true;
-        v->showDebug = !v->showDebug;
-    }
-    else if (!state[SDL_GetScancodeFromKey(SDLK_u)]) {
-        uWasJustPressed = false;
-    }
-}
-
 FSBits fsiReadKeys(FSPSView *v)
 {
     (void) v;
+    SDL_PumpEvents();
     const Uint8 *state = SDL_GetKeyboardState(NULL);
 
     FSBits keys = 0;
@@ -235,7 +215,7 @@ static void renderString(FSPSView *v, const char *s, int x, int y)
     SDL_Surface *textSurface = TTF_RenderText_Solid(v->font, s, color);
     if (textSurface == NULL) {
         fsLogFatal("TTF_RenderText_Solid error: %s", TTF_GetError());
-        destroySDL(v);
+        fsiFree(v);
         exit(1);
     }
 
@@ -244,23 +224,24 @@ static void renderString(FSPSView *v, const char *s, int x, int y)
     if (textTexture == NULL) {
         fsLogFatal("SDL_CreateTextureFromSurface error: %s", TTF_GetError());
         SDL_FreeSurface(textSurface);
-        destroySDL(v);
+        fsiFree(v);
         exit(1);
     }
 
     int w, h;
     if (TTF_SizeText(v->font, s, &w, &h) == -1) {
         fsLogFatal("TTF_SizeText error: %s", TTF_GetError());
-        SDL_DestroyTexture(textTexture);
-        SDL_FreeSurface(textSurface);
-        destroySDL(v);
+        TTF_Quit();
+        SDL_Quit();
         exit(1);
     }
 
     // We limit the debug space to the rightmost 20%, truncating if needed.
     const SDL_Rect dst = {
-        .x = x, .y = y,
-        .w = w, .h = h
+        .x = x,
+        .y = y,
+        .w = w,
+        .h = h
     };
 
     SDL_RenderCopy(v->renderer, textTexture, NULL, &dst);
@@ -269,30 +250,51 @@ static void renderString(FSPSView *v, const char *s, int x, int y)
 }
 
 ///
+// Render a string onto the middle of the field.
+//
+// The string will be centered, and truncated if too long.
+void fsiRenderFieldString(FSPSView *v, const char *msg)
+{
+    int w, h;
+    if (TTF_SizeText(v->font, msg, &w, &h) == -1) {
+        fsLogFatal("TTF_SizeText error: %s", TTF_GetError());
+        TTF_Quit();
+        SDL_Quit();
+        exit(1);
+    }
+
+    renderString(v, msg, FIELD_X + FIELD_W / 2 - w / 2 , FIELD_Y + FIELD_H / 2);
+}
+
+///
 // We only need to pump events once per frame.
 void fsiPreFrameHook(FSPSView *v)
 {
     SDL_PumpEvents();
-    processSpecialEvents(v);
+
+    // A raw window quit just exits without cleaning up
+    if (SDL_QuitRequested()) {
+        exit(0);
+    }
+
+    // Debug window with release catch
+    static bool justDown = false;
+    const Uint8 *state = SDL_GetKeyboardState(NULL);
+
+    if (state[SDL_GetScancodeFromKey(SDLK_u)] && !justDown) {
+        justDown = true;
+        v->showDebug = !v->showDebug;
+    }
+    else if (!state[SDL_GetScancodeFromKey(SDLK_u)]) {
+        justDown = false;
+    }
 }
 
 ///
-// Notes:
-//  * Remove this once the RenderEvent system is implemented.
+// Execute after everything else in the frame.
 void fsiPostFrameHook(FSPSView *v)
 {
-    // We want to render ready, go on top of the field so this **must** be
-    // renderered last.
-    switch (v->view->game->state) {
-      case FSS_READY:
-        renderString(v, "READY", FIELD_X + FIELD_W / 2 - 20, FIELD_Y + FIELD_H / 2);
-        break;
-      case FSS_GO:
-        renderString(v, "GO", FIELD_X + FIELD_W / 2 - 20, FIELD_Y + FIELD_H / 2);
-        break;
-      default:
-        break;
-    }
+    (void) v;
 }
 
 ///
@@ -315,7 +317,6 @@ void drawDebug(FSPSView *v)
     // Clear the entire screen space before continuing
     SDL_SetRenderDrawColor(v->renderer, 0, 0, 0, 255);
     SDL_RenderFillRect(v->renderer, &area);
-
 
     // Print the game logic fps and the render fps.
     // assume non-zero for now (maybe not if we had a supercomputer).
@@ -666,6 +667,7 @@ void fsiUnpackFrontendOption(FSPSView *v, const char *key, const char *value)
     fsLogWarning("No suitable key found for option %s = %s", key, value);
 }
 
+#if 0
 ///
 // TODO: Clean-up this entire main loop. It is excessively ugly.
 int main(void)
@@ -737,5 +739,6 @@ int main(void)
 
     } while (pView.restart == true);
 
-    destroySDL(&pView);
+    fsiFree(&pView);
 }
+#endif

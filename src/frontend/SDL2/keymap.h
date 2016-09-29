@@ -8,17 +8,11 @@
 // Mapped key definitions are those provided by SDL.
 ///
 
-#include <SDL_keycode.h>
+#ifndef KEYMAP_H
+#define KEYMAP_H
 
-static int strcmpi(const char *a, const char *b)
-{
-    for (;; a++, b++) {
-        const int d = tolower(*a) - tolower(*b);
-        if (d || !*a) {
-            return d;
-        }
-    }
-}
+#include <SDL_keycode.h>
+#include <fsOption.h>
 
 #define KEY_NONE (-1)
 
@@ -28,7 +22,7 @@ static int strcmpi(const char *a, const char *b)
 // Notes:
 //  * Could use a perfect hashmap here.
 ///
-static SDL_Keycode fsKeyToPhysicalKey(const char *str)
+static inline SDL_Keycode fsKeyToPhysicalKey(const char *str)
 {
     #define S(x) M(x, x)
     #define M(x, y)                     \
@@ -51,6 +45,8 @@ static SDL_Keycode fsKeyToPhysicalKey(const char *str)
     S(LEFT);
     S(RIGHT);
     S(SPACE);
+    S(LSHIFT);
+    S(RSHIFT);
 
     // Extra ascii conversion.
     S(EQUALS);
@@ -72,3 +68,5 @@ static SDL_Keycode fsKeyToPhysicalKey(const char *str)
     #undef M
     #undef S
 }
+
+#endif

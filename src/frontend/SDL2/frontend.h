@@ -22,10 +22,7 @@
 //
 #ifdef USE_SOUND
 #   include <SDL_mixer.h>
-#   include "sound.inc"
 #endif
-
-#include "font.inc"
 
 // Specifies the pt value of the font to load
 #define DEFAULT_FONT_SIZE 20

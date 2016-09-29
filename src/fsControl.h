@@ -35,7 +35,13 @@ enum InputExtraFlag {
     FST_INPUT_FINESSE_DIRECTION = 0x8,
 
     /// Action indicating a new rotation keypress.
-    FST_INPUT_FINESSE_ROTATION  = 0x10
+    FST_INPUT_FINESSE_ROTATION  = 0x10,
+
+    /// Action indicating a quit event was received.
+    FST_INPUT_QUIT = 0x20,
+
+    /// Action indicating a restart event was received.
+    FST_INPUT_RESTART = 0x40
 };
 
 ///
@@ -54,6 +60,8 @@ enum VirtualKeyIndex {
     FST_VK_ROTH,
     FST_VK_HOLD,
     FST_VK_START,
+    FST_VK_RESTART,
+    FST_VK_QUIT,
     FST_VK_COUNT
 };
 
@@ -61,15 +69,17 @@ enum VirtualKeyIndex {
 // A virtual key flag representing an input state.
 ///
 enum VirtualKey {
-    FST_VK_FLAG_UP    = (1 << FST_VK_UP),
-    FST_VK_FLAG_DOWN  = (1 << FST_VK_DOWN),
-    FST_VK_FLAG_LEFT  = (1 << FST_VK_LEFT),
-    FST_VK_FLAG_RIGHT = (1 << FST_VK_RIGHT),
-    FST_VK_FLAG_ROTL  = (1 << FST_VK_ROTL),
-    FST_VK_FLAG_ROTR  = (1 << FST_VK_ROTR),
-    FST_VK_FLAG_ROTH  = (1 << FST_VK_ROTH),
-    FST_VK_FLAG_HOLD  = (1 << FST_VK_HOLD),
-    FST_VK_FLAG_START = (1 << FST_VK_START)
+    FST_VK_FLAG_UP      = (1 << FST_VK_UP),
+    FST_VK_FLAG_DOWN    = (1 << FST_VK_DOWN),
+    FST_VK_FLAG_LEFT    = (1 << FST_VK_LEFT),
+    FST_VK_FLAG_RIGHT   = (1 << FST_VK_RIGHT),
+    FST_VK_FLAG_ROTL    = (1 << FST_VK_ROTL),
+    FST_VK_FLAG_ROTR    = (1 << FST_VK_ROTR),
+    FST_VK_FLAG_ROTH    = (1 << FST_VK_ROTH),
+    FST_VK_FLAG_HOLD    = (1 << FST_VK_HOLD),
+    FST_VK_FLAG_START   = (1 << FST_VK_START),
+    FST_VK_FLAG_RESTART = (1 << FST_VK_RESTART),
+    FST_VK_FLAG_QUIT    = (1 << FST_VK_QUIT)
 };
 
 ///
@@ -96,6 +106,9 @@ typedef struct FSControl {
     /// @I: Number of ticks DAS has occurred for.
     FSLong dasCounter;
 } FSControl;
+
+/// TODO: Insert options into engine and put this definition into the engine itself.
+/// Repurpose the input code so it is managed internally within an engine.
 
 ///
 // Represents a simple set of actions `FSGame` can understand.

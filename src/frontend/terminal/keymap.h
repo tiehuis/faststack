@@ -11,15 +11,7 @@
 #include <ctype.h>
 #include <linux/input.h>
 
-static int strcmpi(const char *a, const char *b)
-{
-    for (;; a++, b++) {
-        const int d = tolower(*a) - tolower(*b);
-        if (d || !*a) {
-            return d;
-        }
-    }
-}
+#include "fsOption.h"
 
 #define KEY_NONE (-1)
 
@@ -29,7 +21,7 @@ static int strcmpi(const char *a, const char *b)
 // Notes:
 //  * Could use a perfect hashmap here.
 ///
-static int fsKeyToPhysicalKey(const char *str)
+static inline int fsKeyToPhysicalKey(const char *str)
 {
     #define S(x) M(x, x)
     #define M(x, y)                     \
@@ -54,6 +46,8 @@ static int fsKeyToPhysicalKey(const char *str)
     S(LEFT);
     S(RIGHT);
     S(SPACE);
+    M(LSHIFT, LEFTSHIFT);
+    M(RSHIFT, RIGHTSHIFT);
 
     // Extra keys
     M(EQUALS, EQUAL);

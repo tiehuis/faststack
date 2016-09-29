@@ -75,12 +75,6 @@ enum CellAttribute {
     ATTR_BLINK   = 0x1000
 };
 
-const int attributes[] = {
-    // Attribute masks index into this (i) not (1 << i)
-    7, 30, 31, 32, 33, 34, 35, 36, 37,
-    4, 1, 2, 5
-};
-
 ///
 // Represents a single cell of the terminal.
 ///

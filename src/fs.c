@@ -580,7 +580,17 @@ void fsGameTick(FSGame *f, const FSInput *i)
     bool moved = false, rotated = false;
 
     f->se = 0;
+
+    // TODO: Remove lastInput since unused
     f->lastInput = *i;
+
+    // Always handle restart/quit events at any time.
+    if (i->extra & FST_INPUT_RESTART) {
+        f->state = FSS_RESTART;
+    }
+    if (i->extra & FST_INPUT_QUIT) {
+        f->state = FSS_QUIT;
+    }
 
 beginTick:
     switch (f->state) {
@@ -804,6 +814,7 @@ beginTick:
         /* FALLTHROUGH */
 
       case FSS_QUIT:
+      case FSS_RESTART:
         break;
 
       default:

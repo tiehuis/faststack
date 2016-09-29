@@ -33,6 +33,12 @@ const char *fsiFrontendName = "terminal";
 volatile sig_atomic_t caughtSigwinch = 0;
 volatile sig_atomic_t caughtSigint = 0;
 
+static const int attributes[] = {
+    // Attribute masks index into this (i) not (1 << i)
+    7, 30, 31, 32, 33, 34, 35, 36, 37,
+    4, 1, 2, 5
+};
+
 static void sigwinchHandler(int signal)
 {
     (void) signal;
@@ -45,7 +51,7 @@ static void sigintHandler(int signal)
     caughtSigint = 1;
 }
 
-static void initializeTerminal(FSPSView *v)
+void fsiInit(FSPSView *v)
 {
     // TODO: Determine how we can procedurally retrieve the keyboard device.
     static const char *inputDeviceName =
@@ -93,13 +99,17 @@ static void initializeTerminal(FSPSView *v)
     v->invalidateBuffers = true;
 }
 
-static void restoreTerminal(FSPSView *v)
+void fsiFree(FSPSView *v)
 {
     tcsetattr(STDIN_FILENO, TCSANOW, &v->initialTerminalState);
 
     // Show the cursor
     printf("\033[?25h");
-    fflush(stdout);
+    printf("\033[%d;%dH", FS_TERM_HEIGHT, FS_TERM_WIDTH);
+
+    // Cursor is guaranteed to be at the end of the screen, so print some extra
+    // lines on exit to better display score.
+    printf("\n\n");
 
     if (close(v->inputFd) == -1) {
         fsLogError("Failed to close input device: %s", strerror(errno));
@@ -368,6 +378,17 @@ static void putStrAt(FSPSView *v, const char *s, int y, int x, int attrs)
     }
 }
 
+///
+// Render a string onto the middle of the field.
+//
+// The string will be centered, and truncated if too long.
+void fsiRenderFieldString(FSPSView *v, const char *msg)
+{
+    const FSGame *f = v->view->game;
+    const int w = strlen(msg);
+    putStrAt(v, msg, FIELD_Y + FIELD_H / 2, FIELD_X + FIELD_W / 2 - w / 2, 0);
+}
+
 static void drawInfo(FSPSView *v)
 {
     const FSGame *f = v->view->game;
@@ -558,47 +579,7 @@ void fsiPreFrameHook(FSPSView *v)
 
 ///
 // Run after every tick.
-//
-// Notes:
-//  * This should be removed once the RenderEvent functionality is in place.
 void fsiPostFrameHook(FSPSView *v)
 {
-    const FSGame *f = v->view->game;
-
-    switch (f->state) {
-      case FSS_READY:
-      case FSS_GO:
-      {
-        int i = 0;
-        char *ready = "ready", *go = "go";
-        for (char *s = f->state == FSS_READY ? ready : go; *s != '\0'; s++)
-            v->bbuf[FIELD_Y + f->fieldHeight / 2][FIELD_X + f->fieldWidth + i++].value = *s;
-        break;
-      }
-      default:
-        break;
-    }
-}
-
-int main(void)
-{
-    FSGame game;
-    FSControl control;
-
-    // Generic View
-    FSView gView = { .game = &game, .control = &control, .totalFramesDrawn = 0 };
-
-    // Platform-Specific View
-    FSPSView pView = { .view = &gView };
-
-    initializeTerminal(&pView);
-    fsGameInit(&game);
-    fsParseIniFile(&pView, &gView, FS_CONFIG_FILENAME);
-    fsGameLoop(&pView, &gView);
-
-    // Cursor is guaranteed to be at the end of the screen, so print some extra
-    // lines on exit to better display score.
-    printf("\n\n");
-
-    restoreTerminal(&pView);
+    (void) v;
 }
