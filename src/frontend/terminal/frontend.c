@@ -347,7 +347,9 @@ static void drawPreview(FSPSView *v)
 {
     FSInt2 blocks[FS_NBP];
     const FSGame *f = v->view->game;
-    const int previewCount = f->nextPieceCount > 4 ? 4 : f->nextPieceCount;
+    const int previewCount = f->nextPieceCount > FS_MAX_PREVIEW_COUNT
+                                ? FS_MAX_PREVIEW_COUNT
+                                : f->nextPieceCount;
 
     for (int i = 0; i < previewCount; ++i) {
         fsPieceToBlocks(f, blocks, f->nextPiece[i], 0, 0, 0);

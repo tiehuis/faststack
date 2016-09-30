@@ -533,7 +533,9 @@ static void drawPreviewSection(FSPSView *v)
     };
 
     const FSGame *f = v->view->game;
-    const int previewCount = f->nextPieceCount > 4 ? 4 : f->nextPieceCount;
+    const int previewCount = f->nextPieceCount > FS_MAX_PREVIEW_COUNT
+                                ? FS_MAX_PREVIEW_COUNT
+                                : f->nextPieceCount;
 
     // Print 4 preview pieces max for now (where do we render if higher?)
     for (int i = 0; i < previewCount; ++i) {

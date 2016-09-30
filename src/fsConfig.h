@@ -32,6 +32,9 @@
 /// Maximum number of wallkick tables a rotation system is allowed
 #define FS_MAX_KICK_LEN 10
 
+/// Maximum number of preview pieces available. Clamps higher values.
+#define FS_MAX_PREVIEW_COUNT 5
+
 /// Maximum length of internal randomizer buffer.
 #define FS_RAND_BUFFER_LEN (2 * 7)
 
