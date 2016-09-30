@@ -31,7 +31,7 @@ void fsVirtualKeysToInput(struct FSInput *dst, FSBits keys, const FSGame *f, FSC
     dst->currentKeys = keys;
 
     if (keys & FST_VK_FLAG_LEFT) {
-        if (c->dasCounter > TICKS(-c->dasDelay)) {
+        if (c->dasCounter > TICKS(-f->dasDelay)) {
             if (c->dasCounter >= 0) {
                 c->dasCounter = -1;
                 dst->movement = -1;
@@ -41,7 +41,7 @@ void fsVirtualKeysToInput(struct FSInput *dst, FSBits keys, const FSGame *f, FSC
             }
         }
         else {
-            int dasSpeed = c->dasSpeed;
+            int dasSpeed = f->dasSpeed;
             if (dasSpeed) {
                 dst->movement = -1;
                 c->dasCounter += dasSpeed - 1;
@@ -52,7 +52,7 @@ void fsVirtualKeysToInput(struct FSInput *dst, FSBits keys, const FSGame *f, FSC
         }
     }
     else if (keys & FST_VK_FLAG_RIGHT) {
-        if (c->dasCounter < TICKS(c->dasDelay)) {
+        if (c->dasCounter < TICKS(f->dasDelay)) {
             if (c->dasCounter <= 0) {
                 c->dasCounter = 1;
                 dst->movement = 1;
@@ -62,7 +62,7 @@ void fsVirtualKeysToInput(struct FSInput *dst, FSBits keys, const FSGame *f, FSC
             }
         }
         else {
-            int dasSpeed = c->dasSpeed;
+            int dasSpeed = f->dasSpeed;
             if (dasSpeed) {
                 dst->movement = 1;
                 c->dasCounter -= dasSpeed - 1;

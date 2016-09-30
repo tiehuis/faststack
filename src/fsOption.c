@@ -36,7 +36,7 @@ extern const char *fsiFrontendName;
 ///
 struct FSPSView;
 void fsiUnpackFrontendOption(struct FSPSView *v, const char *key, const char *value);
-void fsiAddToKeymap(struct FSPSView *v, const int vkey, const char *key);
+void fsiAddToKeymap(struct FSPSView *v, const int vkey, const char *key, bool isDefault);
 
 int strcmpi(const char *a, const char *b)
 {
@@ -120,6 +120,8 @@ static void unpackOptionValue(struct FSPSView *p, FSView *v, const char *k,
 
         TS_INT       (areDelay);
         TS_BOOL      (areCancellable);
+        TS_INT       (dasSpeed);
+        TS_INT       (dasDelay);
         TS_INT       (lockDelay);
         TS_INT_FUNC  (randomizer, fsRandomizerLookup);
         TS_INT_FUNC  (rotationSystem, fsRotationSystemLookup);
@@ -138,13 +140,6 @@ static void unpackOptionValue(struct FSPSView *p, FSView *v, const char *k,
         TS_FLT       (gravity);
         TS_FLT       (softDropGravity);
         TS_INT_FUNC  (initialActionStyle, fsInitialActionStyleLookup);
-    }
-    else if (!strncmp(k, "control.", 8)) {
-        const char *key = k + 8;
-        FSControl *dst = v->control;
-
-        TS_INT       (dasSpeed);
-        TS_INT       (dasDelay);
     }
     else if (!strncmp(k, "keybind.", 8)) {
         const char *key = k + 8;
@@ -178,18 +173,17 @@ static void unpackOptionValue(struct FSPSView *p, FSView *v, const char *k,
 }
 
 const char *usage =
-"FastStack [-v]\n"
+"FastStack [-hiv]\n"
 "\n"
 "Options:\n"
-"   -v  Increase the logging level\n";
+"   -h --help       Display this message and quit\n"
+"   -i --no-ini     Do not load options from the configuration file\n"
+"   -v              Increase the logging level\n";
 
 ///
 // Parse a command-line argument string.
 //
 // Notes:
-//
-//  * Currently this edits values here, but we should return an appropriate
-//    structure with the read values instead.
 //
 //  * Consider a generic getopt implementation and handling in the actual main
 //    function instead?
@@ -197,16 +191,23 @@ const char *usage =
 //  * Potential options/commands that may be added:
 //      - `replay [filename]`
 ///
-void fsParseOptString(int argc, char **argv)
+void fsParseOptString(FSOptions *o, int argc, char **argv)
 {
+    memset(o, 0, sizeof(FSOptions));
+
     for (int i = 1; i < argc; ++i) {
-        if (!strcmp("-vv", argv[i])) {
-            fsCurrentLogLevel = FS_LOG_LEVEL_DEBUG;
+        const char *opt = argv[i];
+
+        if (!strcmp("-vv", opt)) {
+            o->verbosity = FS_LOG_LEVEL_DEBUG;
         }
-        else if (!strcmp("-v", argv[i])) {
-            fsCurrentLogLevel = FS_LOG_LEVEL_INFO;
+        else if (!strcmp("-v", opt)) {
+            o->verbosity = FS_LOG_LEVEL_INFO;
         }
-        else if (!strcmp("-h", argv[i])) {
+        else if (!strcmp("i", opt) || !strcmp("--no-ini", opt)) {
+            o->no_ini = true;
+        }
+        else if (!strcmp("-h", opt) || !strcmp("--help", opt)) {
             printf("%s\n", usage);
             exit(0);
         }
@@ -377,11 +378,3 @@ void fsParseIniFile(struct FSPSView *p, FSView *v, const char *fname)
 
     fclose(fd);
 }
-
-///
-// Parse a set of command line options.
-//
-// These arguments are consumed in their entirety. This could change in the
-// future as the commands required to support grows but not currently.
-///
-

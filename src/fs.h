@@ -339,6 +339,12 @@ typedef struct FSGame {
     /// @I: Current Initial Hold status (set in ARE)
     bool ihsFlag;
 
+    /// @O: How many blocks a piece moves per ms.
+    FSInt dasSpeed;
+
+    /// @O: Number of ms a key must be held before repeated movement.
+    FSLong dasDelay;
+
     /// @E: Number of wasted movements have occurred during the games
     //      lifetime.
     FSLong finesse;

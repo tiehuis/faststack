@@ -153,6 +153,8 @@ void fsGameInit(FSGame *f)
     f->msPerTick = FSD_MS_PER_TICK;
     f->ticksPerDraw = FSD_TICKS_PER_DRAW;
     f->areDelay = FSD_ARE_DELAY;
+    f->dasSpeed = FSD_DAS_SPEED;
+    f->dasDelay = FSD_DAS_DELAY;
     f->initialActionStyle = FSD_INITIAL_ACTION_STYLE;
     f->lockStyle = FSD_LOCK_STYLE;
     f->lockDelay = FSD_LOCK_DELAY;

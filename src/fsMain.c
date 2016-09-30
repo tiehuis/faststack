@@ -9,7 +9,9 @@
 // Need to include the actual frontend we are using here so we know the storage
 // size.
 #include "fs.h"
+#include "fsDefault.h"
 #include "fsInterface.h"
+#include "fsOption.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -21,6 +23,24 @@
 #elif FS_USE_TERMINAL
 #include "frontend/terminal/frontend.h"
 #endif
+
+static void fsLoadDefaultKeys(FSPSView *v)
+{
+#define ADD_KEY(name) fsiAddToKeymap(v, FST_VK_##name, FSD_KEY_##name, true)
+
+    ADD_KEY(UP);
+    ADD_KEY(DOWN);
+    ADD_KEY(LEFT);
+    ADD_KEY(RIGHT);
+    ADD_KEY(ROTL);
+    ADD_KEY(ROTR);
+    ADD_KEY(ROTH);
+    ADD_KEY(HOLD);
+    ADD_KEY(RESTART);
+    ADD_KEY(QUIT);
+
+#undef ADD_KEY
+}
 
 static void updateGameLogic(FSPSView *v, FSView *g)
 {
@@ -218,10 +238,20 @@ int main(int argc, char **argv)
     FSView gView = { .game = &game, .control = &control, .totalFramesDrawn = 0 };
     FSPSView pView = { .view = &gView };
 
-    fsParseOptString(argc, argv);
+    FSOptions o;
+    fsParseOptString(&o, argc, argv);
+
+    if (o.verbosity) {
+        fsCurrentLogLevel = o.verbosity;
+    }
+
     fsiInit(&pView);
     fsGameInit(&game);
-    fsParseIniFile(&pView, &gView, FS_CONFIG_FILENAME);
+    fsLoadDefaultKeys(&pView);
+
+    if (!o.no_ini) {
+        fsParseIniFile(&pView, &gView, FS_CONFIG_FILENAME);
+    }
 
     gameLoop(&pView, &gView);
 

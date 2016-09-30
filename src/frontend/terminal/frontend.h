@@ -87,6 +87,16 @@ typedef struct {
 } TerminalCell;
 
 ///
+// Represents a single entry in a keymap.
+typedef struct {
+    /// Is this a default key (can be overridden)
+    bool isDefault;
+
+    /// The value of the key
+    int value;
+} KeyEntry;
+
+///
 // FastStack Platform Specific View
 //
 // Represents a generic view which is passed around by the FastStack interface
@@ -97,7 +107,7 @@ struct FSPSView {
     FSView *view;
 
     /// Mapping from virtual keycode to physical keycode.
-    int keymap[FST_VK_COUNT][FS_MAX_KEYS_PER_ACTION];
+    KeyEntry keymap[FST_VK_COUNT][FS_MAX_KEYS_PER_ACTION];
 
     /// File descriptor of currently open input device.
     int inputFd;

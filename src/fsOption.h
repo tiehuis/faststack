@@ -10,15 +10,25 @@
 #ifndef FS_OPTION_H
 #define FS_OPTION_H
 
+#include <stdbool.h>
 #include <ctype.h>
 
 ///
 // Perform a case-insensitive strcmp.
 int strcmpi(const char *a, const char *b);
 
+/// Command-line option struct.
+typedef struct {
+    /// Verbosity level.
+    int verbosity;
+
+    /// Should we skip processing of an ini file.
+    bool no_ini;
+} FSOptions;
+
 ///
 // Parse an option string.
-void fsParseOptString(int argc, char **argv);
+void fsParseOptString(FSOptions *o, int argc, char **argv);
 
 ///
 // The following macros provide more robust parsing of key-value pairs into
@@ -151,7 +161,7 @@ do {                                                                            
 #define TS_KEY(_id, _vkey)                                                      \
 do {                                                                            \
     if (!strcmpi(#_id, key)) {                                                  \
-        fsiAddToKeymap(p, _vkey, value);                                        \
+        fsiAddToKeymap(p, _vkey, value, false);                                 \
         return;                                                                 \
     }                                                                           \
 } while (0)

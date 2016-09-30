@@ -18,7 +18,7 @@ extern int fsCurrentLogLevel;
 ///
 enum FS_LOG_LEVEL {
     /// Debug log message.
-    FS_LOG_LEVEL_DEBUG,
+    FS_LOG_LEVEL_DEBUG = 1,
 
     /// Informational log message.
     FS_LOG_LEVEL_INFO,

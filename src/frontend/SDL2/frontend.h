@@ -66,6 +66,16 @@
 #define INFOS_H (FIELD_H)
 
 ///
+// Represents a single entry in a keymap.
+typedef struct {
+    /// Is this a default key (can be overridden)
+    bool isDefault;
+
+    /// The value of the key
+    SDL_Keycode value;
+} KeyEntry;
+
+///
 // FastStack Platform Specific View
 //
 // Represents a generic view which is passed around by the FastStack interface
@@ -76,7 +86,11 @@ struct FSPSView {
     FSView *view;
 
     // Keymap mapping an action to a number of keycodes
-    SDL_Keycode keymap[FST_VK_COUNT][FS_MAX_KEYS_PER_ACTION];
+    //
+    // Along with each keycode store whether the value was a default value or
+    // not! We should be able to override default values. This allows limited
+    // keybindings or no ini to be specified correctly.
+    KeyEntry keymap[FST_VK_COUNT][FS_MAX_KEYS_PER_ACTION];
 
     // Platform-specific render structures
     //

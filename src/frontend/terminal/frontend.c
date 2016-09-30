@@ -74,7 +74,10 @@ void fsiInit(FSPSView *v)
     // We must explicitly clear the keymap else garbage keys could be pressed.
     for (int i = 0; i < FST_VK_COUNT; ++i) {
         for (int j = 0; j < FS_MAX_KEYS_PER_ACTION; ++j) {
-            v->keymap[i][j] = KEY_NONE;
+            v->keymap[i][j] = (KeyEntry) {
+                .isDefault = false,
+                .value = KEY_NONE
+            };
         }
     }
 
@@ -201,7 +204,11 @@ FSBits fsiReadKeys(FSPSView *v)
     for (int i = 0; i < FST_VK_COUNT; ++i) {
         for (int j = 0; j < FS_MAX_KEYS_PER_ACTION; ++j) {
             // Keystate is stored as a bitset in the array of chars
-            const int key = v->keymap[i][j];
+            const int key = v->keymap[i][j].value;
+            if (key == KEY_NONE) {
+                break;
+            }
+
             if (keystate[key >> 3] & (1 << (key & 7))) {
                 keys |= FS_TO_FLAG(i);
             }
@@ -508,13 +515,17 @@ void fsiBlit(FSPSView *v)
 
 ///
 // Add a trigger for the physical key from this virtual key.
-void fsiAddToKeymap(FSPSView *v, int virtualKey, const char *keyValue)
+void fsiAddToKeymap(FSPSView *v, int virtualKey, const char *keyValue, bool isDefault)
 {
     const int kc = fsKeyToPhysicalKey(keyValue);
     if (kc) {
         for (int i = 0; i < FS_MAX_KEYS_PER_ACTION; ++i) {
-            if (v->keymap[virtualKey][i] == KEY_NONE) {
-                v->keymap[virtualKey][i] = kc;
+            KeyEntry *vk = &v->keymap[virtualKey][i];
+            if (vk->value == KEY_NONE || vk->isDefault) {
+                *vk = (KeyEntry) {
+                    .value = kc,
+                    .isDefault = isDefault
+                };
                 return;
             }
         }

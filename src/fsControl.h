@@ -97,12 +97,6 @@ typedef struct FSControl {
     /// @E: Number of keypresses in total.
     FSLong presses;
 
-    /// @O: How many blocks a piece moves per ms.
-    FSInt dasSpeed;
-
-    /// @O: Number of ms a key must be held before repeated movement.
-    FSLong dasDelay;
-
     /// @I: Number of ticks DAS has occurred for.
     FSLong dasCounter;
 } FSControl;

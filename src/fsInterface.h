@@ -124,7 +124,7 @@ void fsiPlaySe(FSPSView *v, FSBits se);
 ///
 // Try to register the specified key with the views keymap.
 ///
-void fsiAddToKeymap(FSPSView *v, const int vkey, const char *key);
+void fsiAddToKeymap(FSPSView *v, const int vkey, const char *key, bool isDefault);
 
 ///
 // Process an key-value pair option.

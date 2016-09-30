@@ -26,7 +26,10 @@ void fsiInit(FSPSView *v)
 
     for (int i = 0; i < FST_VK_COUNT; ++i) {
         for (int j = 0; j < FS_MAX_KEYS_PER_ACTION; ++j) {
-            v->keymap[i][j] = KEY_NONE;
+            v->keymap[i][j] = (KeyEntry) {
+                .isDefault = false,
+                .value = KEY_NONE
+            };
         }
     }
 
@@ -152,11 +155,11 @@ FSBits fsiReadKeys(FSPSView *v)
     FSBits keys = 0;
     for (int i = 0; i < FST_VK_COUNT; ++i) {
         for (int j = 0; j < FS_MAX_KEYS_PER_ACTION; ++j) {
-            if (v->keymap[i][j] == KEY_NONE) {
+            if (v->keymap[i][j].value == KEY_NONE) {
                 break;
             }
 
-            if (state[SDL_GetScancodeFromKey(v->keymap[i][j])]) {
+            if (state[SDL_GetScancodeFromKey(v->keymap[i][j].value)]) {
                 keys |= FS_TO_FLAG(i);
             }
         }
@@ -640,14 +643,17 @@ void fsiBlit(FSPSView *v)
     SDL_RenderPresent(v->renderer);
 }
 
-void fsiAddToKeymap(FSPSView *v, int virtualKey, const char *keyValue)
+void fsiAddToKeymap(FSPSView *v, int virtualKey, const char *keyValue, bool isDefault)
 {
     const SDL_Keycode kc = fsKeyToPhysicalKey(keyValue);
     if (kc) {
         for (int i = 0; i < FS_MAX_KEYS_PER_ACTION; ++i) {
-            // Found an empty slot to fill
-            if (v->keymap[virtualKey][i] == -1) {
-                v->keymap[virtualKey][i] = kc;
+            KeyEntry *vk = &v->keymap[virtualKey][i];
+            if (vk->value == KEY_NONE || vk->isDefault) {
+                *vk = (KeyEntry) {
+                    .value = kc,
+                    .isDefault = isDefault
+                };
                 return;
             }
         }
