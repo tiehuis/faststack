@@ -431,13 +431,18 @@ static void drawPieceAndShadow(FSPSView *v)
     }
 
     FSInt2 blocks[FS_NBP];
-    fsPieceToBlocks(f, blocks, pid, f->x, f->hardDropY, f->theta);
+    fsPieceToBlocks(f, blocks, pid, f->x, f->hardDropY - f->fieldHidden, f->theta);
 
     for (int i = 0; i < FS_NBP; ++i) {
         block.x = FIELD_X + blocks[i].x * BLOCK_SL;
         block.y = FIELD_Y + blocks[i].y * BLOCK_SL;
 
-        // Shade colourd down
+        // Filter blocks greater than visible field height
+        if (blocks[i].y < 0) {
+            continue;
+        }
+
+        // Dim ghost colour to be less focused
         SDL_SetRenderDrawColor(v->renderer,
                 CRED[pid] / 2,
                 CGREEN[pid] / 2,
@@ -446,11 +451,16 @@ static void drawPieceAndShadow(FSPSView *v)
         SDL_RenderFillRect(v->renderer, &block);
     }
 
-    fsPieceToBlocks(f, blocks, pid, f->x, f->y, f->theta);
+    fsPieceToBlocks(f, blocks, pid, f->x, f->y - f->fieldHidden, f->theta);
 
     for (int i = 0; i < FS_NBP; ++i) {
         block.x = FIELD_X + blocks[i].x * BLOCK_SL;
         block.y = FIELD_Y + blocks[i].y * BLOCK_SL;
+
+        // Filter blocks greater than visible field height
+        if (blocks[i].y < 0) {
+            continue;
+        }
 
         SDL_SetRenderDrawColor(v->renderer, BLOCK_RGBA_TRIPLE(pid));
         SDL_RenderFillRect(v->renderer, &block);
@@ -489,8 +499,8 @@ void drawField(FSPSView *v)
         .h = BLOCK_SL
     };
 
-    for (int y = 0; y < f->fieldHeight; ++y){
-        block.y = FIELD_Y + y * BLOCK_SL;
+    for (int y = f->fieldHidden; y < f->fieldHeight; ++y){
+        block.y = FIELD_Y + (y - f->fieldHidden) * BLOCK_SL;
         for (int x = 0; x < f->fieldWidth; ++x) {
             block.x = FIELD_X + x * BLOCK_SL;
             if (f->b[y][x] > 0) {

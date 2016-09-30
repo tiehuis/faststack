@@ -271,29 +271,29 @@ static void drawField(FSPSView *v)
 
     ///
     // Border
-    v->bbuf[FIELD_Y + f->fieldHeight][FIELD_X + 1].value = GLYPH_LWALL_FLOOR;
-    v->bbuf[FIELD_Y + f->fieldHeight][FIELD_X + 2*f->fieldWidth + 2].value = GLYPH_RWALL_FLOOR;
+    v->bbuf[FIELD_Y + f->fieldHeight - f->fieldHidden][FIELD_X + 1].value = GLYPH_LWALL_FLOOR;
+    v->bbuf[FIELD_Y + f->fieldHeight - f->fieldHidden][FIELD_X + 2*f->fieldWidth + 2].value = GLYPH_RWALL_FLOOR;
 
-    for (int y = 0; y < f->fieldHeight; ++y) {
+    for (int y = 0; y < f->fieldHeight - f->fieldHidden; ++y) {
         v->bbuf[FIELD_Y + y][FIELD_X + 1].value = GLYPH_WALL;
         v->bbuf[FIELD_Y + y][FIELD_X + 2*f->fieldWidth + 2].value = GLYPH_WALL;
     }
 
     for (int x = 0; x < 2 * f->fieldWidth; ++x) {
-        v->bbuf[FIELD_Y + f->fieldHeight][FIELD_X + x + 2].value = GLYPH_FLOOR;
+        v->bbuf[FIELD_Y + f->fieldHeight - f->fieldHidden][FIELD_X + x + 2].value = GLYPH_FLOOR;
     }
 
     ///
     // Field state
-    for (int y = 0; y < f->fieldHeight; ++y) {
+    for (int y = f->fieldHidden; y < f->fieldHeight; ++y) {
         for (int x = 0; x < f->fieldWidth; ++x) {
             const TerminalCell sq = (TerminalCell) {
                 .value = GLYPH_EMPTY,
                 .attrs = f->b[y][x] ? ATTR_REVERSE | ATTR_WHITE  : 0
             };
 
-            v->bbuf[FIELD_Y + y][FIELD_X + 2*x + 2] = sq;
-            v->bbuf[FIELD_Y + y][FIELD_X + 2*x + 3] = sq;
+            v->bbuf[FIELD_Y + (y - f->fieldHidden)][FIELD_X + 2*x + 2] = sq;
+            v->bbuf[FIELD_Y + (y - f->fieldHidden)][FIELD_X + 2*x + 3] = sq;
         }
     }
 
@@ -303,8 +303,12 @@ static void drawField(FSPSView *v)
 
     ///
     // Current piece ghost
-    fsPieceToBlocks(f, blocks, f->piece, f->x, f->hardDropY, f->theta);
+    fsPieceToBlocks(f, blocks, f->piece, f->x, f->hardDropY - f->fieldHidden, f->theta);
     for (int i = 0; i < FS_NBP; ++i) {
+        if (blocks[i].y < 0) {
+            continue;
+        }
+
         v->bbuf[FIELD_Y + blocks[i].y][FIELD_X + 2*blocks[i].x + 2] = (TerminalCell) {
             .value = GLYPH_LBLOCK,
             .attrs = ATTR_REVERSE | ATTR_DIM | attr_colour(f->piece)
@@ -317,8 +321,12 @@ static void drawField(FSPSView *v)
 
     ///
     // Current piece
-    fsPieceToBlocks(f, blocks, f->piece, f->x, f->y, f->theta);
+    fsPieceToBlocks(f, blocks, f->piece, f->x, f->y - f->fieldHidden, f->theta);
     for (int i = 0; i < FS_NBP; ++i) {
+        if (blocks[i].y < 0) {
+            continue;
+        }
+
         v->bbuf[FIELD_Y + blocks[i].y][FIELD_X + 2*blocks[i].x + 2] = (TerminalCell) {
             .value = GLYPH_LBLOCK,
             .attrs = ATTR_REVERSE | attr_colour(f->piece)
@@ -393,7 +401,7 @@ void fsiRenderFieldString(FSPSView *v, const char *msg)
 {
     const FSGame *f = v->view->game;
     const int w = strlen(msg);
-    putStrAt(v, msg, FIELD_Y + FIELD_H / 2, FIELD_X + FIELD_W / 2 - w / 2, 0);
+    putStrAt(v, msg, FIELD_Y + FIELD_H / 2, FIELD_X + FIELD_W / 2 - w / 2 + 1, 0);
 }
 
 static void drawInfo(FSPSView *v)

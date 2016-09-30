@@ -45,7 +45,7 @@
 #define FIELD_X (v->width * 0.13125)
 #define FIELD_Y (v->height * 0.15)
 #define FIELD_W (v->view->game->fieldWidth * BLOCK_SL)
-#define FIELD_H (v->view->game->fieldHeight * BLOCK_SL)
+#define FIELD_H ((v->view->game->fieldHeight - v->view->game->fieldHidden) * BLOCK_SL)
 
 // Hold offsets
 #define HOLDP_X (FIELD_X - (4.5f * BLOCK_SL))

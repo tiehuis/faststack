@@ -291,6 +291,12 @@ typedef struct FSGame {
     //      * fieldHeight < FS_MAX_HEIGHT
     FSInt fieldHeight;
 
+    /// @0: Number of hidden rows.
+    //
+    // These are not extra rows, but rather count how many field rows are
+    // treated as hidden.
+    FSInt fieldHidden;
+
     /// @E: Next available pieces.
     FSBlock nextPiece[FS_PREVIEW_MAX];
 

@@ -127,6 +127,7 @@ static void unpackOptionValue(struct FSPSView *p, FSView *v, const char *k,
         TS_INT_FUNC  (rotationSystem, fsRotationSystemLookup);
         TS_INT_RANGE (msPerTick, 1, INT_MAX);
         TS_INT_RANGE (ticksPerDraw, 1, INT_MAX);
+        TS_INT_RANGE (fieldHidden, 0, FS_MAX_HEIGHT);
         TS_INT_RANGE (fieldHeight, 0, FS_MAX_HEIGHT);
         TS_INT_RANGE (fieldWidth, 0, FS_MAX_WIDTH);
         TS_INT_FUNC  (lockStyle, fsLockStyleLookup);

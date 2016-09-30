@@ -19,7 +19,9 @@
 
 #define FSD_FIELD_WIDTH 10
 
-#define FSD_FIELD_HEIGHT 20
+#define FSD_FIELD_HEIGHT 22
+
+#define FSD_FIELD_HIDDEN 2
 
 #define FSD_MS_PER_TICK 16
 

@@ -150,6 +150,7 @@ void fsGameInit(FSGame *f)
 {
     f->fieldWidth = FSD_FIELD_WIDTH;
     f->fieldHeight = FSD_FIELD_HEIGHT;
+    f->fieldHidden = FSD_FIELD_HIDDEN;
     f->msPerTick = FSD_MS_PER_TICK;
     f->ticksPerDraw = FSD_TICKS_PER_DRAW;
     f->areDelay = FSD_ARE_DELAY;

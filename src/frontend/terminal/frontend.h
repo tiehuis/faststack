@@ -30,7 +30,7 @@
 // Field offsets
 #define FIELD_X (HOLD_X + HOLD_W + 1)
 #define FIELD_Y HOLD_Y
-#define FIELD_H (f->fieldHeight + 1)
+#define FIELD_H (f->fieldHeight - f->fieldHidden + 1)
 #define FIELD_W (2 * f->fieldWidth + 2)
 
 // Preview offsets
