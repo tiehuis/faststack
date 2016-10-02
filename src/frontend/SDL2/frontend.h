@@ -114,9 +114,6 @@ struct FSPSView {
     // The current height of the window
     int height;
 
-    // Did we receive a restart event?
-    bool restart;
-
     // Should we display the debug screen?
     bool showDebug;
 };

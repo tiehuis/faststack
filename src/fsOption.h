@@ -12,6 +12,8 @@
 
 #include <stdbool.h>
 #include <ctype.h>
+#include <errno.h>
+#include <limits.h>
 
 ///
 // Perform a case-insensitive strcmp.

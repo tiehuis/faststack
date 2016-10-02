@@ -50,6 +50,16 @@ void fsParseIniFile(FSPSView *p, FSView *v, const char *fname);
 //************/
 
 ///
+// Pre-initialize. This is currently necessary as the structure needs to
+// be partially initialized to allow proper loading of read structures.
+//
+// Notes:
+//  * This does not load the graphics themselves and should be removed in an
+//    ideal world.
+///
+void fsiPreInit(FSPSView *v);
+
+///
 // Initialize the FSPSView structure.
 ///
 void fsiInit(FSPSView *v);

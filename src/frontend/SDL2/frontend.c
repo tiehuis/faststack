@@ -15,15 +15,14 @@
 
 const char *fsiFrontendName = "sdl2";
 
-void fsiInit(FSPSView *v)
+void fsiPreInit(FSPSView *v)
 {
-    SDL_RWops *rw;
-
+    // These defaults can be overridden by an ini file.
     v->width = 800;
     v->height = 600;
     v->showDebug = false;
-    v->restart = false;
 
+    // Initial keybinds are the only reason we need a pre-initialization phase.
     for (int i = 0; i < FST_VK_COUNT; ++i) {
         for (int j = 0; j < FS_MAX_KEYS_PER_ACTION; ++j) {
             v->keymap[i][j] = (KeyEntry) {
@@ -32,6 +31,11 @@ void fsiInit(FSPSView *v)
             };
         }
     }
+}
+
+void fsiInit(FSPSView *v)
+{
+    SDL_RWops *rw;
 
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) != 0) {
         fsLogFatal("SDL_Init error: %s", SDL_GetError());
@@ -681,82 +685,8 @@ void fsiUnpackFrontendOption(FSPSView *v, const char *key, const char *value)
     FSPSView *dst = v;
 
     TS_BOOL(showDebug);
+    TS_INT(height);
+    TS_INT(width);
 
     fsLogWarning("No suitable key found for option %s = %s", key, value);
 }
-
-#if 0
-///
-// TODO: Clean-up this entire main loop. It is excessively ugly.
-int main(void)
-{
-    FSGame game;
-    FSControl control;
-    FSView gView = { .game = &game, .control = &control, .totalFramesDrawn = 0 };
-    FSPSView pView = { .view = &gView };
-
-    initSDL(&pView);
-    fsGameInit(&game);
-    fsParseIniFile(&pView, &gView, FS_CONFIG_FILENAME);
-
-    // Loop until we didn't receive a restart
-    do {
-        pView.restart = false;
-
-        // Wait till restart key is removed before entering loop.
-        // REMOVE THIS PLEASE.
-        while (1) {
-            SDL_PumpEvents();
-            const Uint8 *state = SDL_GetKeyboardState(NULL);
-            if (state[SDL_SCANCODE_RSHIFT] == 0) {
-                break;
-            }
-            SDL_Delay(50);
-        }
-
-        // This is safe to call without overwriting user options.
-        fsGameReset(&game);
-
-        // Ideally we would store the parsed options somewhere and just reload
-        // instead of re-reading the file.
-        fsGameLoop(&pView, &gView);
-
-        // If we finish a game successfully, check if the user wants to play again
-        if (game.state == FSS_GAMEOVER) {
-            // Allow FIELD macros to work
-            FSPSView *v = &pView;
-
-            // Well done
-            renderString(v, "EXCELLENT", FIELD_X + FIELD_W / 2 - 40, FIELD_Y + FIELD_H / 2);
-
-            // Blit and sleep in a loop so we don't get a non-redrawn screen
-            for (int i = 0; i < (2000 / 50); ++i) {
-                fsiBlit(v);
-                SDL_Delay(50);
-            }
-
-            renderString(v, "(Y) TO PLAY AGAIN", FIELD_X + FIELD_W / 2 - 90, FIELD_Y + FIELD_H / 2 + 20);
-            fsiBlit(v);
-            while (1) {
-                SDL_PumpEvents();
-                const Uint8 *state = SDL_GetKeyboardState(NULL);
-                if (state[SDL_SCANCODE_Y]) {
-                    pView.restart = true;
-                    break;
-                }
-                else if (state[SDL_GetScancodeFromKey(SDLK_q)] || SDL_QuitRequested()) {
-                    // Just quit and don't restart
-                    break;
-                }
-
-                // Stil want to blit here since when unminizing we need to redraw for example
-                fsiBlit(v);
-                SDL_Delay(50);
-            }
-        }
-
-    } while (pView.restart == true);
-
-    fsiFree(&pView);
-}
-#endif

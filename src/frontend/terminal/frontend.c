@@ -51,6 +51,19 @@ static void sigintHandler(int signal)
     caughtSigint = 1;
 }
 
+void fsiPreInit(FSPSView *v)
+{
+    // We must explicitly clear the keymap else garbage keys could be pressed.
+    for (int i = 0; i < FST_VK_COUNT; ++i) {
+        for (int j = 0; j < FS_MAX_KEYS_PER_ACTION; ++j) {
+            v->keymap[i][j] = (KeyEntry) {
+                .isDefault = false,
+                .value = KEY_NONE
+            };
+        }
+    }
+}
+
 void fsiInit(FSPSView *v)
 {
     // TODO: Determine how we can procedurally retrieve the keyboard device.
@@ -69,16 +82,6 @@ void fsiInit(FSPSView *v)
         }
 
         exit(1);
-    }
-
-    // We must explicitly clear the keymap else garbage keys could be pressed.
-    for (int i = 0; i < FST_VK_COUNT; ++i) {
-        for (int j = 0; j < FS_MAX_KEYS_PER_ACTION; ++j) {
-            v->keymap[i][j] = (KeyEntry) {
-                .isDefault = false,
-                .value = KEY_NONE
-            };
-        }
     }
 
     // Clear the cursor

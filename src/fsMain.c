@@ -245,7 +245,7 @@ int main(int argc, char **argv)
         fsCurrentLogLevel = o.verbosity;
     }
 
-    fsiInit(&pView);
+    fsiPreInit(&pView);
     fsGameInit(&game);
     fsLoadDefaultKeys(&pView);
 
@@ -253,6 +253,7 @@ int main(int argc, char **argv)
         fsParseIniFile(&pView, &gView, FS_CONFIG_FILENAME);
     }
 
+    fsiInit(&pView);
     gameLoop(&pView, &gView);
 
     fsiFree(&pView);
