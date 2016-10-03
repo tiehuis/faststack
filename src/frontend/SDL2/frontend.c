@@ -33,6 +33,11 @@ void fsiPreInit(FSPSView *v)
     }
 }
 
+int calcFontSize(int width)
+{
+    return width / 40;
+}
+
 void fsiInit(FSPSView *v)
 {
     SDL_RWops *rw;
@@ -49,7 +54,7 @@ void fsiInit(FSPSView *v)
     }
 
     rw = SDL_RWFromConstMem(ttfFontSpec, ttfFontSpecLen);
-    v->font = TTF_OpenFontRW(rw, 1, DEFAULT_FONT_SIZE);
+    v->font = TTF_OpenFontRW(rw, 1, calcFontSize(v->width));
     if (v->font == NULL) {
         fsLogFatal("TTF_OpenFontIndexRW error: %s", TTF_GetError());
         TTF_Quit();
