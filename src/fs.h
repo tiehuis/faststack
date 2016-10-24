@@ -27,9 +27,6 @@
 #include <stdbool.h>
 #include <string.h>
 
-/// Name of configuration file.
-#define FS_CONFIG_FILENAME "fs.ini"
-
 /// Number of types of pieces.
 #define FS_NPT 7
 

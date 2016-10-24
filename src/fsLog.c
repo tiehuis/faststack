@@ -7,6 +7,10 @@
 // NOTE: Not thread-safe.
 ///
 
+// TODO(#39): Platform-specific for `isatty` and `fileno`
+#define _XOPEN_SOURCE 500
+#include <unistd.h>
+
 #include "fsLog.h"
 
 #include <stdarg.h>
@@ -17,6 +21,11 @@
 // Global variable used to filter which messages are printed.
 ///
 int fsCurrentLogLevel = FS_LOG_LEVEL_WARNING;
+
+///
+// Global variable for which stream to logging.
+///
+FILE *fsLogStream = NULL;
 
 ///
 // Return a string with the current time.
@@ -65,15 +74,24 @@ static int logLevelColorCode(int level)
 void fsLog(int level, ...)
 {
     if (level >= fsCurrentLogLevel) {
-        fprintf(stderr, "\033[%dm[%s] [%s]:\033[0m ",
-                logLevelColorCode(level), ctimeStr(), logLevelStr(level));
+        int stat = isatty(fileno(fsLogStream));
+
+        if (stat) {
+            fprintf(fsLogStream, "\033[%dm", logLevelColorCode(level));
+        }
+
+        fprintf(fsLogStream, "[%s] [%s]: ", ctimeStr(), logLevelStr(level));
+
+        if (stat) {
+            fprintf(fsLogStream, "\033[0m");
+        }
 
         va_list args;
         va_start(args, level);
         const char *format = va_arg(args, const char*);
-        vfprintf(stderr, format, args);
+        vfprintf(fsLogStream, format, args);
         va_end(args);
 
-        fprintf(stderr, "\n");
+        fprintf(fsLogStream, "\n");
     }
 }

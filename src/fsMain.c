@@ -22,6 +22,8 @@
 #include "frontend/SDL2/frontend.h"
 #elif FS_USE_TERMINAL
 #include "frontend/terminal/frontend.h"
+#else
+#error "No frontend selected!"
 #endif
 
 static void fsLoadDefaultKeys(FSPSView *v)
@@ -241,6 +243,12 @@ int main(int argc, char **argv)
     FSOptions o;
     fsParseOptString(&o, argc, argv);
 
+#ifdef FS_USE_TERMINAL
+    fsLogStream = fopen(FS_LOG_FILENAME, "w+");
+#else
+    fsLogStream = stderr;
+#endif
+
     if (o.verbosity) {
         fsCurrentLogLevel = o.verbosity;
     }
@@ -257,4 +265,8 @@ int main(int argc, char **argv)
     gameLoop(&pView, &gView);
 
     fsiFree(&pView);
+
+#ifdef FS_USE_TERMINAL
+    fclose(fsLogStream);
+#endif
 }

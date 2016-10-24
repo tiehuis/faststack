@@ -44,4 +44,10 @@
 /// Maximum number of keys an action can be triggered by.
 #define FS_MAX_KEYS_PER_ACTION 3
 
+/// Name of configuration file.
+#define FS_CONFIG_FILENAME "fs.ini"
+
+/// Name of the log file to write to.
+#define FS_LOG_FILENAME "fs.log"
+
 #endif // FS_CONFIG_H

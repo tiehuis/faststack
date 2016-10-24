@@ -8,10 +8,17 @@
 #ifndef FS_LOG_H
 #define FS_LOG_H
 
+#include <stdio.h>
+
 ///
 // We want to allow any client to set this variable to alter all logging.
 ///
 extern int fsCurrentLogLevel;
+
+///
+// We want to allow a user to adjust output stream as required.
+///
+extern FILE *fsLogStream;
 
 ///
 // Represents a level of logging.
