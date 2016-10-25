@@ -1,57 +1,43 @@
 FastStack
 =========
 
-A customisable tetris game aimed at line-race modes.
+<p align="center">
+    <img src="http://i.imgur.com/M9RXMpH.gif"/>
+</p>
 
-![SDL Frontend](/res/sdl-example.png)
+A heavily customisable speed-oriented puzzle game.
 
-This is largely adapted from LockJaw. Many existing features have been removed
-such as support for the DS/GBA and block connections amongst others. This was
-done primarily because this is effectively a rewrite using LockJaw as a basis
-on how to structure the project, but also because they aren't part of the
-feature set I want to use.
+This is primarily intended for line-race modes at the current stage. If you
+want a more feature-filled game, I would suggest
+[Nullpomino](https://github.com/nullpomino/nullpomino) instead.
 
-The internal code is altered so that game logic is not tied to the draw phase
-and the internal tick rate is configurable.
+Motivation
+----------
 
-I want to keep this simple and a good foundation to build on top of, but
-reduced in scope enough that the focus is clear. This isn't an end-all
-emulator like NullpoMino.
+Nullpomino has a few problems on Linux with new Java versions so I needed
+another lightweight game as an alternative. Another reason was that there are
+no decent terminal versions.
 
-Another important reason for this is that I want to play 40L mode, but
-NullpoMino currently lags immensely and massively slows down other programs
-on my current java version. This version uses no dynamically allocated
-variables in the core engine so should be almost as quick as it can be.
-Maybe in the future I'll even adapt it to run on an embedded device?
-
-Also, there weren't any good serious terminal based tetris games. They usually
-offered really poor input choices in my experience.
-
-Frontends
----------
-
-The current frontend uses the SDL2 library. There is an in-progress terminal
-frontend which is assumes linux and vt100 but otherwise doesn't have any other
-dependencies.
-
-The GUI will never be fully-featured, instead it is much more likely that
-things such as keybindings and options are configured through an INI file.
-If it remains lean and quick there is little reason to configure it any other
-way.
-
-See the specific README files for details.
+See the specific README files for details about the different frontends.
 
  * [SDL2](./src/frontend/SDL2/README.md)
  * [Terminal](./src/frontend/terminal/README.md)
 
+Goals
+-----
+
+ * The core engine should be as lean as possible. No dynamic memory allocation
+   if possible, and strictly conforming to C99 with no external dependencies.
+
+ * The main focus is on line-race modes. Other modes could be added in the
+   future, but it is important to limit the scope for the moment.
+
 Contributing
 ------------
 
-I'd like to keep this fairly active. If you are reading this let me know if you
-have any ideas and/or requests and I may think about implementing them.
+If you have any ideas or requests, feel free to create an issue.
 
 License
 -------
 
-GPLv3 licensed. I'm usually an MIT sort of person, but Lockjaw was GPLv2
-(or later) and for a simple application, it fits okay anyway.
+GPLv3 licensed. See the [README](./README.md).
