@@ -246,7 +246,7 @@ static uint16_t attr_colour(int piece)
 static void drawHold(FSPSView *v)
 {
     i8x2 blocks[4];
-    const FSGame *f = v->view->game;
+    const FSEngine *f = v->view->game;
 
     if (f->holdPiece == FS_NONE) {
         return;
@@ -270,7 +270,7 @@ static void drawHold(FSPSView *v)
 static void drawField(FSPSView *v)
 {
     i8x2 blocks[4];
-    const FSGame *f = v->view->game;
+    const FSEngine *f = v->view->game;
 
     ///
     // Border
@@ -349,7 +349,7 @@ static void drawField(FSPSView *v)
 static void drawPreview(FSPSView *v)
 {
     i8x2 blocks[FS_NBP];
-    const FSGame *f = v->view->game;
+    const FSEngine *f = v->view->game;
     const int previewCount = f->nextPieceCount > FS_MAX_PREVIEW_COUNT
                                 ? FS_MAX_PREVIEW_COUNT
                                 : f->nextPieceCount;
@@ -404,14 +404,14 @@ static void putStrAt(FSPSView *v, const char *s, int y, int x, int attrs)
 // The string will be centered, and truncated if too long.
 void fsiRenderFieldString(FSPSView *v, const char *msg)
 {
-    const FSGame *f = v->view->game;
+    const FSEngine *f = v->view->game;
     const int w = strlen(msg);
     putStrAt(v, msg, FIELD_Y + FIELD_H / 2, FIELD_X + FIELD_W / 2 - w / 2 + 1, 0);
 }
 
 static void drawInfo(FSPSView *v)
 {
-    const FSGame *f = v->view->game;
+    const FSEngine *f = v->view->game;
 
     const int bufsiz = FS_TERM_WIDTH;
     char buf[bufsiz];

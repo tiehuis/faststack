@@ -6,7 +6,7 @@
 // for the FastStack engine.
 ///
 
-#include "fs.h"
+#include "fsEngine.h"
 #include "fsControl.h"
 #include "fsInternal.h"
 
@@ -19,7 +19,7 @@
 // `keys` is an integer with bits set depending on the state of the specified
 //  key. The bits set correspond to the `FST_VK_FLAG` enum in `fsControl.h`.
 ///
-void fsVirtualKeysToInput(struct FSInput *dst, u32 keys, const FSGame *f, FSControl *c)
+void fsVirtualKeysToInput(struct FSInput *dst, u32 keys, const FSEngine *f, FSControl *c)
 {
     u32 lastTickKeys = c->lastKeys;
     u32 newKeys = keys & ~lastTickKeys;

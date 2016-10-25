@@ -3,14 +3,14 @@
 // ==========
 //
 // Handle parsing of configuration files and the associated setting of value
-// within a `FSGame` instance.
+// within a `FSEngine` instance.
 //
 // We make heavy macro usage in order to get thorough input-checking for values
 // across a number of types. Will likely be slightly adjusted if we move hasing
 // approaches into here.
 ///
 
-#include "fs.h"
+#include "fsEngine.h"
 #include "fsInternal.h"
 #include "fsInterface.h"
 
@@ -109,7 +109,7 @@ static void unpackOptionValue(struct FSPSView *p, FSView *v, const char *k,
 {
     if (!strncmp(k, "game.", 5)) {
         const char *key = k + 5;
-        FSGame *dst = v->game;
+        FSEngine *dst = v->game;
 
         TS_INT       (areDelay);
         TS_BOOL      (areCancellable);

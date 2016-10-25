@@ -8,7 +8,7 @@
 ///
 
 #include "keymap.h"
-#include "fs.h"
+#include "fsEngine.h"
 #include "fsInterface.h"
 
 #include <stdio.h>

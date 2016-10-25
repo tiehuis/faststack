@@ -4,7 +4,7 @@
 //
 // Internal macros and definitions that are used across multiple files.
 //
-// This is not included in the public header `fs.h`.
+// This is not included in the public header `fsEngine.h`.
 ///
 
 #ifndef FS_INTERNAL_H

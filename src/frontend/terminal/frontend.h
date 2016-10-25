@@ -9,7 +9,7 @@
 
 #include "keymap.h"
 
-#include "fs.h"
+#include "fsEngine.h"
 #include "fsInterface.h"
 
 #include <stdint.h>

@@ -8,7 +8,7 @@
 
 // Need to include the actual frontend we are using here so we know the storage
 // size.
-#include "fs.h"
+#include "fsEngine.h"
 #include "fsDefault.h"
 #include "fsInterface.h"
 #include "fsOption.h"
@@ -38,7 +38,7 @@ static void fsLoadDefaultKeys(FSPSView *v)
 
 static void updateGameLogic(FSPSView *v, FSView *g)
 {
-    FSGame *f = g->game;
+    FSEngine *f = g->game;
     FSControl *ctl = g->control;
     FSInput in = {0, 0, 0, 0, 0};
 
@@ -70,7 +70,7 @@ static void updateGameView(FSPSView *v, FSView *g)
 
 static void playGameLoop(FSPSView *v, FSView *g)
 {
-    FSGame *f = g->game;
+    FSEngine *f = g->game;
     i32 tickRate = f->msPerTick * 1000;
     i32 gameStart = fsiGetTime(v);
     i32 lastTime = fsiGetTime(v);
@@ -227,7 +227,7 @@ end:;
 
 int main(int argc, char **argv)
 {
-    FSGame game;
+    FSEngine game;
     FSControl control;
     FSView gView = { .game = &game, .control = &control, .totalFramesDrawn = 0 };
     FSPSView pView = { .view = &gView };

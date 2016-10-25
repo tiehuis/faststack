@@ -4,7 +4,7 @@
 //
 // Implements a number of different types of randomizers.
 //
-// All randomizer can uset the internal 'FSGame' variables
+// All randomizer can uset the internal 'FSEngine' variables
 // 'randBuf' and 'randBufIndex'.
 //
 // The PRNG used is found here: http://burtleburtle.net/bob/rand/smallprng.html.
@@ -14,7 +14,7 @@
 // seed.
 ///
 
-#include "fs.h"
+#include "fsEngine.h"
 
 #include <stdint.h>
 #include <stdlib.h>
@@ -91,7 +91,7 @@ static void fisherYatesShuffle(FSRandCtx *ctx, FSBlock *a, int n)
 // This implements a standard 7-bag shuffle randomizer. An extra condition is
 // added to ensure that an S, Z or O piece is not dealt first.
 ///
-static void initNoSZOBag7(FSGame *f)
+static void initNoSZOBag7(FSEngine *f)
 {
     f->randBufIndex = 0;
     for (int i = 0; i < FS_NPT; ++i) {
@@ -106,7 +106,7 @@ static void initNoSZOBag7(FSGame *f)
              f->randBuf[0] == FS_O);
 }
 
-static FSBlock fromNoSZOBag7(FSGame *f)
+static FSBlock fromNoSZOBag7(FSEngine *f)
 {
     const FSBlock b = f->randBuf[f->randBufIndex];
     if (++f->randBufIndex == FS_NPT) {
@@ -122,7 +122,7 @@ static FSBlock fromNoSZOBag7(FSGame *f)
 // A simple randomizer just generates a random number with no knowledge
 // of what comes before or after it.
 ///
-static FSBlock fromSimple(FSGame *f)
+static FSBlock fromSimple(FSEngine *f)
 {
     (void) f;
     return fsRandInRange(&f->randomContext, 0, FS_NPT);
@@ -133,7 +133,7 @@ static FSBlock fromSimple(FSGame *f)
 //
 // Simple 4-roll randomizer with initial 4 Z history.
 ///
-static void initTGM1(FSGame *f)
+static void initTGM1(FSEngine *f)
 {
     // Fill history with 4 Z's
     f->randBuf[0] = FS_Z;
@@ -145,7 +145,7 @@ static void initTGM1(FSGame *f)
     f->randBufIndex = 0;
 }
 
-static FSBlock fromTGM1or2(FSGame *f, int noOfRolls)
+static FSBlock fromTGM1or2(FSEngine *f, int noOfRolls)
 {
     FSBlock piece = 0;
     for (int i = 0; i < noOfRolls; ++i) {
@@ -178,7 +178,7 @@ static FSBlock fromTGM1or2(FSGame *f, int noOfRolls)
 // This only differs from the TGM1 in the initial history.
 // Reuse the `fromTGM1or2` function to generate pieces.
 ///
-static void initTGM2(FSGame *f)
+static void initTGM2(FSEngine *f)
 {
     // Fill history with Z, S, S, Z
     f->randBuf[0] = FS_Z;
@@ -196,7 +196,7 @@ static void initTGM2(FSGame *f)
 // This wil initialize the randomizer if it has yet to be called with the
 // current randomizer type.
 ///
-FSBlock fsNextRandomPiece(FSGame *f)
+FSBlock fsNextRandomPiece(FSEngine *f)
 {
     if (f->randomizer != f->lastRandomizer) {
         f->lastRandomizer = f->randomizer;

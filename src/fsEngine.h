@@ -1,6 +1,6 @@
 ///
-// fs.h
-// ====
+// fsEngine.h
+// ==========
 //
 // Header file for the FastStack engine.
 //
@@ -8,7 +8,7 @@
 // provided which provide some convenience when performing certain tasks.
 //
 // Notes:
-//  * Rename this to FSGame.h and fsTypes to fsCore.h
+//  * Rename this to FSEngine.h and fsTypes to fsCore.h
 //
 // Naming
 // ------
@@ -167,7 +167,7 @@ enum GameState {
 //
 //  Note: ANy 'Constraints' should always be true at any point in time.
 ///
-typedef struct FSGame {
+typedef struct FSEngine {
     /// @E: Current field state.
     FSBlock b[FS_MAX_HEIGHT][FS_MAX_WIDTH];
 
@@ -359,17 +359,17 @@ typedef struct FSGame {
 
     /// @O: Target number of lines to clear during this game.
     i32 goal;
-} FSGame;
+} FSEngine;
 
 ///
 // A generic view of a games components.
 //
-// The 'FSGame' instance does not handle all the components, such as input.
+// The 'FSEngine' instance does not handle all the components, such as input.
 // This view encapsulates all these components into one structure.
 ///
 typedef struct FSView {
     /// Current game instance.
-    FSGame *game;
+    FSEngine *game;
 
     /// Current input state.
     FSControl *control;
@@ -385,10 +385,10 @@ typedef struct FSView {
 // options. This is suitable to call when a new game is wanted to be started
 // without reloading an options file/keeping track of options elsewhere.
 //
-//  * FSGame *f
+//  * FSEngine *f
 //      The instance to clear.
 ///
-void fsGameReset(FSGame *f);
+void fsGameReset(FSEngine *f);
 
 ///
 // Initialize a game instance.
@@ -396,23 +396,23 @@ void fsGameReset(FSGame *f);
 // This will reset all internal variables and also set options to their
 // default values.
 ///
-void fsGameInit(FSGame *f);
+void fsGameInit(FSEngine *f);
 
 ///
 // Perform a single game update.
 //
-//  * FSGame *f
+//  * FSEngine *f
 //      The instance to update
 //
 //  * const FSInput *i
 //      The input for the instance to compute.
 ///
-void fsGameTick(FSGame *f, const FSInput *i);
+void fsGameTick(FSEngine *f, const FSInput *i);
 
 ///
 // Convert the specified into its individual blocks.
 //
-//  * const FSGame *f
+//  * const FSEngine *f
 //      The instance which options are used
 //
 //  * i8x2 *dst
@@ -433,7 +433,7 @@ void fsGameTick(FSGame *f, const FSInput *i);
 //      Rotation state of the piece.
 //
 ///
-void fsPieceToBlocks(const FSGame *f, i8x2 dst[static FS_NBP],
+void fsPieceToBlocks(const FSEngine *f, i8x2 dst[static FS_NBP],
                      i8 piece, int x, int y, int theta);
 
 #endif // FS_H

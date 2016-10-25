@@ -19,7 +19,7 @@ enum RandomizerType {
     FST_RAND_TGM2
 };
 
-struct FSGame;
+struct FSEngine;
 
 ///
 // Random state context.
@@ -37,6 +37,6 @@ u32 fsRandNext(FSRandCtx *ctx);
 
 void fsRandSeed(FSRandCtx *ctx, u32 seed);
 
-FSBlock fsNextRandomPiece(struct FSGame *f);
+FSBlock fsNextRandomPiece(struct FSEngine *f);
 
 #endif // FS_RAND_H

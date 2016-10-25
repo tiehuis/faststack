@@ -77,7 +77,7 @@ extern const i8x2 pieceOffsets[FS_NPT][FS_NPR][FS_NBP];
 
 ///
 // Rotation Systems are defined statically. We only store an index to the
-// currently used table in 'FSGame'.
+// currently used table in 'FSEngine'.
 ///
 extern const FSRotationSystem *rotationSystems[FS_NRS];
 

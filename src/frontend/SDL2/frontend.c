@@ -313,7 +313,7 @@ void fsiPostFrameHook(FSPSView *v)
 // Draws a rudimentary debug screen in the upper right corner of the screen.
 void drawDebug(FSPSView *v)
 {
-    const FSGame *f = v->view->game;
+    const FSEngine *f = v->view->game;
 
     // Initial x, y offset
     int ux = v->width * 0.7;
@@ -398,7 +398,7 @@ static void drawHoldPiece(FSPSView *v)
         .h = BLOCK_SL
     };
 
-    const FSGame *f = v->view->game;
+    const FSEngine *f = v->view->game;
 
     if (f->holdPiece == FS_NONE) {
         return;
@@ -432,7 +432,7 @@ static void drawPieceAndShadow(FSPSView *v)
         .h = BLOCK_SL
     };
 
-    const FSGame *f = v->view->game;
+    const FSEngine *f = v->view->game;
     const FSBlock pid = f->piece;
 
     if (pid == FS_NONE) {
@@ -485,7 +485,7 @@ static void drawPieceAndShadow(FSPSView *v)
 //  We assume a width and height of 10, 20 for the moment.
 void drawField(FSPSView *v)
 {
-    const FSGame *f = v->view->game;
+    const FSEngine *f = v->view->game;
 
     const SDL_Rect border = {
         .x = FIELD_X - 1,
@@ -541,7 +541,7 @@ static void drawPreviewSection(FSPSView *v)
         .h = BLOCK_SL
     };
 
-    const FSGame *f = v->view->game;
+    const FSEngine *f = v->view->game;
     const int previewCount = f->nextPieceCount > FS_MAX_PREVIEW_COUNT
                                 ? FS_MAX_PREVIEW_COUNT
                                 : f->nextPieceCount;
@@ -577,7 +577,7 @@ static void drawPreviewSection(FSPSView *v)
 
 static void drawInfoSection(FSPSView *v)
 {
-    const FSGame *f = v->view->game;
+    const FSEngine *f = v->view->game;
 
     // Render text to bottom of the screen signalling goal
     const int writeBufferSize = 64;

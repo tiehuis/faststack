@@ -18,7 +18,7 @@
 #ifndef FS_INTERFACE_H
 #define FS_INTERFACE_H
 
-#include "fs.h"
+#include "fsEngine.h"
 #include "fsTypes.h"
 
 ///

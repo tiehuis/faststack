@@ -1,11 +1,11 @@
 ///
-// fs.c
-// ====
+// fsEngine.c
+// ==========
 //
 // FastStack Engine implementation.
 ///
 
-#include "fs.h"
+#include "fsEngine.h"
 #include "fsDefault.h"
 #include "fsInternal.h"
 #include "fsRand.h"
@@ -23,7 +23,7 @@ const i8 pieceColors[FS_NPT] = {
 ///
 // Return the next preview piece from the queue.
 ///
-static FSBlock nextPreviewPiece(FSGame *f)
+static FSBlock nextPreviewPiece(FSEngine *f)
 {
     const FSBlock newPiece = fsNextRandomPiece(f);
 
@@ -37,7 +37,7 @@ static FSBlock nextPreviewPiece(FSGame *f)
     return pendingPiece;
 }
 
-void fsGameReset(FSGame *f)
+void fsGameReset(FSEngine *f)
 {
     // We cannot simply memset the entire structure since we want to preserve
     // existing option (@O) values.
@@ -86,7 +86,7 @@ void fsGameReset(FSGame *f)
 //
 // We want this seperate from standard initialization so we can reset a game
 // without discarding user options.
-void fsGameInit(FSGame *f)
+void fsGameInit(FSEngine *f)
 {
     f->fieldWidth = FSD_FIELD_WIDTH;
     f->fieldHeight = FSD_FIELD_HEIGHT;
@@ -118,7 +118,7 @@ void fsGameInit(FSGame *f)
 ///
 // Return the set of `FS_NBP` locations the specified piece fills.
 ///
-void fsPieceToBlocks(const FSGame *f, i8x2 *dst, i8 piece, int x, int y, int theta)
+void fsPieceToBlocks(const FSEngine *f, i8x2 *dst, i8 piece, int x, int y, int theta)
 {
     // A rotation system could be offset
     const FSRotationSystem *rs = rotationSystems[f->rotationSystem];
@@ -134,7 +134,7 @@ void fsPieceToBlocks(const FSGame *f, i8x2 *dst, i8 piece, int x, int y, int the
 // Return whether the specified position is occupied by a block/field.
 ///
 // If the coordinates are outside the field, false is returned.
-static bool isOccupied(const FSGame *f, int x, int y)
+static bool isOccupied(const FSEngine *f, int x, int y)
 {
     if (x < 0 || x >= f->fieldWidth || y < 0 || y >= f->fieldHeight) {
         return true;
@@ -146,7 +146,7 @@ static bool isOccupied(const FSGame *f, int x, int y)
 ///
 // Does the current piece collide at the specified coordinates/rotation.
 ///
-static bool isCollision(const FSGame *f, int x, int y, int theta)
+static bool isCollision(const FSEngine *f, int x, int y, int theta)
 {
     i8x2 blocks[FS_NBP];
 
@@ -163,7 +163,7 @@ static bool isCollision(const FSGame *f, int x, int y, int theta)
 ///
 // Lock the current piece and perform post-piece specific routines.
 ///
-static void lockPiece(FSGame *f)
+static void lockPiece(FSEngine *f)
 {
     i8x2 blocks[FS_NBP];
     fsPieceToBlocks(f, blocks, f->piece, f->x, f->y, f->theta);
@@ -204,7 +204,7 @@ static void lockPiece(FSGame *f)
 ///
 // Generate a new piece and 'spawn' it to the field.
 ///
-static void newPiece(FSGame *f)
+static void newPiece(FSEngine *f)
 {
     // NOTE: Should use wallkick entryOffset here probably, and entryTheta?
     // Else we are maintaining the current where we map only when the blocks
@@ -234,7 +234,7 @@ static void newPiece(FSGame *f)
 // Notes:
 //  * These conditionals are a little hard to parse.
 ///
-static bool wkCondArikaLJT(const FSGame *f, int direction)
+static bool wkCondArikaLJT(const FSEngine *f, int direction)
 {
     // The following states are invalid if the x slot is occupied AND
     // the o slot is not occupied and traveling the specified
@@ -305,7 +305,7 @@ static bool wkCondArikaLJT(const FSGame *f, int direction)
 ///
 // Attempt to perform a rotation, returning whether the rotation succeeded.
 ///
-static bool doRotate(FSGame *f, i8 direction)
+static bool doRotate(FSEngine *f, i8 direction)
 {
     i8 newDir = (f->theta + 4 + direction) & 3;
     const FSRotationSystem *rs = rotationSystems[f->rotationSystem];
@@ -380,7 +380,7 @@ static bool doRotate(FSGame *f, i8 direction)
 //
 // `gravity` is includes the calculated soft drop amount.
 ///
-static void doPieceGravity(FSGame *f, i8 gravity)
+static void doPieceGravity(FSEngine *f, i8 gravity)
 {
     f->actualY += (f->msPerTick * f->gravity) + gravity;
 
@@ -416,7 +416,7 @@ static void doPieceGravity(FSGame *f, i8 gravity)
 // This requires only two passes of the data, and at worst copying of
 // fieldHeight - 1 rows.
 ///
-static i8 clearLines(FSGame *f)
+static i8 clearLines(FSEngine *f)
 {
     // This effectively limits the maximum possible height to 32 rows.
     u32 foundLines = 0;
@@ -463,7 +463,7 @@ next_row:
 ///
 // Recalculate and set the lowest valid Y position for the current piece.
 ///
-void updateHardDropY(FSGame *f)
+void updateHardDropY(FSEngine *f)
 {
     int y = f->y;
     while (!isCollision(f, f->x, y, f->theta)) {
@@ -476,7 +476,7 @@ void updateHardDropY(FSGame *f)
 ///
 // Attempt to hold the piece, returning if a hold was successful.
 ///
-static bool tryHold(FSGame *f)
+static bool tryHold(FSEngine *f)
 {
     if (f->holdAvailable) {
         f->holdAvailable = false;
@@ -517,7 +517,7 @@ static bool tryHold(FSGame *f)
 // game loop. We do not want a 1 frame delay for some actions so we allow
 // some to run 'instantly'.
 ///
-void fsGameTick(FSGame *f, const FSInput *i)
+void fsGameTick(FSEngine *f, const FSInput *i)
 {
     i8 distance;
     bool moved = false, rotated = false;

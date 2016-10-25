@@ -8,7 +8,7 @@
 // allocate for various structures. This can be configured based on the
 // requirements of the frontend implementation.
 //
-// Note: Do not include this directly. 'fs.h' includes this.
+// Note: Do not include this directly. 'fsEngine.h' includes this.
 ///
 
 #ifndef FS_CONFIG_H

@@ -2,7 +2,7 @@
 // fsDefault.h
 // ===========
 //
-// Defualt parameters used for every FSGame instance.
+// Defualt parameters used for every FSEngine instance.
 //
 // These provide a fallback for if user specified options from an ini file
 // could not be loaded or if no ini file support is wanted.
@@ -10,7 +10,7 @@
 // Any default value specified here should be able to be overridden in the ini
 // file.
 //
-// See `FSGame` declaration in `fs.h` for documentation on what each value
+// See `FSEngine` declaration in `fsEngine.h` for documentation on what each value
 // is expected to be.
 ///
 
