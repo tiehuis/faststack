@@ -199,7 +199,7 @@ enum GameState {
 // the prng here: http://burtleburtle.net/bob/rand/smallprng.html.
 ///
 typedef struct FSRandCtx {
-    uint32_t a, b, c, d;
+    u32 a, b, c, d;
 } FSRandCtx;
 
 ///
@@ -301,10 +301,10 @@ typedef struct FSGame {
     FSRandCtx randomContext;
 
     /// @I: Buffer for calculating next pieces.
-    FSBlock randomInternal[FS_RAND_BUFFER_LEN];
+    FSBlock randBuf[FS_RAND_BUFFER_LEN];
 
-    /// @I: Index for `randomInternal`
-    int randomInternalIndex;
+    /// @I: Index for `randBuf`
+    int randBufIndex;
 
     /// @O: The way we should handle Initial Actions.
     i8 initialActionStyle;
@@ -430,7 +430,7 @@ typedef struct FSGame {
     i8 randomizer;
 
     /// @I: Randomizer seed
-    uint32_t seed;
+    u32 seed;
 
     /// @I: The randomizer in use during the last game update.
     //

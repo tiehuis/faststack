@@ -18,8 +18,8 @@
 // Implementation in `fsRand.c`.
 //
 FSBlock fsNextRandomPiece(FSGame *f);
-uint32_t fsGetRoughSeed(void);
-void fsRandSeed(FSRandCtx *ctx, uint32_t seed);
+u32 fsGetRoughSeed(void);
+void fsRandSeed(FSRandCtx *ctx, u32 seed);
 
 ///
 // Static piece offsets.
@@ -104,7 +104,7 @@ void fsGameReset(FSGame *f)
     //
     // Typically any added @I or @E piece needs to be added here as well.
     memset(f->b, 0, sizeof(f->b));
-    memset(f->randomInternal, 0, sizeof(f->randomInternal));
+    memset(f->randBuf, 0, sizeof(f->randBuf));
     memset(&f->lastInput, 0, sizeof(f->lastInput));
     f->se = 0;
     f->irsAmount = 0;

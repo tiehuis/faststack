@@ -80,7 +80,7 @@ enum CellAttribute {
 ///
 typedef struct {
     /// Value stored in this cell.
-    uint32_t value;
+    u32 value;
 
     /// Attributes associated with this cell.
     uint16_t attrs;

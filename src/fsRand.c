@@ -5,7 +5,7 @@
 // Implements a number of different types of randomizers.
 //
 // All randomizer can uset the internal 'FSGame' variables
-// 'randomInternal' and 'randomInternalIndex'.
+// 'randBuf' and 'randBufIndex'.
 //
 // The PRNG used is found here: http://burtleburtle.net/bob/rand/smallprng.html.
 //
@@ -26,35 +26,33 @@
 //
 // This is only intended to change often enough to be recalculated on
 // game restart.
-uint32_t fsGetRoughSeed(void)
+u32 fsGetRoughSeed(void)
 {
-    uint32_t seed = time(NULL);
-    return seed * (uint32_t) clock();
+    u32 seed = time(NULL);
+    return seed * (u32) clock();
 }
 
 ///
 // Generate the next value for this PRNG context.
-uint32_t fsRandNext(FSRandCtx *ctx)
+u32 fsRandNext(FSRandCtx *ctx)
 {
-#define ROT(x, k) (((x) << (k)) | ((x) >> (32 - (k))))
-
-    const uint32_t e = ctx->a - ROT(ctx->b, 27);
-    ctx->a = ctx->b ^ ROT(ctx->c, 17);
+#define R(x, k) (((x) << (k)) | ((x) >> (32 - (k))))
+    const u32 e = ctx->a - R(ctx->b, 27);
+    ctx->a = ctx->b ^ R(ctx->c, 17);
     ctx->b = ctx->c + ctx->d;
     ctx->c = ctx->d + e;
     ctx->d = e + ctx->a;
     return ctx->d;
-
-#undef ROT
+#undef R
 }
 
 ///
 // Generate an unbiased integer within the range [low, high).
-static uint32_t fsRandInRange(FSRandCtx *ctx, uint32_t low, uint32_t high)
+static u32 fsRandInRange(FSRandCtx *ctx, u32 low, u32 high)
 {
-    const uint32_t range = high - low;
-    const uint32_t rem = UINT32_MAX % range;
-    uint32_t x;
+    const u32 range = high - low;
+    const u32 rem = UINT32_MAX % range;
+    u32 x;
 
     do {
         x = fsRandNext(ctx);
@@ -65,7 +63,7 @@ static uint32_t fsRandInRange(FSRandCtx *ctx, uint32_t low, uint32_t high)
 
 ///
 // Seed the randomizer.
-void fsRandSeed(FSRandCtx *ctx, uint32_t seed)
+void fsRandSeed(FSRandCtx *ctx, u32 seed)
 {
     ctx->a = 0xf1ea5eed;
     ctx->b = ctx->c = ctx->d = seed;
@@ -95,25 +93,25 @@ static void fisherYatesShuffle(FSRandCtx *ctx, FSBlock *a, int n)
 ///
 static void initNoSZOBag7(FSGame *f)
 {
-    f->randomInternalIndex = 0;
+    f->randBufIndex = 0;
     for (int i = 0; i < FS_NPT; ++i) {
-        f->randomInternal[i] = i;
+        f->randBuf[i] = i;
     }
 
     do {
-        fisherYatesShuffle(&f->randomContext, f->randomInternal, FS_NPT);
+        fisherYatesShuffle(&f->randomContext, f->randBuf, FS_NPT);
         // Discard S, Z, O pieces
-    } while (f->randomInternal[0] == FS_S ||
-             f->randomInternal[0] == FS_Z ||
-             f->randomInternal[0] == FS_O);
+    } while (f->randBuf[0] == FS_S ||
+             f->randBuf[0] == FS_Z ||
+             f->randBuf[0] == FS_O);
 }
 
 static FSBlock fromNoSZOBag7(FSGame *f)
 {
-    const FSBlock b = f->randomInternal[f->randomInternalIndex];
-    if (++f->randomInternalIndex == FS_NPT) {
-        f->randomInternalIndex = 0;
-        fisherYatesShuffle(&f->randomContext, f->randomInternal, FS_NPT);
+    const FSBlock b = f->randBuf[f->randBufIndex];
+    if (++f->randBufIndex == FS_NPT) {
+        f->randBufIndex = 0;
+        fisherYatesShuffle(&f->randomContext, f->randBuf, FS_NPT);
     }
     return b;
 }
@@ -138,13 +136,13 @@ static FSBlock fromSimple(FSGame *f)
 static void initTGM1(FSGame *f)
 {
     // Fill history with 4 Z's
-    f->randomInternal[0] = FS_Z;
-    f->randomInternal[1] = FS_Z;
-    f->randomInternal[2] = FS_Z;
-    f->randomInternal[3] = FS_Z;
+    f->randBuf[0] = FS_Z;
+    f->randBuf[1] = FS_Z;
+    f->randBuf[2] = FS_Z;
+    f->randBuf[3] = FS_Z;
 
     // We use a circular buffer to manage history
-    f->randomInternalIndex = 0;
+    f->randBufIndex = 0;
 }
 
 static FSBlock fromTGM1or2(FSGame *f, int noOfRolls)
@@ -156,7 +154,7 @@ static FSBlock fromTGM1or2(FSGame *f, int noOfRolls)
         // If the piece is not in the queue then we are done
         int j;
         for (j = 0; j < 4; ++j) {
-            if (f->randomInternal[j] == piece) {
+            if (f->randBuf[j] == piece) {
                 break;
             }
         }
@@ -168,8 +166,8 @@ static FSBlock fromTGM1or2(FSGame *f, int noOfRolls)
     }
 
     // Update history with current piece
-    f->randomInternal[f->randomInternalIndex] = piece;
-    f->randomInternalIndex = (f->randomInternalIndex + 1) & 3;
+    f->randBuf[f->randBufIndex] = piece;
+    f->randBufIndex = (f->randBufIndex + 1) & 3;
     fsLogDebug("Returning piece: %d", piece);
     return piece;
 }
@@ -183,13 +181,13 @@ static FSBlock fromTGM1or2(FSGame *f, int noOfRolls)
 static void initTGM2(FSGame *f)
 {
     // Fill history with Z, S, S, Z
-    f->randomInternal[0] = FS_Z;
-    f->randomInternal[1] = FS_S;
-    f->randomInternal[2] = FS_S;
-    f->randomInternal[3] = FS_Z;
+    f->randBuf[0] = FS_Z;
+    f->randBuf[1] = FS_S;
+    f->randBuf[2] = FS_S;
+    f->randBuf[3] = FS_Z;
 
     // We use a circular buffer to manage history
-    f->randomInternalIndex = 0;
+    f->randBufIndex = 0;
 }
 
 ///
