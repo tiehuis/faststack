@@ -14,26 +14,21 @@
 /// Represents a single piece id.
 typedef int8_t FSBlock;
 
-/// A type for representing a sequence of bits.
-typedef uint_fast32_t FSBits;
+typedef int8_t i8;
+typedef int32_t i32;
+typedef uint32_t u32;
 
-/// An integer type for small variables. Not required to exceed 8 bits.
-typedef int_fast8_t FSInt;
+/// Generic 2-member tuple of type 'i8'.
+typedef struct i8x2 {
+    i8 x;
+    i8 y;
+} i8x2;
 
-/// An integer type for large variables. At least 32 bits long.
-typedef int_least32_t FSLong;
-
-/// Generic 2-member tuple of type 'FSInt'.
-typedef struct FSInt2 {
-    FSInt x;
-    FSInt y;
-} FSInt2;
-
-/// Generic 3-member tuple of type 'FSInt'.
-typedef struct FSInt3 {
-    FSInt x;
-    FSInt y;
-    FSInt z;
-} FSInt3;
+/// Generic 3-member tuple of type 'i8'.
+typedef struct i8x3 {
+    i8 x;
+    i8 y;
+    i8 z;
+} i8x3;
 
 #endif // FS_TYPES_H

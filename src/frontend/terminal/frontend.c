@@ -123,7 +123,7 @@ void fsiFree(FSPSView *v)
     }
 }
 
-void fsiPlaySe(FSPSView *v, FSBits se)
+void fsiPlaySe(FSPSView *v, u32 se)
 {
     (void) v;
     (void) se;
@@ -134,7 +134,7 @@ void fsiPlaySe(FSPSView *v, FSBits se)
 //
 // Notes:
 //  * Should use CLOCK_MONOTONIC_RAW where available.
-FSLong fsiGetTime(FSPSView *v)
+i32 fsiGetTime(FSPSView *v)
 {
     (void) v;
 
@@ -148,7 +148,7 @@ FSLong fsiGetTime(FSPSView *v)
 //
 // Notes:
 //  * Should clock_nanosleep instead for consistency.
-void fsiSleepUs(FSPSView *v, FSLong time)
+void fsiSleepUs(FSPSView *v, i32 time)
 {
     (void) v;
 
@@ -179,7 +179,7 @@ void fsiSleepUs(FSPSView *v, FSLong time)
 // Notes:
 //  * Can we replace the required getchar() with an ioctl call to mute the
 //    output on this terminal?
-FSBits fsiReadKeys(FSPSView *v)
+u32 fsiReadKeys(FSPSView *v)
 {
     char keystate[(KEY_MAX + 7) / 8] = {0};
 
@@ -203,7 +203,7 @@ FSBits fsiReadKeys(FSPSView *v)
     // Fills buffer with current keystate
     ioctl(v->inputFd, EVIOCGKEY(sizeof(keystate)), keystate);
 
-    FSBits keys = 0;
+    u32 keys = 0;
     for (int i = 0; i < FST_VK_COUNT; ++i) {
         for (int j = 0; j < FS_MAX_KEYS_PER_ACTION; ++j) {
             // Keystate is stored as a bitset in the array of chars
@@ -245,7 +245,7 @@ static uint16_t attr_colour(int piece)
 
 static void drawHold(FSPSView *v)
 {
-    FSInt2 blocks[4];
+    i8x2 blocks[4];
     const FSGame *f = v->view->game;
 
     if (f->holdPiece == FS_NONE) {
@@ -269,7 +269,7 @@ static void drawHold(FSPSView *v)
 
 static void drawField(FSPSView *v)
 {
-    FSInt2 blocks[4];
+    i8x2 blocks[4];
     const FSGame *f = v->view->game;
 
     ///
@@ -348,7 +348,7 @@ static void drawField(FSPSView *v)
 //  * Extend the maximum preview count beyond four in some way.
 static void drawPreview(FSPSView *v)
 {
-    FSInt2 blocks[FS_NBP];
+    i8x2 blocks[FS_NBP];
     const FSGame *f = v->view->game;
     const int previewCount = f->nextPieceCount > FS_MAX_PREVIEW_COUNT
                                 ? FS_MAX_PREVIEW_COUNT

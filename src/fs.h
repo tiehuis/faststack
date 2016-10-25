@@ -206,7 +206,7 @@ typedef struct FSRandCtx {
 // A wallkick table consists of a number 'tests' which are tested in order
 // until success or every test has been tried.
 ///
-typedef FSInt3 WallkickTable[FS_NPR][FS_MAX_KICK_LEN];
+typedef i8x3 WallkickTable[FS_NPR][FS_MAX_KICK_LEN];
 
 ///
 // Specifies a single rotation system.
@@ -225,15 +225,15 @@ typedef FSInt3 WallkickTable[FS_NPR][FS_MAX_KICK_LEN];
 ///
 typedef struct FSRotationSystem {
     /// Initial x, y offsets.
-    FSInt entryOffset[FS_NPT];
+    i8 entryOffset[FS_NPT];
 
     /// Initial theta offets.
-    FSInt entryTheta[FS_NPT];
+    i8 entryTheta[FS_NPT];
 
     /// Indexes into 'kickTables'.
-    FSInt kicksL[FS_NPT];
-    FSInt kicksR[FS_NPT];
-    FSInt kicksH[FS_NPT];
+    i8 kicksL[FS_NPT];
+    i8 kicksR[FS_NPT];
+    i8 kicksH[FS_NPT];
 
     /// A sequence of wallkick tests.
     WallkickTable kickTables[FS_MAX_NO_OF_WALLKICK_TABLES];
@@ -280,19 +280,19 @@ typedef struct FSGame {
     //
     //  * Constraints
     //      * fieldWidth < FS_MAX_WIDTH
-    FSInt fieldWidth;
+    i8 fieldWidth;
 
     /// @O: Current field height.
     //
     //  * Constraints
     //      * fieldHeight < FS_MAX_HEIGHT
-    FSInt fieldHeight;
+    i8 fieldHeight;
 
     /// @0: Number of hidden rows.
     //
     // These are not extra rows, but rather count how many field rows are
     // treated as hidden.
-    FSInt fieldHidden;
+    i8 fieldHidden;
 
     /// @E: Next available pieces.
     FSBlock nextPiece[FS_PREVIEW_MAX];
@@ -307,19 +307,19 @@ typedef struct FSGame {
     int randomInternalIndex;
 
     /// @O: The way we should handle Initial Actions.
-    FSInt initialActionStyle;
+    i8 initialActionStyle;
 
     /// @E: Current sound effects to be played this frame.
-    FSBits se;
+    u32 se;
 
     /// @E: Current pieces type.
     FSBlock piece;
 
     /// @E: Current pieces x position.
-    FSInt x;
+    i8 x;
 
     /// @E: Current pieces y position.
-    FSInt y;
+    i8 y;
 
     /// @I: Actual y position with greater precision.
     //
@@ -331,46 +331,46 @@ typedef struct FSGame {
     float actualY;
 
     /// @I: Greatest 'y' the current piece can exist at without a collision.
-    FSInt hardDropY;
+    i8 hardDropY;
 
     /// @E: Current pieces rotation state.
-    FSInt theta;
+    i8 theta;
 
     /// @I: Current Initial Rotation status (set in ARE)
-    FSInt irsAmount;
+    i8 irsAmount;
 
     /// @I: Current Initial Hold status (set in ARE)
     bool ihsFlag;
 
     /// @O: How many blocks a piece moves per ms.
-    FSInt dasSpeed;
+    i8 dasSpeed;
 
     /// @O: Number of ms a key must be held before repeated movement.
-    FSLong dasDelay;
+    i32 dasDelay;
 
     /// @E: Number of wasted movements have occurred during the games
     //      lifetime.
-    FSLong finesse;
+    i32 finesse;
 
     /// @I: Number of directional movements have been performed during this
     //     pieces lifetime.
-    FSLong finessePieceDirection;
+    i32 finessePieceDirection;
 
     /// @I: Number of rotational movements have been performed during this
     //     pieces lifetime.
-    FSLong finessePieceRotation;
+    i32 finessePieceRotation;
 
     /// @O: Milliseconds between each game logic update.
-    FSInt msPerTick;
+    i8 msPerTick;
 
     /// @O: How many game ticks occur per draw update.
-    FSLong ticksPerDraw;
+    i32 ticksPerDraw;
 
     /// @O: Length in ms that ARE should take.
-    FSLong areDelay;
+    i32 areDelay;
 
     /// @I: Counter for ARE.
-    FSLong areTimer;
+    i32 areTimer;
 
     /// @O: Can ARE be cancelled by input
     bool areCancellable;
@@ -382,34 +382,34 @@ typedef struct FSGame {
     // as a reliable source to ensure the game was played at the correct speed.
     //
     // This is calculated **only** on game finish.
-    FSLong actualTime;
+    i32 actualTime;
 
     /// @I: Generic counter for multi-tick usage.
-    FSLong genericCounter;
+    i32 genericCounter;
 
     /// @E: Number of ticks that have elapsed during this game.
-    FSLong totalTicks;
+    i32 totalTicks;
 
     /// @O: Current lock reset style in use.
-    FSInt lockStyle;
+    i8 lockStyle;
 
     /// @O: Length in ms that it should take to lock a piece.
-    FSLong lockDelay;
+    i32 lockDelay;
 
     /// @I: Counter for locking.
-    FSLong lockTimer;
+    i32 lockTimer;
 
     /// @O: Maximum number of floorkicks allowed per piece.
-    FSInt floorkickLimit;
+    i8 floorkickLimit;
 
     /// @I: Count for how many floorkicks have occured.
-    FSInt floorkickCount;
+    i8 floorkickCount;
 
     /// @O: Should soft drop be a single shot on each key press.
     bool oneShotSoftDrop;
 
     /// @O: Current rotation system being used.
-    FSInt rotationSystem;
+    i8 rotationSystem;
 
     /// @O: How many blocks a piece will fall by every ms.
     float gravity;
@@ -418,16 +418,16 @@ typedef struct FSGame {
     float softDropGravity;
 
     /// @E: Current state of the internal engine.
-    FSInt state;
+    i8 state;
 
     /// @E: State of the game during the last frame.
-    FSInt lastState;
+    i8 lastState;
 
     /// @I: Key input applied during the last logic update.
     FSInput lastInput;
 
     /// @O: Current randomizer in play. */
-    FSInt randomizer;
+    i8 randomizer;
 
     /// @I: Randomizer seed
     uint32_t seed;
@@ -436,19 +436,19 @@ typedef struct FSGame {
     //
     // Used to determine if reinitialization of a randomizer is required.
     // This allows one to alter than randomizer mid-game.
-    FSInt lastRandomizer;
+    i8 lastRandomizer;
 
     /// @O: How long the "Ready" phase countdown should last in ms
-    FSLong readyPhaseLength;
+    i32 readyPhaseLength;
 
     /// @O: How long the "Go" phase countdown should last in ms
-    FSLong goPhaseLength;
+    i32 goPhaseLength;
 
     /// @O: Whether infinite hold is allowed during pre-game.
     bool infiniteReadyGoHold;
 
     /// @O: Number of preview pieces displayed.
-    FSInt nextPieceCount;
+    i8 nextPieceCount;
 
     /// @I: Whether a hold can be performed.
     bool holdAvailable;
@@ -457,13 +457,13 @@ typedef struct FSGame {
     FSBlock holdPiece;
 
     /// @E: Number of cleared lines during the games lifetime
-    FSLong linesCleared;
+    i32 linesCleared;
 
     /// @E: Number of blocks placed during the games lifetime.
-    FSLong blocksPlaced;
+    i32 blocksPlaced;
 
     /// @O: Target number of lines to clear during this game.
-    FSLong goal;
+    i32 goal;
 } FSGame;
 
 ///
@@ -480,7 +480,7 @@ typedef struct FSView {
     FSControl *control;
 
     /// Number of draw requests made during this views lifetime.
-    FSLong totalFramesDrawn;
+    i32 totalFramesDrawn;
 } FSView;
 
 ///
@@ -520,12 +520,12 @@ void fsGameTick(FSGame *f, const FSInput *i);
 //  * const FSGame *f
 //      The instance which options are used
 //
-//  * FSInt2 *dst
+//  * i8x2 *dst
 //      The destination buffer to store the pieces in.
 //
 //      Note: **must** be greater than or equal to FS_NBP in size.
 //
-//  * FSInt piece
+//  * i8 piece
 //      Type of piece to generate.
 //
 //  * int x
@@ -538,6 +538,7 @@ void fsGameTick(FSGame *f, const FSInput *i);
 //      Rotation state of the piece.
 //
 ///
-void fsPieceToBlocks(const FSGame *f, FSInt2 *dst, FSInt piece, int x, int y, int theta);
+void fsPieceToBlocks(const FSGame *f, i8x2 dst[static FS_NBP],
+                     i8 piece, int x, int y, int theta);
 
 #endif // FS_H

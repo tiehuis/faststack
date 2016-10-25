@@ -19,10 +19,10 @@
 // `keys` is an integer with bits set depending on the state of the specified
 //  key. The bits set correspond to the `FST_VK_FLAG` enum in `fsControl.h`.
 ///
-void fsVirtualKeysToInput(struct FSInput *dst, FSBits keys, const FSGame *f, FSControl *c)
+void fsVirtualKeysToInput(struct FSInput *dst, u32 keys, const FSGame *f, FSControl *c)
 {
-    FSBits lastTickKeys = c->lastKeys;
-    FSBits newKeys = keys & ~lastTickKeys;
+    u32 lastTickKeys = c->lastKeys;
+    u32 newKeys = keys & ~lastTickKeys;
     c->lastKeys = keys;
 
     c->currentKeys &= keys;

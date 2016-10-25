@@ -89,16 +89,16 @@ enum VirtualKey {
 ///
 typedef struct FSControl {
     /// @I: State of input device last tick.
-    FSBits lastKeys;
+    u32 lastKeys;
 
     /// @I: Current state of input device.
-    FSBits currentKeys;
+    u32 currentKeys;
 
     /// @E: Number of keypresses in total.
-    FSLong presses;
+    i32 presses;
 
     /// @I: Number of ticks DAS has occurred for.
-    FSLong dasCounter;
+    i32 dasCounter;
 } FSControl;
 
 /// TODO: Insert options into engine and put this definition into the engine itself.
@@ -114,21 +114,21 @@ typedef struct FSInput {
     //
     //  * Constraints
     //      One of 'RotationAmount' (in fs.h)
-    FSInt rotation;
+    i8 rotation;
 
     /// A left-right movement action.
     //
     // Positive movement indicates a right move, whilst negative is left.
-    FSInt movement;
+    i8 movement;
 
     /// Downward movement action. Product of gravity and soft drop.
-    FSInt gravity;
+    i8 gravity;
 
     /// Specific extra movement (e.g. HardDrop).
-    FSInt extra;
+    i8 extra;
 
     /// Current key status (used for some specific events)
-    FSBits currentKeys;
+    u32 currentKeys;
 } FSInput;
 
 
@@ -138,7 +138,7 @@ typedef struct FSInput {
 //  * FSInput *dst
 //      FSInput structure to fill with the calculated actions.
 //
-//  * FSBits keys
+//  * u32 keys
 //      Current keystate.
 //
 //  * const FSGame *f
@@ -147,6 +147,6 @@ typedef struct FSInput {
 //  * FSControl *c
 //      Control structure to use for calculating target actions.
 ///
-void fsVirtualKeysToInput(FSInput *dst, FSBits keys, const struct FSGame *f, FSControl *c);
+void fsVirtualKeysToInput(FSInput *dst, u32 keys, const struct FSGame *f, FSControl *c);
 
 #endif // FS_CONTROL_H

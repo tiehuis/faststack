@@ -30,7 +30,7 @@ void fsRandSeed(FSRandCtx *ctx, uint32_t seed);
 //
 // This complicates wallkicks for some otherwise simple rotations, but
 // in my experience is cleaner than implementing different base offsets.
-static const FSInt2 pieceOffsets[FS_NPT][FS_NPR][FS_NBP] = {
+static const i8x2 pieceOffsets[FS_NPT][FS_NPR][FS_NBP] = {
     [FS_I] = {
         {{0, 1}, {1, 1}, {2, 1}, {3, 1}},
         {{2, 0}, {2, 1}, {2, 2}, {2, 3}},
@@ -76,7 +76,7 @@ static const FSInt2 pieceOffsets[FS_NPT][FS_NPR][FS_NBP] = {
 };
 
 /// Specifies the value stored in each cell. Not currently utilized much.
-const FSInt pieceColors[7] = {
+const i8 pieceColors[FS_NPT] = {
     0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70
 };
 
@@ -178,7 +178,7 @@ void fsGameInit(FSGame *f)
 ///
 // Return the set of `FS_NBP` locations the specified piece fills.
 ///
-void fsPieceToBlocks(const FSGame *f, FSInt2 *dst, FSInt piece, int x, int y, int theta)
+void fsPieceToBlocks(const FSGame *f, i8x2 *dst, i8 piece, int x, int y, int theta)
 {
     // A rotation system could be offset
     const FSRotationSystem *rs = rotationSystems[f->rotationSystem];
@@ -208,7 +208,7 @@ static bool isOccupied(const FSGame *f, int x, int y)
 ///
 static bool isCollision(const FSGame *f, int x, int y, int theta)
 {
-    FSInt2 blocks[FS_NBP];
+    i8x2 blocks[FS_NBP];
 
     fsPieceToBlocks(f, blocks, f->piece, x, y, theta);
 
@@ -225,7 +225,7 @@ static bool isCollision(const FSGame *f, int x, int y, int theta)
 ///
 static void lockPiece(FSGame *f)
 {
-    FSInt2 blocks[FS_NBP];
+    i8x2 blocks[FS_NBP];
     fsPieceToBlocks(f, blocks, f->piece, f->x, f->y, f->theta);
     f->blocksPlaced += 1;
 
@@ -365,12 +365,12 @@ static bool wkCondArikaLJT(const FSGame *f, int direction)
 ///
 // Attempt to perform a rotation, returning whether the rotation succeeded.
 ///
-static bool doRotate(FSGame *f, FSInt direction)
+static bool doRotate(FSGame *f, i8 direction)
 {
-    FSInt newDir = (f->theta + 4 + direction) & 3;
+    i8 newDir = (f->theta + 4 + direction) & 3;
     const FSRotationSystem *rs = rotationSystems[f->rotationSystem];
 
-    FSInt tableNo;
+    i8 tableNo;
     switch (direction) {
       case FST_ROT_CLOCKWISE:
         tableNo = rs->kicksR[f->piece];
@@ -393,7 +393,7 @@ static bool doRotate(FSGame *f, FSInt direction)
     for (int k = 0; k < FS_MAX_KICK_LEN; ++k) {
         // NOTE: Check which theta we should be using here
         // We need to reverse the kick rotation here
-        const FSInt3 kickData = (*table)[f->theta][k];
+        const i8x3 kickData = (*table)[f->theta][k];
 
         if (kickData.z == WK_END) {
             break;
@@ -440,7 +440,7 @@ static bool doRotate(FSGame *f, FSInt direction)
 //
 // `gravity` is includes the calculated soft drop amount.
 ///
-static void doPieceGravity(FSGame *f, FSInt gravity)
+static void doPieceGravity(FSGame *f, i8 gravity)
 {
     f->actualY += (f->msPerTick * f->gravity) + gravity;
 
@@ -460,7 +460,7 @@ static void doPieceGravity(FSGame *f, FSInt gravity)
             f->lockTimer = 0;
         }
 
-        f->y = (FSInt) f->actualY;
+        f->y = (i8) f->actualY;
         f->state = FSS_FALLING;
     }
 }
@@ -476,11 +476,11 @@ static void doPieceGravity(FSGame *f, FSInt gravity)
 // This requires only two passes of the data, and at worst copying of
 // fieldHeight - 1 rows.
 ///
-static FSInt clearLines(FSGame *f)
+static i8 clearLines(FSGame *f)
 {
     // This effectively limits the maximum possible height to 32 rows.
-    FSBits foundLines = 0;
-    FSInt filledLineCount = 0;
+    u32 foundLines = 0;
+    i8 filledLineCount = 0;
 
     // 1: Mark filled rows.
     for (int y = 0; y < f->fieldHeight; ++y) {
@@ -579,7 +579,7 @@ static bool tryHold(FSGame *f)
 ///
 void fsGameTick(FSGame *f, const FSInput *i)
 {
-    FSInt distance;
+    i8 distance;
     bool moved = false, rotated = false;
 
     f->se = 0;

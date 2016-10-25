@@ -91,12 +91,12 @@ void fsiRenderFieldString(FSPSView *v, const char *msg);
 //
 // The reference clock should be monotonic.
 ///
-FSLong fsiGetTime(FSPSView *v);
+i32 fsiGetTime(FSPSView *v);
 
 ///
 // Sleep for the specific number of microseconds.
 ///
-void fsiSleepUs(FSPSView *v, FSLong time);
+void fsiSleepUs(FSPSView *v, i32 time);
 
 ///
 // Return the set of virtual keys that are currently pressed.
@@ -104,7 +104,7 @@ void fsiSleepUs(FSPSView *v, FSLong time);
 // The translation from physical keys to virtual keys must be handled by the
 // frontend.
 ///
-FSBits fsiReadKeys(FSPSView *v);
+u32 fsiReadKeys(FSPSView *v);
 
 ///
 // Draw the specified view to the screen.
@@ -129,7 +129,7 @@ void fsiPostFrameHook(FSPSView *v);
 ///
 // Play the specified sound effect.
 ///
-void fsiPlaySe(FSPSView *v, FSBits se);
+void fsiPlaySe(FSPSView *v, u32 se);
 
 ///
 // Try to register the specified key with the views keymap.

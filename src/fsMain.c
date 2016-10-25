@@ -79,10 +79,10 @@ static void updateGameView(FSPSView *v, FSView *g)
 static void playGameLoop(FSPSView *v, FSView *g)
 {
     FSGame *f = g->game;
-    FSLong tickRate = f->msPerTick * 1000;
-    FSLong gameStart = fsiGetTime(v);
-    FSLong lastTime = fsiGetTime(v);
-    FSLong lag = 0;
+    i32 tickRate = f->msPerTick * 1000;
+    i32 gameStart = fsiGetTime(v);
+    i32 lastTime = fsiGetTime(v);
+    i32 lag = 0;
 
     // The game loop here uses a fixed timestep with lag reduction. The render
     // phase is synced and occurs every `ticksPerDraw` frames.
@@ -90,8 +90,8 @@ static void playGameLoop(FSPSView *v, FSView *g)
     // NOTE: This loop does not account for running too slow. We always assume
     // we can perform a `logic` -> `render` cycle within `tickRate`.
     while (1) {
-        FSLong startTime = fsiGetTime(v);
-        FSLong elapsed = startTime - lastTime;
+        i32 startTime = fsiGetTime(v);
+        i32 elapsed = startTime - lastTime;
         lastTime = startTime;
         lag += elapsed;
 
@@ -123,7 +123,7 @@ static void playGameLoop(FSPSView *v, FSView *g)
             fsiBlit(v);
         }
 
-        FSLong currentTime = fsiGetTime(v);
+        i32 currentTime = fsiGetTime(v);
         f->actualTime = currentTime - gameStart;
 
         // Break early if we know we are finished to save `tickRate` us of lag.
@@ -163,7 +163,7 @@ void gameLoop(FSPSView *v, FSView *g)
 
     while (1) {
 start:;
-        const FSBits keys = fsiReadKeys(v);
+        const u32 keys = fsiReadKeys(v);
 
         // Allow a reset or restart from anywhere (this is managed by the
         // frame hooks during an actual game).

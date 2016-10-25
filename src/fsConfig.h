@@ -17,7 +17,7 @@
 /// Maximum height of a playfield.
 //
 //  * Constraints
-//      FS_MAX_HEIGHT <= sizeof(FSBits) * 8
+//      FS_MAX_HEIGHT <= sizeof(u32) * 8
 //
 //      Due to the current algorithm used for clearing lines.
 ///

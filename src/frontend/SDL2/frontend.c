@@ -143,25 +143,25 @@ const int CBLUE[7]  = {221, 234,   0, 240,  31,   0,   0};
 // Defines how we work out a color pattern for a specific block id.
 #define BLOCK_RGBA_TRIPLE(id) CRED[(id)], CGREEN[(id)], CBLUE[(id)], 255
 
-FSLong fsiGetTime(FSPSView *v)
+i32 fsiGetTime(FSPSView *v)
 {
     (void) v;
     return SDL_GetTicks() * 1000;
 }
 
-void fsiSleepUs(FSPSView *v, FSLong time)
+void fsiSleepUs(FSPSView *v, i32 time)
 {
     (void) v;
     SDL_Delay(time / 1000);
 }
 
-FSBits fsiReadKeys(FSPSView *v)
+u32 fsiReadKeys(FSPSView *v)
 {
     (void) v;
     SDL_PumpEvents();
     const Uint8 *state = SDL_GetKeyboardState(NULL);
 
-    FSBits keys = 0;
+    u32 keys = 0;
     for (int i = 0; i < FST_VK_COUNT; ++i) {
         for (int j = 0; j < FS_MAX_KEYS_PER_ACTION; ++j) {
             if (v->keymap[i][j].value == KEY_NONE) {
@@ -178,7 +178,7 @@ FSBits fsiReadKeys(FSPSView *v)
 }
 
 // Audio is not buffered by default under SDL_Mixer which is what we want.
-void fsiPlaySe(FSPSView *v, FSBits se)
+void fsiPlaySe(FSPSView *v, u32 se)
 {
 #ifdef USE_SOUND
     #define PlayWav(name)                                                   \
@@ -404,7 +404,7 @@ static void drawHoldPiece(FSPSView *v)
         return;
     }
 
-    FSInt2 blocks[FS_NBP];
+    i8x2 blocks[FS_NBP];
     fsPieceToBlocks(f, blocks, f->holdPiece, 0, 0, 0);
     SDL_SetRenderDrawColor(v->renderer, BLOCK_RGBA_TRIPLE(f->holdPiece));
 
@@ -439,7 +439,7 @@ static void drawPieceAndShadow(FSPSView *v)
         return;
     }
 
-    FSInt2 blocks[FS_NBP];
+    i8x2 blocks[FS_NBP];
     fsPieceToBlocks(f, blocks, pid, f->x, f->hardDropY - f->fieldHidden, f->theta);
 
     for (int i = 0; i < FS_NBP; ++i) {
@@ -548,7 +548,7 @@ static void drawPreviewSection(FSPSView *v)
 
     // Print 4 preview pieces max for now (where do we render if higher?)
     for (int i = 0; i < previewCount; ++i) {
-        FSInt2 blocks[FS_NBP];
+        i8x2 blocks[FS_NBP];
         const FSBlock pid = f->nextPiece[i];
         fsPieceToBlocks(f, blocks, pid, 0, 0, 0);
 
