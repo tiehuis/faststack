@@ -12,6 +12,7 @@
 
 #include "fs.h"
 #include "fsInternal.h"
+#include "fsInterface.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -29,14 +30,6 @@
 // This variable must be present in the frontend.
 ///
 extern const char *fsiFrontendName;
-
-///
-// Implementation in frontend code.
-// Declaration in `fsInterface.h`.
-///
-struct FSPSView;
-void fsiUnpackFrontendOption(struct FSPSView *v, const char *key, const char *value);
-void fsiAddToKeymap(struct FSPSView *v, const int vkey, const char *key, bool isDefault);
 
 int strcmpi(const char *a, const char *b)
 {

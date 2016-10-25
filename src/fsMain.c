@@ -12,19 +12,11 @@
 #include "fsDefault.h"
 #include "fsInterface.h"
 #include "fsOption.h"
+#include "fsFrontend.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-
-// This is required for FSPSView definition, resolve circular dependency
-#ifdef FS_USE_SDL2
-#include "frontend/SDL2/frontend.h"
-#elif FS_USE_TERMINAL
-#include "frontend/terminal/frontend.h"
-#else
-#error "No frontend selected!"
-#endif
 
 static void fsLoadDefaultKeys(FSPSView *v)
 {
