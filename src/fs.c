@@ -8,72 +8,12 @@
 #include "fs.h"
 #include "fsDefault.h"
 #include "fsInternal.h"
+#include "fsRand.h"
 
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <time.h>
-
-///
-// Implementation in `fsRand.c`.
-//
-FSBlock fsNextRandomPiece(FSGame *f);
-u32 fsGetRoughSeed(void);
-void fsRandSeed(FSRandCtx *ctx, u32 seed);
-
-///
-// Static piece offsets.
-//
-// These map to SRS rotation by default. Alternate rotation systems
-// are specific in 'fsTables.c' by customising the default wallkick
-// test to account for the differences.
-//
-// This complicates wallkicks for some otherwise simple rotations, but
-// in my experience is cleaner than implementing different base offsets.
-static const i8x2 pieceOffsets[FS_NPT][FS_NPR][FS_NBP] = {
-    [FS_I] = {
-        {{0, 1}, {1, 1}, {2, 1}, {3, 1}},
-        {{2, 0}, {2, 1}, {2, 2}, {2, 3}},
-        {{0, 2}, {1, 2}, {2, 2}, {3, 2}},
-        {{1, 0}, {1, 1}, {1, 2}, {1, 3}}
-    },
-    [FS_J] = {
-        {{0, 0}, {0, 1}, {1, 1}, {2, 1}},
-        {{1, 0}, {1, 1}, {1, 2}, {2, 0}},
-        {{0, 1}, {1, 1}, {2, 1}, {2, 2}},
-        {{0, 2}, {1, 0}, {1, 1}, {1, 2}}
-    },
-    [FS_L] = {
-        {{0, 1}, {1, 1}, {2, 0}, {2, 1}},
-        {{1, 0}, {1, 1}, {1, 2}, {2, 2}},
-        {{0, 1}, {0, 2}, {1, 1}, {2, 1}},
-        {{0, 0}, {1, 0}, {1, 1}, {1, 2}}
-    },
-    [FS_O] = {
-        {{1, 0}, {1, 1}, {2, 0}, {2, 1}},
-        {{1, 0}, {1, 1}, {2, 0}, {2, 1}},
-        {{1, 0}, {1, 1}, {2, 0}, {2, 1}},
-        {{1, 0}, {1, 1}, {2, 0}, {2, 1}}
-    },
-    [FS_S] = {
-        {{0, 1}, {1, 0}, {1, 1}, {2, 0}},
-        {{1, 0}, {1, 1}, {2, 1}, {2, 2}},
-        {{0, 2}, {1, 1}, {1, 2}, {2, 1}},
-        {{0, 0}, {0, 1}, {1, 1}, {1, 2}}
-    },
-    [FS_T] = {
-        {{0, 1}, {1, 0}, {1, 1}, {2, 1}},
-        {{1, 0}, {1, 1}, {1, 2}, {2, 1}},
-        {{0, 1}, {1, 1}, {1, 2}, {2, 1}},
-        {{0, 1}, {1, 0}, {1, 1}, {1, 2}}
-    },
-    [FS_Z] = {
-        {{0, 0}, {1, 0}, {1, 1}, {2, 1}},
-        {{1, 1}, {1, 2}, {2, 0}, {2, 1}},
-        {{0, 1}, {1, 1}, {1, 2}, {2, 2}},
-        {{0, 1}, {0, 2}, {1, 0}, {1, 1}}
-    }
-};
 
 /// Specifies the value stored in each cell. Not currently utilized much.
 const i8 pieceColors[FS_NPT] = {

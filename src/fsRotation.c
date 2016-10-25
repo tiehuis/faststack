@@ -1,5 +1,5 @@
 ///
-// fsTables.c
+// fsRotation.c
 // ==========
 //
 // A rotation system consists of wallkicks and initial piece offsets.
@@ -11,7 +11,8 @@
 // wallkick for the rotation `0 -> R` we would check table.kicksR[0];
 ///
 
-#include "fs.h"
+#include "fsTypes.h"
+#include "fsRotation.h"
 #include "fsInternal.h"
 
 // The C99 standard specifies that static variables are 0 initialized
@@ -23,6 +24,59 @@
 
 // Shorthand for specifying an empty kick table.
 #define NO_KICKS -1, -1, -1, -1, -1, -1, -1
+
+///
+// Static piece offsets.
+//
+// These map to SRS rotation by default. Alternate rotation systems
+// as specified by adjusting their wallkick tables to suit.
+//
+// This complicates wallkicks for some otherwise simple rotations, but
+// in my experience is cleaner than implementing different base offsets.
+const i8x2 pieceOffsets[FS_NPT][FS_NPR][FS_NBP] = {
+    [FS_I] = {
+        {{0, 1}, {1, 1}, {2, 1}, {3, 1}},
+        {{2, 0}, {2, 1}, {2, 2}, {2, 3}},
+        {{0, 2}, {1, 2}, {2, 2}, {3, 2}},
+        {{1, 0}, {1, 1}, {1, 2}, {1, 3}}
+    },
+    [FS_J] = {
+        {{0, 0}, {0, 1}, {1, 1}, {2, 1}},
+        {{1, 0}, {1, 1}, {1, 2}, {2, 0}},
+        {{0, 1}, {1, 1}, {2, 1}, {2, 2}},
+        {{0, 2}, {1, 0}, {1, 1}, {1, 2}}
+    },
+    [FS_L] = {
+        {{0, 1}, {1, 1}, {2, 0}, {2, 1}},
+        {{1, 0}, {1, 1}, {1, 2}, {2, 2}},
+        {{0, 1}, {0, 2}, {1, 1}, {2, 1}},
+        {{0, 0}, {1, 0}, {1, 1}, {1, 2}}
+    },
+    [FS_O] = {
+        {{1, 0}, {1, 1}, {2, 0}, {2, 1}},
+        {{1, 0}, {1, 1}, {2, 0}, {2, 1}},
+        {{1, 0}, {1, 1}, {2, 0}, {2, 1}},
+        {{1, 0}, {1, 1}, {2, 0}, {2, 1}}
+    },
+    [FS_S] = {
+        {{0, 1}, {1, 0}, {1, 1}, {2, 0}},
+        {{1, 0}, {1, 1}, {2, 1}, {2, 2}},
+        {{0, 2}, {1, 1}, {1, 2}, {2, 1}},
+        {{0, 0}, {0, 1}, {1, 1}, {1, 2}}
+    },
+    [FS_T] = {
+        {{0, 1}, {1, 0}, {1, 1}, {2, 1}},
+        {{1, 0}, {1, 1}, {1, 2}, {2, 1}},
+        {{0, 1}, {1, 1}, {1, 2}, {2, 1}},
+        {{0, 1}, {1, 0}, {1, 1}, {1, 2}}
+    },
+    [FS_Z] = {
+        {{0, 0}, {1, 0}, {1, 1}, {2, 1}},
+        {{1, 1}, {1, 2}, {2, 0}, {2, 1}},
+        {{0, 1}, {1, 1}, {1, 2}, {2, 2}},
+        {{0, 1}, {0, 2}, {1, 0}, {1, 1}}
+    }
+};
 
 const WallkickTable emptyWallkickTable = {
     {{0, 0}, WKE}, // R -> U

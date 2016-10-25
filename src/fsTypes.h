@@ -3,13 +3,37 @@
 // =========
 //
 // Notes:
-//  * Consider using types from stdint.h directly where required.
+//  * Rename this to fsCore.h
 ///
 
 #ifndef FS_TYPES_H
 #define FS_TYPES_H
 
 #include <stdint.h>
+
+/// Number of types of pieces.
+#define FS_NPT 7
+
+/// Number of rotation systems.
+#define FS_NRS 7
+
+/// Number of rotation states.
+#define FS_NPR 4
+
+/// Number of blocks in a piece.
+#define FS_NBP 4
+
+/// Piece types
+enum PieceType {
+    FS_I,
+    FS_J,
+    FS_L,
+    FS_O,
+    FS_S,
+    FS_T,
+    FS_Z,
+    FS_NONE
+};
 
 /// Represents a single piece id.
 typedef int8_t FSBlock;
