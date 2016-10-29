@@ -19,7 +19,7 @@
 #define FS_INTERFACE_H
 
 #include "fsEngine.h"
-#include "fsTypes.h"
+#include "fsCore.h"
 
 ///
 // Implementation in frontend.
@@ -27,19 +27,6 @@
 // The definition there **must** not be a typedef.
 ///
 typedef struct FSPSView FSPSView;
-
-///
-// Main game loop.
-//
-// This blocks until an appropriate end condition is meet.
-///
-void fsGameLoop(FSPSView *v, FSView *g);
-
-///
-// Open the specified file and attempt to parse any known options.
-///
-void fsParseIniFile(FSPSView *p, FSView *v, const char *fname);
-
 
 ///*********************/
 // Frontend Interface

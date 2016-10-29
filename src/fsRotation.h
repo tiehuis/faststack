@@ -11,10 +11,9 @@
 #ifndef FS_ROTATION_H
 #define FS_ROTATION_H
 
-#include "fsTypes.h"
+#include "fsCore.h"
 #include "fsConfig.h"
 
-/// Rotation System type
 enum RotationSystemType {
     FST_ROTSYS_SIMPLE,
     FST_ROTSYS_SEGA,
@@ -25,7 +24,6 @@ enum RotationSystemType {
     FST_ROTSYS_DTET
 };
 
-/// Rotation amount
 enum RotationAmount {
     FST_ROT_NONE = 0,
     FST_ROT_CLOCKWISE = 1,

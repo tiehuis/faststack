@@ -33,6 +33,12 @@ typedef struct {
 void fsParseOptString(FSOptions *o, int argc, char **argv);
 
 ///
+// Parse an ini file.
+struct FSPSView;
+struct FSView;
+void fsParseIniFile(struct FSPSView *p, struct FSView *v, const char *fname);
+
+///
 // The following macros provide more robust parsing of key-value pairs into
 // their associated variables.
 //

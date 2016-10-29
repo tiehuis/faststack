@@ -1,9 +1,8 @@
 ///
-// fsTypes.h
+// fsCore.h
 // =========
 //
-// Notes:
-//  * Rename this to fsCore.h
+// Core public definitions across all files.
 ///
 
 #ifndef FS_TYPES_H
@@ -23,7 +22,6 @@
 /// Number of blocks in a piece.
 #define FS_NBP 4
 
-/// Piece types
 enum PieceType {
     FS_I,
     FS_J,
@@ -35,24 +33,27 @@ enum PieceType {
     FS_NONE
 };
 
-/// Represents a single piece id.
+// Represents a single block id
 typedef int8_t FSBlock;
 
 typedef int8_t i8;
 typedef int32_t i32;
 typedef uint32_t u32;
 
-/// Generic 2-member tuple of type 'i8'.
 typedef struct i8x2 {
     i8 x;
     i8 y;
 } i8x2;
 
-/// Generic 3-member tuple of type 'i8'.
 typedef struct i8x3 {
     i8 x;
     i8 y;
     i8 z;
 } i8x3;
+
+///
+// Convert an arbitrary index type (e.g. FST_SE_*) into its corresponding flag
+// value (FST_SE_FLAG_*).
+#define FS_TO_FLAG(x) (1 << (x))
 
 #endif // FS_TYPES_H

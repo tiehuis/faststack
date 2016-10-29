@@ -11,7 +11,7 @@
 // wallkick for the rotation `0 -> R` we would check table.kicksR[0];
 ///
 
-#include "fsTypes.h"
+#include "fsCore.h"
 #include "fsRotation.h"
 #include "fsInternal.h"
 

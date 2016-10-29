@@ -11,7 +11,7 @@
 #ifndef FS_CONTROL_H
 #define FS_CONTROL_H
 
-#include "fsTypes.h"
+#include "fsCore.h"
 
 ///
 // Implementation in fsEngine.c.

@@ -21,21 +21,16 @@
 #ifndef FS_H
 #define FS_H
 
+#include "fsCore.h"
 #include "fsConfig.h"
 #include "fsControl.h"
 #include "fsLog.h"
 #include "fsRand.h"
 #include "fsOption.h"
-#include "fsTypes.h"
 #include "fsRotation.h"
 
 #include <stdbool.h>
 #include <string.h>
-
-///
-// Convert an arbitrary index type (e.g. FST_SE_*) into its corresponding flag
-// value (FST_SE_FLAG_*).
-#define FS_TO_FLAG(x) (1 << (x))
 
 enum SoundEffectIndex {
     FST_SE_GAMEOVER,
@@ -58,7 +53,6 @@ enum SoundEffectIndex {
     FST_SE_COUNT
 };
 
-/// Types of sound effects
 enum SoundEffect {
     FST_SE_FLAG_GAMEOVER = (1 << FST_SE_GAMEOVER),
     FST_SE_FLAG_READY    = (1 << FST_SE_READY),

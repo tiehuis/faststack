@@ -8,9 +8,8 @@
 #ifndef FS_RAND_H
 #define FS_RAND_H
 
-#include "fsTypes.h"
+#include "fsCore.h"
 
-/// Randomizer type
 enum RandomizerType {
     FST_RAND_UNDEFINED,
     FST_RAND_SIMPLE,
@@ -31,12 +30,16 @@ typedef struct FSRandCtx {
     u32 a, b, c, d;
 } FSRandCtx;
 
+/// Return a random seed value which updates frequently enough.
 u32 fsGetRoughSeed(void);
 
+/// Return the next u32 in the PRNG sequence
 u32 fsRandNext(FSRandCtx *ctx);
 
+/// Seed the random context
 void fsRandSeed(FSRandCtx *ctx, u32 seed);
 
+/// Update the engine with a new random piece
 FSBlock fsNextRandomPiece(struct FSEngine *f);
 
 #endif // FS_RAND_H
