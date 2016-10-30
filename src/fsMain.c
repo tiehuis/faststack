@@ -60,6 +60,25 @@ static void drawStateStrings(FSPSView *v, FSView *g)
     }
 }
 
+// A sensitive state is one where an added or dropped input would
+// potentially cause unnecessary input.
+static inline bool isSensitiveState(FSView *g)
+{
+    const FSControl *ctl = g->control;
+
+    // If any horizontal movement is present, then we are in a sensitive
+    // state. This is due to DAS. Added inputs effectively reduce DAS
+    // momentarily which can easily cause misdrops.
+    //
+    // Note: Can we allow this if we are fixed against a wall and the
+    //       input is effectively nullified?
+    if (ctl->currentKeys & (FST_VK_FLAG_LEFT | FST_VK_FLAG_RIGHT)) {
+        return true;
+    }
+
+    return false;
+}
+
 static void updateGameView(FSPSView *v, FSView *g)
 {
     fsiDraw(v);
@@ -89,16 +108,19 @@ static void playGameLoop(FSPSView *v, FSView *g)
 
         fsiPreFrameHook(v);
 
-        // We need handle at most only one frame of lag at a time. This
-        // is enough for correcting the clock sleep lag.
+        // Handle clock-lag is an interesting problem. We need to perform an
+        // extra tick to make up the lost time, but cannot just perform it
+        // immediately since it may give poor user experience. (inconsistent
+        // movements being notable).
         //
-        // NOTE: Test whether dropping input during lag is works as an
-        // alternative to doubling input.
+        // We attempt to bypass this by only performing lag compensation when
+        // we are not in a sensitive state. See the core engine function for
+        // a better definition as to what is considered a sensitive game state.
         {
             updateGameLogic(v, g);
             lag -= tickRate;
         }
-        if (lag >= tickRate) {
+        if (lag >= tickRate && !isSensitiveState(g)) {
             updateGameLogic(v, g);
             lag -= tickRate;
         }
