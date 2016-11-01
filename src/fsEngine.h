@@ -279,6 +279,9 @@ typedef struct FSEngine {
     /// @E: Number of ticks that have elapsed during this game.
     i32 totalTicks;
 
+    /// @E: Actual number of elapsed ticks (including ready, go).
+    i32 totalTicksRaw;
+
     /// @O: Current lock reset style in use.
     i8 lockStyle;
 

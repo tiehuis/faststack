@@ -55,6 +55,7 @@ void fsGameReset(FSEngine *f)
     f->areTimer = 0;
     f->genericCounter = 0;
     f->totalTicks = 0;
+    f->totalTicksRaw = 0;
     f->lockTimer = 0;
     f->lastState = FSS_UNKNOWN;
     f->linesCleared = 0;
@@ -523,6 +524,7 @@ void fsGameTick(FSEngine *f, const FSInput *i)
     bool moved = false, rotated = false;
 
     f->se = 0;
+    f->totalTicksRaw++;
 
     // TODO: Remove lastInput since unused
     f->lastInput = *i;

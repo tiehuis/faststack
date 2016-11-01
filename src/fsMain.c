@@ -59,26 +59,6 @@ static void drawStateStrings(FSPSView *v, FSView *g)
             break;
     }
 }
-
-// A sensitive state is one where an added or dropped input would
-// potentially cause unnecessary input.
-static inline bool isSensitiveState(FSView *g)
-{
-    const FSControl *ctl = g->control;
-
-    // If any horizontal movement is present, then we are in a sensitive
-    // state. This is due to DAS. Added inputs effectively reduce DAS
-    // momentarily which can easily cause misdrops.
-    //
-    // Note: Can we allow this if we are fixed against a wall and the
-    //       input is effectively nullified?
-    if (ctl->currentKeys & (FST_VK_FLAG_LEFT | FST_VK_FLAG_RIGHT)) {
-        return true;
-    }
-
-    return false;
-}
-
 static void updateGameView(FSPSView *v, FSView *g)
 {
     fsiDraw(v);
@@ -104,26 +84,14 @@ static void playGameLoop(FSPSView *v, FSView *g)
         i32 startTime = fsiGetTime(v);
         i32 elapsed = startTime - lastTime;
         lastTime = startTime;
-        lag += elapsed;
+
+        // Lag can potentially be negative and would result in a slightly
+        // longer frame being processed. This seems ok in practice, but we
+        // could probably enforce this as non-negative if we tried.
+        lag += (elapsed - tickRate);
 
         fsiPreFrameHook(v);
-
-        // Handle clock-lag is an interesting problem. We need to perform an
-        // extra tick to make up the lost time, but cannot just perform it
-        // immediately since it may give poor user experience. (inconsistent
-        // movements being notable).
-        //
-        // We attempt to bypass this by only performing lag compensation when
-        // we are not in a sensitive state. See the core engine function for
-        // a better definition as to what is considered a sensitive game state.
-        {
-            updateGameLogic(v, g);
-            lag -= tickRate;
-        }
-        if (lag >= tickRate && !isSensitiveState(g)) {
-            updateGameLogic(v, g);
-            lag -= tickRate;
-        }
+        updateGameLogic(v, g);
 
         const bool lastFrame = f->state == FSS_GAMEOVER ||
                                f->state == FSS_RESTART ||
@@ -145,20 +113,22 @@ static void playGameLoop(FSPSView *v, FSView *g)
             break;
         }
 
-        // NOTE: This should try to do more corrections if possible.
-        if (startTime + tickRate < currentTime) {
+        // When should the tick end (best-case)
+        const i32 tickEnd = startTime + tickRate;
+
+        // Warn if a frame was too slow but don't do anything special.
+        if (tickEnd < currentTime) {
             fsLogDebug("Tick %ld took %ld but tickrate is only %ld",
                         f->totalTicks, currentTime - startTime, tickRate);
         }
-        else {
-            fsiSleepUs(v, startTime + tickRate - currentTime);
-        }
+
+        fsiSleepUs(v, tickEnd - lag - currentTime);
     }
 
     // Cross-reference the in-game time (as calculated from the number of
     // elapsed ticks) to a reference clock to ensure it runs accurately.
     const double actualElapsed = (double) f->actualTime / 1000000;
-    const double ingameElapsed = (double) (f->totalTicks * f->msPerTick) / 1000;
+    const double ingameElapsed = (double) (f->totalTicksRaw * f->msPerTick) / 1000;
 
     fsLogDebug("Actual time elapsed: %lf", actualElapsed);
     fsLogDebug("Ingame time elapsed: %lf", ingameElapsed);
