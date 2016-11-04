@@ -122,7 +122,10 @@ static void playGameLoop(FSPSView *v, FSView *g)
                         f->totalTicks, currentTime - startTime, tickRate);
         }
 
-        fsiSleepUs(v, tickEnd - lag - currentTime);
+        // If frame has taken too long to render then this could be negative.
+        // Avoid the underflow (resulting in a long sleep).
+        const i32 value = tickEnd - lag - currentTime;
+        fsiSleepUs(v, value > 0 ? value : 0);
     }
 
     // Cross-reference the in-game time (as calculated from the number of
