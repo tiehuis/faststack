@@ -1,5 +1,5 @@
 ///
-// fsFrontend.h
+// frontend.h
 // ============
 //
 // Core include for specifying which frontend is used statically.

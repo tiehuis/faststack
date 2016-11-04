@@ -1,5 +1,5 @@
 ///
-// fsMain.c
+// main.c
 // ========
 //
 // Main entry point. This will run the program and call any required interface
@@ -12,7 +12,8 @@
 #include "fsDefault.h"
 #include "fsInterface.h"
 #include "fsOption.h"
-#include "fsFrontend.h"
+
+#include "frontend.h"
 
 #include <stdio.h>
 #include <stdlib.h>
