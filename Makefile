@@ -6,8 +6,8 @@ LDFLAGS += -lm
 PROGRAM := FastStack
 SOURCE  := src/engine/*.c src/*.c
 
-SDL2_SOURCE := src/frontend/SDL2/*.c
-SDL2_OPTION := `pkg-config sdl2 SDL2_mixer SDL2_ttf --cflags --libs`
+SDL2_SOURCE := src/frontend/SDL2/*.c src/frontend/SDL2/deps/SDL_FontCache/*.c
+SDL2_OPTION := `pkg-config sdl2 SDL2_mixer SDL2_ttf --cflags --libs` -isystem src/frontend/SDL2/deps/SDL_FontCache
 
 TERM_SOURCE := src/frontend/terminal/*.c
 TERM_OPTION :=

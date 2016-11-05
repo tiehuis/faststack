@@ -40,25 +40,8 @@ int calcFontSize(int width)
 
 void fsiInit(FSPSView *v)
 {
-    SDL_RWops *rw;
-
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) != 0) {
         fsLogFatal("SDL_Init error: %s", SDL_GetError());
-        exit(1);
-    }
-
-    if (TTF_Init() == -1) {
-        fsLogFatal("TTF_Init error: %s", TTF_GetError());
-        SDL_Quit();
-        exit(1);
-    }
-
-    rw = SDL_RWFromConstMem(ttfFontSpec, ttfFontSpecLen);
-    v->font = TTF_OpenFontRW(rw, 1, calcFontSize(v->width));
-    if (v->font == NULL) {
-        fsLogFatal("TTF_OpenFontIndexRW error: %s", TTF_GetError());
-        TTF_Quit();
-        SDL_Quit();
         exit(1);
     }
 
@@ -72,6 +55,11 @@ void fsiInit(FSPSView *v)
         SDL_Quit();
         exit(1);
     }
+
+    SDL_RWops *rw = SDL_RWFromConstMem(ttfFontSpec, ttfFontSpecLen);
+    v->font = FC_CreateFont();
+    FC_LoadFont_RW(v->font, v->renderer, rw, 1, calcFontSize(v->width),
+                   FC_MakeColor(200, 200, 200, 255), TTF_STYLE_NORMAL);
 
 #ifdef USE_SOUND
     if (Mix_OpenAudio(22050, AUDIO_S16LSB, 1, AUDIO_BUFFER_SIZE) < 0) {
@@ -130,8 +118,7 @@ void fsiFree(FSPSView *v)
 
     SDL_DestroyRenderer(v->renderer);
     SDL_DestroyWindow(v->window);
-    TTF_CloseFont(v->font);
-    TTF_Init();
+    FC_FreeFont(v->font);
     SDL_Quit();
 }
 
@@ -223,42 +210,7 @@ void fsiPlaySe(FSPSView *v, u32 se)
 //    load and simply reuse this for every character instead.
 static void renderString(FSPSView *v, const char *s, int x, int y)
 {
-    SDL_Color color = { BLOCK_RGBA_TRIPLE(4) };
-    SDL_Surface *textSurface = TTF_RenderText_Solid(v->font, s, color);
-    if (textSurface == NULL) {
-        fsLogFatal("TTF_RenderText_Solid error: %s", TTF_GetError());
-        fsiFree(v);
-        exit(1);
-    }
-
-    // Copy a texture to the current renderer
-    SDL_Texture *textTexture = SDL_CreateTextureFromSurface(v->renderer, textSurface);
-    if (textTexture == NULL) {
-        fsLogFatal("SDL_CreateTextureFromSurface error: %s", TTF_GetError());
-        SDL_FreeSurface(textSurface);
-        fsiFree(v);
-        exit(1);
-    }
-
-    int w, h;
-    if (TTF_SizeText(v->font, s, &w, &h) == -1) {
-        fsLogFatal("TTF_SizeText error: %s", TTF_GetError());
-        TTF_Quit();
-        SDL_Quit();
-        exit(1);
-    }
-
-    // We limit the debug space to the rightmost 20%, truncating if needed.
-    const SDL_Rect dst = {
-        .x = x,
-        .y = y,
-        .w = w,
-        .h = h
-    };
-
-    SDL_RenderCopy(v->renderer, textTexture, NULL, &dst);
-    SDL_DestroyTexture(textTexture);
-    SDL_FreeSurface(textSurface);
+    FC_Draw(v->font, v->renderer, x, y, s);
 }
 
 ///
@@ -267,14 +219,7 @@ static void renderString(FSPSView *v, const char *s, int x, int y)
 // The string will be centered, and truncated if too long.
 void fsiRenderFieldString(FSPSView *v, const char *msg)
 {
-    int w, h;
-    if (TTF_SizeText(v->font, msg, &w, &h) == -1) {
-        fsLogFatal("TTF_SizeText error: %s", TTF_GetError());
-        TTF_Quit();
-        SDL_Quit();
-        exit(1);
-    }
-
+    int w = FC_GetWidth(v->font, msg);
     renderString(v, msg, FIELD_X + FIELD_W / 2 - w / 2 , FIELD_Y + FIELD_H / 2);
 }
 
@@ -338,7 +283,7 @@ void drawDebug(FSPSView *v)
     const float renderFPS = (float) elapsedTime / (1000 * v->view->totalFramesDrawn);
     const float logicFPS = (float) elapsedTime / (1000 * f->totalTicks);
 
-    const int lineSkipY = TTF_FontLineSkip(v->font);
+    const int lineSkipY = FC_GetLineHeight(v->font);
     const int writeBufferSize = 64;
     char writeBuffer[writeBufferSize];
 
@@ -605,7 +550,7 @@ static void drawInfoSection(FSPSView *v)
     SDL_SetRenderDrawColor(v->renderer, BLOCK_RGBA_TRIPLE(1));
 
     // Draw right side info
-    const int lineSkipY = TTF_FontLineSkip(v->font);
+    const int lineSkipY = FC_GetLineHeight(v->font);
     int c = 0;
 
     snprintf(writeBuffer, writeBufferSize, "Time");

@@ -76,6 +76,9 @@ static void playGameLoop(FSPSView *v, FSView *g)
     i32 lastTime = fsiGetTime(v);
     i32 lag = 0;
 
+    // Length of an average frame
+    i32 avgFrame = 0;
+
     // The game loop here uses a fixed timestep with lag reduction. The render
     // phase is synced and occurs every `ticksPerDraw` frames.
     //
@@ -108,6 +111,7 @@ static void playGameLoop(FSPSView *v, FSView *g)
 
         i32 currentTime = fsiGetTime(v);
         f->actualTime = currentTime - gameStart;
+        avgFrame = avgFrame + ((currentTime - startTime) - avgFrame) / f->totalTicksRaw;
 
         // Break early if we know we are finished to save `tickRate` us of lag.
         if (lastFrame) {
@@ -134,6 +138,7 @@ static void playGameLoop(FSPSView *v, FSView *g)
     const double actualElapsed = (double) f->actualTime / 1000000;
     const double ingameElapsed = (double) (f->totalTicksRaw * f->msPerTick) / 1000;
 
+    fsLogDebug("Average frame time: %d", avgFrame);
     fsLogDebug("Actual time elapsed: %lf", actualElapsed);
     fsLogDebug("Ingame time elapsed: %lf", ingameElapsed);
     fsLogDebug("Maximum Difference: %lf", fabs(actualElapsed - ingameElapsed));

@@ -13,7 +13,7 @@
 
 #include <stdio.h>
 #include <SDL.h>
-#include <SDL_ttf.h>
+#include <SDL_FontCache.h>
 
 // Font and sound effect resources are embedded in the binary itself.
 //
@@ -101,7 +101,7 @@ struct FSPSView {
     SDL_Renderer *renderer;
 
     // We a single font specification while rendering.
-    TTF_Font *font;
+    FC_Font *font;
 
 #ifdef USE_SOUND
     // Sound effect data
