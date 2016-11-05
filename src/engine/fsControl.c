@@ -12,6 +12,16 @@
 
 #include <stdio.h>
 
+i32 popcount(u32 x)
+{
+    i32 c = 0;
+    while (x) {
+        c += x & 1;
+        x >>= 1;
+    }
+    return c;
+}
+
 ///
 // Transform the current input state into a simple set of actions for the
 // engine to apply.
@@ -29,9 +39,7 @@ void fsVirtualKeysToInput(struct FSInput *dst, u32 keys, const FSEngine *f, FSCo
     keys &= ~c->currentKeys;
     newKeys &= keys;
     dst->currentKeys = keys;
-
-    // Popcnt newKeys
-    dst->newKeysCount = __builtin_popcount(newKeys);
+    dst->newKeysCount = popcount(newKeys);
 
     if (keys & FST_VK_FLAG_LEFT) {
         if (c->dasCounter > TICKS(-f->dasDelay)) {
