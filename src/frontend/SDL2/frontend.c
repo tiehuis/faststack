@@ -51,7 +51,6 @@ void fsiInit(FSPSView *v)
     if (SDL_CreateWindowAndRenderer(v->width, v->height, SDL_WINDOW_SHOWN,
                                     &v->window, &v->renderer)) {
         fsLogFatal("SDL_CreateWindowAndRenderer error: %s", SDL_GetError());
-        TTF_Quit();
         SDL_Quit();
         exit(1);
     }
@@ -116,9 +115,9 @@ void fsiFree(FSPSView *v)
     Mix_CloseAudio();
 #endif
 
+    FC_FreeFont(v->font);
     SDL_DestroyRenderer(v->renderer);
     SDL_DestroyWindow(v->window);
-    FC_FreeFont(v->font);
     SDL_Quit();
 }
 

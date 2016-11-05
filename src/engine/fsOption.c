@@ -149,18 +149,15 @@ static void unpackOptionValue(struct FSPSView *p, FSView *v, const char *k,
         TS_KEY       (quit, FST_VK_QUIT);
         TS_KEY       (restart, FST_VK_RESTART);
     }
-    else {
-        char buffer[2 * MAX_ID_LENGTH] = "frontend.";
-        strncat(buffer, fsiFrontendName, 2 * MAX_ID_LENGTH - 9);
-        const size_t slen = strlen(buffer);
-
-        // If we encounter a frontend-defined option do not warn that no key
-        // was found if nothing is parsed. Let the frontend manage this if
-        // it needs to.
-        if (!strncmp(k, buffer, slen)) {
-            fsiUnpackFrontendOption(p, k + slen + 1, value);
-            return;
+    else if (!strncmp(k, "frontend.", 9)) {
+        const size_t slen = strlen(fsiFrontendName);
+        if (!strncmp(k + 9, fsiFrontendName, slen)) {
+            fsiUnpackFrontendOption(p, k + 9 + slen + 1, value);
         }
+
+        // If this was an option for another frontend, we should silently omit
+        // it from our processing.
+        return;
     }
 
     fsLogWarning("No suitable key found for option %s = %s", k, value);
