@@ -561,7 +561,7 @@ static void drawInfoSection(FSPSView *v)
 
     ++c;
 
-    snprintf(writeBuffer, writeBufferSize, "Blocks Placed");
+    snprintf(writeBuffer, writeBufferSize, "Blocks");
     renderString(v, writeBuffer, INFOS_X, INFOS_Y + c++ * lineSkipY);
 
     snprintf(writeBuffer, writeBufferSize, "%d", f->blocksPlaced);
@@ -569,7 +569,7 @@ static void drawInfoSection(FSPSView *v)
 
     ++c;
 
-    snprintf(writeBuffer, writeBufferSize, "Tetriminos Per Second (TPS)");
+    snprintf(writeBuffer, writeBufferSize, "TPS");
     renderString(v, writeBuffer, INFOS_X, INFOS_Y + c++ * lineSkipY);
 
     snprintf(writeBuffer, writeBufferSize, "%.5f",
@@ -580,9 +580,12 @@ static void drawInfoSection(FSPSView *v)
 
     ++c;
 
-    snprintf(writeBuffer, writeBufferSize, "Finesse");
+    snprintf(writeBuffer, writeBufferSize, "KPT");
     renderString(v, writeBuffer, INFOS_X, INFOS_Y + c++ * lineSkipY);
-    snprintf(writeBuffer, writeBufferSize, "%d", f->finesse);
+    snprintf(writeBuffer, writeBufferSize, "%.5f",
+             f->blocksPlaced ? (float) f->totalKeysPressed / f->blocksPlaced
+                             : 0.0f
+    );
     renderString(v, writeBuffer, INFOS_X, INFOS_Y + c++ * lineSkipY);
 }
 

@@ -49,11 +49,9 @@ void fsGameReset(FSEngine *f)
     f->se = 0;
     f->irsAmount = 0;
     f->ihsFlag = false;
-    f->finesse = 0;
-    f->finessePieceDirection = 0;
-    f->finessePieceRotation = 0;
     f->areTimer = 0;
     f->genericCounter = 0;
+    f->totalKeysPressed = 0;
     f->totalTicks = 0;
     f->totalTicksRaw = 0;
     f->lockTimer = 0;
@@ -173,33 +171,6 @@ static void lockPiece(FSEngine *f)
     for (int i = 0; i < FS_NBP; ++i) {
         f->b[blocks[i].y][blocks[i].x] = pieceColors[f->piece];
     }
-
-    // Compute the finesse of this piece and add if we have wasted keypresses.
-    // We use a simple algorithm. Every location can be reached in 2 presses most
-    // (under DAS), so use this as an upper bound. This means it isn't 100%
-    // accurate for close values, but these are not the problem areas most people
-    // have. Also, this assumes the SRS rotation system, or any system where
-    // every location is reachable with 2 presses.
-    int wastedDirection = f->finessePieceDirection > 2 ? f->finessePieceDirection - 2 : 0;
-
-    // How many movements to get to each rotation optimally (excluding 180)
-    const int fLook[FS_NPR] = { 0, 1, 2, 1 };
-
-    // We should handle overhangs here to ideally
-    // We do not count finesse for 180 degree rotation by default (but could)
-
-    // O piece should never be rotated
-    int wastedRotation;
-    if (f->piece == FS_O) {
-        wastedRotation = f->finessePieceRotation > fLook[f->theta]
-                            ? f->finessePieceRotation - fLook[f->theta]
-                            : 0;
-    }
-    else {
-        wastedRotation = f->finessePieceRotation;
-    }
-
-    f->finesse += wastedDirection + wastedRotation;
 }
 
 ///
@@ -219,8 +190,6 @@ static void newPiece(FSEngine *f)
     f->actualY = f->y;
     f->theta = 0;
     f->lockTimer = 0;
-    f->finessePieceRotation = 0;
-    f->finessePieceDirection = 0;
     f->floorkickCount = 0;
     f->piece = nextPreviewPiece(f);
     f->holdAvailable = true;
@@ -537,6 +506,9 @@ void fsGameTick(FSEngine *f, const FSInput *i)
         f->state = FSS_QUIT;
     }
 
+    // Always count the number of new keys pressed
+    f->totalKeysPressed += i->newKeysCount;
+
 beginTick:
     switch (f->state) {
       case FSS_READY:
@@ -670,13 +642,6 @@ beginTick:
       case FSS_LANDED:
         if (i->extra & FST_INPUT_HOLD) {
             tryHold(f);
-        }
-
-        if (i->extra & FST_INPUT_FINESSE_DIRECTION) {
-            f->finessePieceDirection += 1;
-        }
-        if (i->extra & FST_INPUT_FINESSE_ROTATION) {
-            f->finessePieceRotation += 1;
         }
 
         if (i->rotation) {

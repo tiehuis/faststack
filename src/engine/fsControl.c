@@ -30,6 +30,9 @@ void fsVirtualKeysToInput(struct FSInput *dst, u32 keys, const FSEngine *f, FSCo
     newKeys &= keys;
     dst->currentKeys = keys;
 
+    // Popcnt newKeys
+    dst->newKeysCount = __builtin_popcount(newKeys);
+
     if (keys & FST_VK_FLAG_LEFT) {
         if (c->dasCounter > TICKS(-f->dasDelay)) {
             if (c->dasCounter >= 0) {
@@ -83,11 +86,9 @@ void fsVirtualKeysToInput(struct FSInput *dst, u32 keys, const FSEngine *f, FSCo
 
     if (newKeys & FST_VK_FLAG_ROTL) {
         dst->rotation -= 1;
-        dst->extra |= FST_INPUT_FINESSE_ROTATION;
     }
     if (newKeys & FST_VK_FLAG_ROTR) {
         dst->rotation += 1;
-        dst->extra |= FST_INPUT_FINESSE_ROTATION;
     }
     // A 180 degree rotation takes priority over any 90 degree rotations
     if (newKeys & FST_VK_FLAG_ROTH) {
@@ -100,12 +101,6 @@ void fsVirtualKeysToInput(struct FSInput *dst, u32 keys, const FSEngine *f, FSCo
         dst->gravity = f->fieldHeight;
         dst->extra |= FST_INPUT_HARD_DROP;
         dst->extra |= FST_INPUT_LOCK;
-    }
-    if (newKeys & FST_VK_FLAG_LEFT) {
-        dst->extra |= FST_INPUT_FINESSE_DIRECTION;
-    }
-    if (newKeys & FST_VK_FLAG_RIGHT) {
-        dst->extra |= FST_INPUT_FINESSE_DIRECTION;
     }
     if (newKeys & FST_VK_FLAG_RESTART) {
         dst->extra |= FST_INPUT_RESTART;

@@ -23,25 +23,19 @@ struct FSEngine;
 // These label special actions which are understood by the engine.
 enum InputExtraFlag {
     /// A hard drop action.
-    FST_INPUT_HARD_DROP = 0x1,
+    FST_INPUT_HARD_DROP = 0x01,
 
     /// A hold action.
-    FST_INPUT_HOLD      = 0x2,
+    FST_INPUT_HOLD      = 0x02,
 
     /// A locking action.
-    FST_INPUT_LOCK      = 0x4,
-
-    /// Action indicating a new directional keypress.
-    FST_INPUT_FINESSE_DIRECTION = 0x8,
-
-    /// Action indicating a new rotation keypress.
-    FST_INPUT_FINESSE_ROTATION  = 0x10,
+    FST_INPUT_LOCK      = 0x04,
 
     /// Action indicating a quit event was received.
-    FST_INPUT_QUIT = 0x20,
+    FST_INPUT_QUIT      = 0x08,
 
     /// Action indicating a restart event was received.
-    FST_INPUT_RESTART = 0x40
+    FST_INPUT_RESTART   = 0x10
 };
 
 ///
@@ -94,9 +88,6 @@ typedef struct FSControl {
     /// @I: Current state of input device.
     u32 currentKeys;
 
-    /// @E: Number of keypresses in total.
-    i32 presses;
-
     /// @I: Number of ticks DAS has occurred for.
     i32 dasCounter;
 } FSControl;
@@ -126,6 +117,9 @@ typedef struct FSInput {
 
     /// Specific extra movement (e.g. HardDrop).
     i8 extra;
+
+    /// How many new keys were pressed (used for finesse/KPT)
+    i8 newKeysCount;
 
     /// Current key status (used for some specific events)
     u32 currentKeys;

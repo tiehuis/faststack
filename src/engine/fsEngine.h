@@ -237,17 +237,8 @@ typedef struct FSEngine {
     /// @O: Number of ms a key must be held before repeated movement.
     i32 dasDelay;
 
-    /// @E: Number of wasted movements have occurred during the games
-    //      lifetime.
-    i32 finesse;
-
-    /// @I: Number of directional movements have been performed during this
-    //     pieces lifetime.
-    i32 finessePieceDirection;
-
-    /// @I: Number of rotational movements have been performed during this
-    //     pieces lifetime.
-    i32 finessePieceRotation;
+    /// @E: Total number of new keys pressed during game.
+    i32 totalKeysPressed;
 
     /// @O: Milliseconds between each game logic update.
     i8 msPerTick;
