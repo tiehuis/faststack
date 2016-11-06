@@ -7,6 +7,7 @@
 
 #include "fsEngine.h"
 #include "fsDefault.h"
+#include "fsHiscore.h"
 #include "fsInternal.h"
 #include "fsRand.h"
 
@@ -721,6 +722,9 @@ beginTick:
 
       case FSS_GAMEOVER:
         f->se |= FST_SE_FLAG_GAMEOVER;
+        // Only save a hiscore if we completed the game (no quit/restart)
+        fsHiscoreInsert(f);
+
         /* FALLTHROUGH */
 
       case FSS_QUIT:
