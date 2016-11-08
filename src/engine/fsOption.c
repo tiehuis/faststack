@@ -41,15 +41,17 @@ int strcmpi(const char *a, const char *b)
     }
 }
 
+#define M(x) !strcmpi(value, x)
+
 static inline int fsRandomizerLookup(const char *value)
 {
-    if (!strcmpi(value, "simple"))
+    if (M("simple") || M("0"))
         return FST_RAND_SIMPLE;
-    else if (!strcmpi(value, "noszobag7"))
+    else if (M("noszobag7") || M("1"))
         return FST_RAND_NOSZO_BAG7;
-    else if (!strcmpi(value, "tgm1"))
+    else if (M("tgm1") || M("2"))
         return FST_RAND_TGM1;
-    else if (!strcmpi(value, "tgm2"))
+    else if (M("tgm2") || M("3"))
         return FST_RAND_TGM2;
 
     return -1;
@@ -57,19 +59,19 @@ static inline int fsRandomizerLookup(const char *value)
 
 static inline int fsRotationSystemLookup(const char *value)
 {
-    if (!strcmpi(value, "simple"))
+    if (M("simple") || M("0"))
         return FST_ROTSYS_SIMPLE;
-    else if (!strcmpi(value, "sega"))
+    else if (M("sega") || M("1"))
         return FST_ROTSYS_SEGA;
-    else if (!strcmpi(value, "srs"))
+    else if (M("srs") || M("2"))
         return FST_ROTSYS_SRS;
-    else if (!strcmpi(value, "arikasrs"))
+    else if (M("arikasrs") || M("3"))
         return FST_ROTSYS_ARIKA_SRS;
-    else if (!strcmpi(value, "tgm12"))
+    else if (M("tgm12") || M("4"))
         return FST_ROTSYS_TGM12;
-    else if (!strcmpi(value, "tgm3"))
+    else if (M("tgm3") || M("5"))
         return FST_ROTSYS_TGM3;
-    else if (!strcmpi(value, "dtet"))
+    else if (M("dtet") || M("6"))
         return FST_ROTSYS_DTET;
 
     return -1;
@@ -77,11 +79,11 @@ static inline int fsRotationSystemLookup(const char *value)
 
 static inline int fsLockStyleLookup(const char *value)
 {
-    if (!strcmpi(value, "entry"))
+    if (M("entry") || M("0"))
         return FST_LOCK_ENTRY;
-    if (!strcmpi(value, "step"))
+    if (M("step") || M("1"))
         return FST_LOCK_STEP;
-    if (!strcmpi(value, "move"))
+    if (M("move") || M("2"))
         return FST_LOCK_MOVE;
 
     return -1;
@@ -89,11 +91,11 @@ static inline int fsLockStyleLookup(const char *value)
 
 static inline int fsInitialActionStyleLookup(const char *value)
 {
-    if (!strcmpi(value, "none"))
+    if (M("none") || M("0"))
         return FST_IA_NONE;
-    if (!strcmpi(value, "persistent"))
+    if (M("persistent") || M("1"))
         return FST_IA_PERSISTENT;
-    if (!strcmpi(value, "trigger"))
+    if (M("trigger") || M("2"))
         fsLogWarning("initialActionStyle = trigger is not implemented!");
 
     return -1;
@@ -201,6 +203,10 @@ void fsParseOptString(FSOptions *o, int argc, char **argv)
         else if (!strcmp("-h", opt) || !strcmp("--help", opt)) {
             printf("%s\n", usage);
             exit(0);
+        }
+        else if (strncmp("-", opt, 1) || strncmp("--", opt, 2)) {
+            // Non-option argument is a replay (take last)
+            o->replay = (char*) opt;
         }
         else {
             printf("Unknown argument: %s\n", argv[i]);

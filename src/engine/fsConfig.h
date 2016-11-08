@@ -50,7 +50,10 @@
 /// Name of the log file to write to.
 #define FS_LOG_FILENAME "fs.log"
 
-/// Name of the hiscore file to write do.
+/// Name of the hiscore file to write to.
 #define FS_HISCORE_FILENAME "fs.hiscore"
+
+/// Name of the replay file to write to.
+#define FS_REPLAY_FILENAME "fs.replay"
 
 #endif // FS_CONFIG_H

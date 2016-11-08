@@ -43,7 +43,18 @@ static void updateGameLogic(FSPSView *v, FSView *g)
     FSControl *ctl = g->control;
     FSInput in = {0, 0, 0, 0, 0, 0};
 
-    fsVirtualKeysToInput(&in, fsiReadKeys(v), f, ctl);
+    // We still want to handle quit and restart in a replay
+    u32 keystate = fsiReadKeys(v);
+
+    if (!g->replayPlayback) {
+        fsReplayInsert(g->replay, f->totalTicksRaw, keystate);
+    }
+    else {
+        //keystate &= FST_VK_FLAG_RESTART | FST_VK_FLAG_QUIT;
+        keystate = fsReplayGet(g->replay, f->totalTicksRaw);
+    }
+
+    fsVirtualKeysToInput(&in, keystate, f, ctl);
     fsGameTick(f, &in);
 }
 
@@ -170,18 +181,37 @@ start:;
         switch (state) {
             case IN_GAME:
             {
+                // We must reinit the replay buffer every restart.
+                // TODO: Don't keep files open!
+                // TODO: Fix annoying seed set here. Unintuitive.
+                if (!g->replayPlayback) {
+                    g->game->seed = fsGetRoughSeed();
+                    fsReplayInit(g->game, g->replay);
+                }
+                else {
+                    fsReplayLoad(g->game, g->replay);
+                }
+
                 fsGameReset(g->game);
                 playGameLoop(v, g);
 
                 switch (g->game->state) {
                     case FSS_RESTART:
+                        fsReplayClear(g->replay);
+                        g->replayPlayback = false;
                         // Stay in current state to restart
                         goto start;
 
                     case FSS_QUIT:
+                        g->replayPlayback = false;
                         goto end;
 
                     case FSS_GAMEOVER:
+                        if (!g->replayPlayback) {
+                            fsReplaySave(g->replay);
+                        }
+
+                        g->replayPlayback = false;
                         state = IN_EXCELLENT;
                         counter = 0;
                         break;
@@ -230,7 +260,9 @@ int main(int argc, char **argv)
 {
     FSEngine game;
     FSControl control;
-    FSView gView = { .game = &game, .control = &control, .totalFramesDrawn = 0 };
+    FSReplay replay;
+    FSView gView = { .game = &game, .control = &control, .replay = &replay,
+                     .replayPlayback = false, .totalFramesDrawn = 0 };
     FSPSView pView = { .view = &gView };
 
     FSOptions o;
@@ -252,6 +284,10 @@ int main(int argc, char **argv)
 
     if (!o.no_ini) {
         fsParseIniFile(&pView, &gView, FS_CONFIG_FILENAME);
+    }
+
+    if (o.replay) {
+        gView.replayPlayback = true;
     }
 
     fsiInit(&pView);

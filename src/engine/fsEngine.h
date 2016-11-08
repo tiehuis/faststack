@@ -26,6 +26,7 @@
 #include "fsControl.h"
 #include "fsLog.h"
 #include "fsRand.h"
+#include "fsReplay.h"
 #include "fsOption.h"
 #include "fsRotation.h"
 
@@ -361,6 +362,12 @@ typedef struct FSView {
 
     /// Current input state.
     FSControl *control;
+
+    /// Replay state.
+    FSReplay *replay;
+
+    /// Is this a replay playback?
+    bool replayPlayback;
 
     /// Number of draw requests made during this views lifetime.
     i32 totalFramesDrawn;

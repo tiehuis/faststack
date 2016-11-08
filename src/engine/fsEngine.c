@@ -61,9 +61,7 @@ void fsGameReset(FSEngine *f)
     f->blocksPlaced = 0;
     f->floorkickCount = 0;
 
-    // We want each game to have a unique seed to ensure we can replicate it
-    // during replays.
-    f->seed = fsGetRoughSeed();
+    // The seed is assumed to be set by now by some external call!
     fsRandSeed(&f->randomContext, f->seed);
 
     // Signal that we are changing the randomizer and need to reinitialize

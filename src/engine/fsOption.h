@@ -26,6 +26,9 @@ typedef struct {
 
     /// Should we skip processing of an ini file.
     bool no_ini;
+
+    /// Filename of replay
+    char *replay;
 } FSOptions;
 
 ///
