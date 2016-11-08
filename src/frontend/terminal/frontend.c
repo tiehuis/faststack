@@ -436,13 +436,13 @@ static void drawInfo(FSPSView *v)
     snprintf(buf, bufsiz, "%.3f", (float) msElapsed / 1000);
     putStrAt(v, buf, INFO_Y + 2, INFO_X, ATTR_BRIGHT);
 
-    snprintf(buf, bufsiz, "Blocks Placed");
+    snprintf(buf, bufsiz, "Blocks");
     putStrAt(v, buf, INFO_Y + 4, INFO_X, ATTR_UNDERLINE);
 
     snprintf(buf, bufsiz, "%d", f->blocksPlaced);
     putStrAt(v, buf, INFO_Y + 5, INFO_X, ATTR_BRIGHT);
 
-    snprintf(buf, bufsiz, "Tetriminos Per Second (TPS)");
+    snprintf(buf, bufsiz, "TPS");
     putStrAt(v, buf, INFO_Y + 7, INFO_X, ATTR_UNDERLINE);
 
     snprintf(buf, bufsiz, "%.5f",
@@ -451,10 +451,12 @@ static void drawInfo(FSPSView *v)
                 : 0);
     putStrAt(v, buf, INFO_Y + 8, INFO_X, ATTR_BRIGHT);
 
-    snprintf(buf, bufsiz, "Finesse");
+    snprintf(buf, bufsiz, "KPT");
     putStrAt(v, buf, INFO_Y + 10, INFO_X, ATTR_UNDERLINE);
 
-    snprintf(buf, bufsiz, "%d", f->finesse);
+    snprintf(buf, bufsiz, "%.5f",
+             f->blocksPlaced ? (float) f->totalKeysPressed / f->blocksPlaced
+                             : 0.0f);
     putStrAt(v, buf, INFO_Y + 11, INFO_X, ATTR_BRIGHT);
 }
 
