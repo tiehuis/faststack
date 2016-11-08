@@ -50,8 +50,8 @@ static void updateGameLogic(FSPSView *v, FSView *g)
         fsReplayInsert(g->replay, f->totalTicksRaw, keystate);
     }
     else {
-        //keystate &= FST_VK_FLAG_RESTART | FST_VK_FLAG_QUIT;
-        keystate = fsReplayGet(g->replay, f->totalTicksRaw);
+        keystate &= FST_VK_FLAG_RESTART | FST_VK_FLAG_QUIT;
+        keystate |= fsReplayGet(g->replay, f->totalTicksRaw);
     }
 
     fsVirtualKeysToInput(&in, keystate, f, ctl);
