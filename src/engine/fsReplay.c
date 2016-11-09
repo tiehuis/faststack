@@ -10,6 +10,7 @@
 #include "fsLog.h"
 
 #include <stdlib.h>
+#include <time.h>
 #include <inttypes.h>
 
 // We ignore invalid boolean reads. A boolean must be at least 8 bits on
@@ -92,6 +93,21 @@ void deserializeOptions(struct FSEngine *f, FSReplay *r)
     C(0, fscanf(r->handle, "\n"));
 }
 
+// Create a new filename for storing the current replay.
+char* replayFileName(const struct FSEngine *f)
+{
+    static char buffer[64];
+    time_t rawtime;
+    struct tm *tminfo;
+
+    time(&rawtime);
+    tminfo = localtime(&rawtime);
+    snprintf(buffer, 64, "%d'%.3f'", f->goal, (float) (f->msPerTick * f->totalTicks) / 1000);
+    strftime(buffer + strlen(buffer), 64 - strlen(buffer), "%F'%H:%M:%S", tminfo);
+
+    return buffer;
+}
+
 /// Initialize a replay file.
 ///
 /// This requires an `FSEngine` in order to save the option state for
@@ -105,7 +121,8 @@ void fsReplayInit(const struct FSEngine *f, FSReplay *r)
         return;
     }
 
-    r->handle = fopen(FS_REPLAY_FILENAME, "w+");
+    strcpy(r->fname, "replay/.current");
+    r->handle = fopen(r->fname, "w+");
     if (r->handle != NULL) {
         r->lastKeystate = 0;
         serializeOptions(f, r);
@@ -129,20 +146,27 @@ void fsReplayInsert(FSReplay *r, u32 ticks, u32 keystate)
 ///
 /// Cleans up any open resources as well. `fsReplayInit` can be called
 /// again following this.
-void fsReplaySave(FSReplay *r)
+void fsReplaySave(const struct FSEngine *f, FSReplay *r)
 {
     if (!r->error) {
         fflush(r->handle);
         fclose(r->handle);
+
+        char target[64];
+        strcpy(target, "replay/");
+        strcat(target, replayFileName(f));
+
+        // Rename the current file with the current time
+        rename(r->fname, target);
     }
 }
 
 /// Load a replay file for reading. The next key is queried with
 /// `fsReplayGet`.
-void fsReplayLoad(struct FSEngine *f, FSReplay *r)
+void fsReplayLoad(struct FSEngine *f, FSReplay *r, const char *filename)
 {
     r->error = false;
-    r->handle = fopen(FS_REPLAY_FILENAME, "r");
+    r->handle = fopen(filename, "r");
     if (r->handle != NULL) {
         deserializeOptions(f, r);
         r->lastKeystate = 0;
@@ -175,6 +199,7 @@ u32 fsReplayGet(FSReplay *r, u32 ticks)
 void fsReplayClear(FSReplay *r)
 {
     if (!r->error) {
+        remove(r->fname);
         fclose(r->handle);
     }
 }

@@ -189,7 +189,7 @@ start:;
                     fsReplayInit(g->game, g->replay);
                 }
                 else {
-                    fsReplayLoad(g->game, g->replay);
+                    fsReplayLoad(g->game, g->replay, g->replayName);
                 }
 
                 fsGameReset(g->game);
@@ -203,12 +203,13 @@ start:;
                         goto start;
 
                     case FSS_QUIT:
+                        fsReplayClear(g->replay);
                         g->replayPlayback = false;
                         goto end;
 
                     case FSS_GAMEOVER:
                         if (!g->replayPlayback) {
-                            fsReplaySave(g->replay);
+                            fsReplaySave(g->game, g->replay);
                         }
 
                         g->replayPlayback = false;
@@ -262,7 +263,8 @@ int main(int argc, char **argv)
     FSControl control;
     FSReplay replay;
     FSView gView = { .game = &game, .control = &control, .replay = &replay,
-                     .replayPlayback = false, .totalFramesDrawn = 0 };
+                     .replayName = NULL, .replayPlayback = false,
+                     .totalFramesDrawn = 0 };
     FSPSView pView = { .view = &gView };
 
     FSOptions o;
@@ -288,6 +290,7 @@ int main(int argc, char **argv)
 
     if (o.replay) {
         gView.replayPlayback = true;
+        gView.replayName = o.replay;
     }
 
     fsiInit(&pView);

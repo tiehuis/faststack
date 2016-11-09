@@ -369,6 +369,9 @@ typedef struct FSView {
     /// Is this a replay playback?
     bool replayPlayback;
 
+    /// Filename of the replay to load
+    char *replayName;
+
     /// Number of draw requests made during this views lifetime.
     i32 totalFramesDrawn;
 } FSView;

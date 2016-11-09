@@ -19,6 +19,9 @@ typedef struct {
     // File to write replay data out too
     FILE *handle;
 
+    // Name of file
+    char fname[64];
+
     // Last known keystate
     u32 lastKeystate;
 
@@ -34,9 +37,9 @@ typedef struct {
 
 void fsReplayInit(const struct FSEngine *f, FSReplay *r);
 void fsReplayInsert(FSReplay *r, u32 ticks, u32 keystate);
-void fsReplaySave(FSReplay *r);
+void fsReplaySave(const struct FSEngine *f, FSReplay *r);
 void fsReplayFree(FSReplay *r);
-void fsReplayLoad(struct FSEngine *f, FSReplay *r);
+void fsReplayLoad(struct FSEngine *f, FSReplay *r, const char *filename);
 u32 fsReplayGet(FSReplay *r, u32 ticks);
 void fsReplayClear(FSReplay *r);
 

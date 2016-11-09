@@ -2,4 +2,4 @@ FastStack
 libfs.a
 fs.log
 fs.hiscore
-fs.replay
+replay/*
