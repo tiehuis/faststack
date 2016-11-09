@@ -348,6 +348,9 @@ typedef struct FSEngine {
 
     /// @O: Target number of lines to clear during this game.
     i32 goal;
+
+    /// @I: Is this a replay and not a real game?
+    bool replay;
 } FSEngine;
 
 ///

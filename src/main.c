@@ -193,6 +193,11 @@ start:;
                 }
 
                 fsGameReset(g->game);
+                // TODO: Fix this disgusting code.
+                if (g->replayPlayback) {
+                    g->game->replay = true;
+                }
+
                 playGameLoop(v, g);
 
                 switch (g->game->state) {

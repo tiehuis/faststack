@@ -50,6 +50,7 @@ void fsGameReset(FSEngine *f)
     f->se = 0;
     f->irsAmount = 0;
     f->ihsFlag = false;
+    f->replay = false;
     f->areTimer = 0;
     f->genericCounter = 0;
     f->totalKeysPressed = 0;
@@ -720,9 +721,11 @@ beginTick:
 
       case FSS_GAMEOVER:
         f->se |= FST_SE_FLAG_GAMEOVER;
-        // Only save a hiscore if we completed the game (no quit/restart)
-        fsHiscoreInsert(f);
-
+        // Only save a hiscore if we completed the game (no quit/restart) and
+        // if this is not a replay.
+        if (!f->replay) {
+            fsHiscoreInsert(f);
+        }
         /* FALLTHROUGH */
 
       case FSS_QUIT:
