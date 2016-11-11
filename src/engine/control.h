@@ -60,7 +60,7 @@ enum VirtualKey {
 };
 
 // This handles cross-key state required during generation of `FSInput` values.
-typedef struct FSControl {
+struct FSControl {
     /// @I: State of input device last tick.
     u32 lastKeys;
 
@@ -69,10 +69,10 @@ typedef struct FSControl {
 
     /// @I: Number of ticks DAS has occurred for.
     i32 dasCounter;
-} FSControl;
+};
 
 // Generation target for `FSControl` which the `FSEngine` can understand.
-typedef struct FSInput {
+struct FSInput {
     /// A Rotation action.
     //
     //  * Constraints
@@ -95,12 +95,10 @@ typedef struct FSInput {
 
     /// Current key status (used for some specific events)
     u32 currentKeys;
-} FSInput;
-
+};
 
 // Converts the current keystate `keys` with the state object `c` into the
 // associated `FSInput` output structure.
-void fsVirtualKeysToInput(FSInput *dst, u32 keys, const struct FSEngine *f,
-                          FSControl *c);
+void fsVirtualKeysToInput(FSInput *dst, u32 keys, const FSEngine *f, FSControl *c);
 
 #endif // FS_CONTROL_H

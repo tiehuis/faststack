@@ -13,10 +13,8 @@
 #include "core.h"
 #include "config.h"
 
-struct FSEngine;
-
 // A generic loader/reader of a replay file.
-typedef struct {
+struct FSReplay {
     // File to read/write date to/from.
     FILE *handle;
 
@@ -34,13 +32,13 @@ typedef struct {
 
     // Error flag preserved over re-initialization.
     bool error;
-} FSReplay;
+};
 
 // Initializes a replay as a hidden file within the replay directory.
 //
 // This is considered temporary until either one of `fsReplaySave` or
 // `fsReplayClear` is called.
-void fsReplayInit(const struct FSEngine *f, FSReplay *r);
+void fsReplayInit(const FSEngine *f, FSReplay *r);
 
 // Try and insert the current keystate value into the replay file.
 //
@@ -53,14 +51,14 @@ void fsReplayInsert(FSReplay *r, u32 ticks, u32 keystate);
 //
 // This will rename the working replay file to one based on the current date,
 // goal, and resulting performance (playtime).
-void fsReplaySave(const struct FSEngine *f, FSReplay *r);
+void fsReplaySave(const FSEngine *f, FSReplay *r);
 
 // Load an existing replay file from the specified filename.
 //
 // This will emit a warning if loading failed, and will set the internal
 // `error` flag to true which will set any following calls to replay functions
 // as effective noops.
-void fsReplayLoad(struct FSEngine *f, FSReplay *r, const char *filename);
+void fsReplayLoad(FSEngine *f, FSReplay *r, const char *filename);
 
 // Read the expected keystate from the replay file for the given `ticks` value.
 //

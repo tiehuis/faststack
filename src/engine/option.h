@@ -18,20 +18,17 @@
 #include <errno.h>
 #include <limits.h>
 
-struct FSPSView;
-struct FSView;
-
 // A struct containing command line option parameters for a generic FastStack
 // frontend implementation.
-typedef struct {
+struct FSOptions {
     int verbosity;
     bool no_ini;
     char *replay;
-} FSOptions;
+};
 
 int strcmpi(const char *a, const char *b);
 void fsParseOptString(FSOptions *o, int argc, char **argv);
-void fsParseIniFile(struct FSPSView *p, struct FSView *v, const char *fname);
+void fsParseIniFile(FSPSView *p, FSView *v, const char *fname);
 
 ///
 // The following macros provide more robust parsing of key-value pairs into

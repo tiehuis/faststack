@@ -10,6 +10,20 @@
 
 #include <stdint.h>
 
+// Every structure is typedef here instead of at their declaration. The reason
+// for this is to remove the requirement to forward-declare these types
+// anywhere else (as a struct, too). This is cleaner, and works much better
+// due to all the cyclical dependencies between these structures.
+typedef struct FSEngine FSEngine;
+typedef struct FSInput FSInput;
+typedef struct FSControl FSControl;
+typedef struct FSView FSView;
+typedef struct FSPSView FSPSView;
+typedef struct FSOptions FSOptions;
+typedef struct FSReplay FSReplay;
+typedef struct FSRotationSystem FSRotationSystem;
+typedef struct FSRandCtx FSRandCtx;
+
 // (N)umber of (P)iece (T)ypes.
 #define FS_NPT 7
 
@@ -38,6 +52,7 @@ enum PieceType {
     FS_NONE
 };
 
+// These typedefs are done primarily for brevity.
 typedef int8_t FSBlock;
 typedef int8_t i8;
 typedef int32_t i32;

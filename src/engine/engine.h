@@ -162,7 +162,7 @@ enum GameState {
 //
 //  Note: ANy 'Constraints' should always be true at any point in time.
 ///
-typedef struct FSEngine {
+struct FSEngine {
     /// @E: Current field state.
     FSBlock b[FS_MAX_HEIGHT][FS_MAX_WIDTH];
 
@@ -351,7 +351,7 @@ typedef struct FSEngine {
 
     /// @I: Is this a replay and not a real game?
     bool replay;
-} FSEngine;
+};
 
 ///
 // A generic view of a games components.
@@ -359,7 +359,7 @@ typedef struct FSEngine {
 // The 'FSEngine' instance does not handle all the components, such as input.
 // This view encapsulates all these components into one structure.
 ///
-typedef struct FSView {
+struct FSView {
     /// Current game instance.
     FSEngine *game;
 
@@ -377,7 +377,7 @@ typedef struct FSView {
 
     /// Number of draw requests made during this views lifetime.
     i32 totalFramesDrawn;
-} FSView;
+};
 
 ///
 // Clear the specified game instance.

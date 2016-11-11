@@ -9,6 +9,11 @@
 // the standard provided functions (prefixed with `fs`).
 // frontend.
 //
+// Each frontend implementation is expected to implement an actual `FSPSView`
+// type itself.
+//
+// This **should** be declared with one field `view` of type `FSView`.
+//
 // Notes:
 //  * Do we require microsecond granularity for `fsiGetTime` and `fsiSleepUs`?.
 //  * Weak-linking potentially unimplemented functions could improve
@@ -22,11 +27,6 @@
 #include "core.h"
 #include "engine.h"
 
-// Each frontend implementation is expected to implement the actual `FSPSView`
-// type itself.
-//
-// This **should** be declared with one field `view` of type `FSView`.
-typedef struct FSPSView FSPSView;
 
 ///
 // Pre-initialize. This is currently necessary as the structure needs to

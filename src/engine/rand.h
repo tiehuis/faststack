@@ -22,17 +22,15 @@ enum RandomizerType {
     FST_RAND_TGM2
 };
 
-struct FSEngine;
-
 ///
 // Random state context.
 //
 // This stores the current data used to compute the next random value. Based on
 // the prng here: http://burtleburtle.net/bob/rand/smallprng.html.
 ///
-typedef struct FSRandCtx {
+struct FSRandCtx {
     u32 a, b, c, d;
-} FSRandCtx;
+};
 
 // Returns a seed which provides sufficient sub-millisecond movement.
 u32 fsGetRoughSeed(void);
@@ -44,6 +42,6 @@ u32 fsRandNext(FSRandCtx *ctx);
 void fsRandSeed(FSRandCtx *ctx, u32 seed);
 
 // Retrieve the next random piece in the queue for the specified engine.
-FSBlock fsNextRandomPiece(struct FSEngine *f);
+FSBlock fsNextRandomPiece(FSEngine *f);
 
 #endif // FS_RAND_H

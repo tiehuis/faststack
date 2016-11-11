@@ -29,7 +29,7 @@ i32 popcount(u32 x)
 // `keys` is an integer with bits set depending on the state of the specified
 //  key. The bits set correspond to the `FST_VK_FLAG` enum in `fsControl.h`.
 ///
-void fsVirtualKeysToInput(struct FSInput *dst, u32 keys, const FSEngine *f, FSControl *c)
+void fsVirtualKeysToInput(FSInput *dst, u32 keys, const FSEngine *f, FSControl *c)
 {
     u32 lastTickKeys = c->lastKeys;
     u32 newKeys = keys & ~lastTickKeys;

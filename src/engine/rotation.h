@@ -51,7 +51,7 @@ typedef i8x3 WallkickTable[FS_NPR][FS_MAX_KICK_LEN];
 //      Specifies individual wallkick tables for a given piece. Tables can
 //      be shared amongst types by reusing the index.
 ///
-typedef struct FSRotationSystem {
+struct FSRotationSystem {
     /// Initial x, y offsets.
     i8 entryOffset[FS_NPT];
 
@@ -65,7 +65,7 @@ typedef struct FSRotationSystem {
 
     /// A sequence of wallkick tests.
     WallkickTable kickTables[FS_MAX_NO_OF_WALLKICK_TABLES];
-} FSRotationSystem;
+};
 
 ///
 // The core piece offsets used.
