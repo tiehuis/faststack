@@ -1,6 +1,6 @@
 ///
-// fsRand.c
-// ========
+// rand.c
+// ======
 //
 // Implements a number of different types of randomizers.
 //
@@ -14,7 +14,7 @@
 // seed.
 ///
 
-#include "fsEngine.h"
+#include "engine.h"
 
 #include <stdint.h>
 #include <stdlib.h>

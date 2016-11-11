@@ -1,6 +1,6 @@
 ///
-// fsHiscore.c
-// ===========
+// hiscore.c
+// =========
 //
 // Functions for writing and reading to the hiscore file.
 //
@@ -15,10 +15,10 @@
 // ```
 ///
 
-#include "fsCore.h"
-#include "fsConfig.h"
-#include "fsEngine.h"
-#include "fsLog.h"
+#include "core.h"
+#include "config.h"
+#include "engine.h"
+#include "log.h"
 
 #include <stdio.h>
 #include <time.h>

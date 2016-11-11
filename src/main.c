@@ -8,10 +8,7 @@
 
 // Need to include the actual frontend we are using here so we know the storage
 // size.
-#include "fsEngine.h"
-#include "fsDefault.h"
-#include "fsInterface.h"
-#include "fsOption.h"
+#include "faststack.h"
 
 #include "frontend.h"
 

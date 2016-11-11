@@ -1,40 +1,32 @@
 ///
-// fsInterface.h
-// =============
+// interface.h
+// ===========
 //
-// The main interface between frontend and engine code.
+// Defines the interface which is required to be implemented in its entirety
+// by any frontend implementation.
 //
-// All functions prefixed with fsi* **must** be implemented by a
+// All interface functions are prefixed with `fsi` to differentiate them from
+// the standard provided functions (prefixed with `fs`).
 // frontend.
 //
 // Notes:
 //  * Do we require microsecond granularity for `fsiGetTime` and `fsiSleepUs`?.
-//    Millisecond is probably sufficient for our purposes.
-//
-//  * Could we weak-link some potentially unimplemented functions such as the
-//    pre/post frame hooks?
+//  * Weak-linking potentially unimplemented functions could improve
+//    ergonomics. The problem with this is that it requires non-standard
+//    extensions.
 ///
 
 #ifndef FS_INTERFACE_H
 #define FS_INTERFACE_H
 
-#include "fsEngine.h"
-#include "fsCore.h"
+#include "core.h"
+#include "engine.h"
 
-///
-// Implementation in frontend.
+// Each frontend implementation is expected to implement the actual `FSPSView`
+// type itself.
 //
-// The definition there **must** not be a typedef.
-///
+// This **should** be declared with one field `view` of type `FSView`.
 typedef struct FSPSView FSPSView;
-
-///*********************/
-// Frontend Interface
-// ==================
-//
-// The following functions **must** be implemented by any frontend. If they are
-// omitted, a linker error will occur.
-//************/
 
 ///
 // Pre-initialize. This is currently necessary as the structure needs to

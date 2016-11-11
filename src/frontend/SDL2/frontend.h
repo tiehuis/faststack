@@ -8,8 +8,7 @@
 ///
 
 #include "keymap.h"
-#include "fsEngine.h"
-#include "fsInterface.h"
+#include <faststack.h>
 
 #include <stdio.h>
 #include <SDL.h>

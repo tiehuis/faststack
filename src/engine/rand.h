@@ -1,14 +1,18 @@
 ///
-// fsRand.h
-// ========
+// rand.h
+// ======
 //
-// Provides functions which rely on random state.
+// Header file for all random function support.
+//
+// This exposes its own random function instead of utilizing those found in
+// `stdlib.h`. The reason this is required is to ensure consistent random
+// number generation across arbitrary platforms.
 ///
 
 #ifndef FS_RAND_H
 #define FS_RAND_H
 
-#include "fsCore.h"
+#include "core.h"
 
 enum RandomizerType {
     FST_RAND_UNDEFINED,
@@ -30,16 +34,16 @@ typedef struct FSRandCtx {
     u32 a, b, c, d;
 } FSRandCtx;
 
-/// Return a random seed value which updates frequently enough.
+// Returns a seed which provides sufficient sub-millisecond movement.
 u32 fsGetRoughSeed(void);
 
-/// Return the next u32 in the PRNG sequence
+// Return the next u32 in the PRNG sequence.
 u32 fsRandNext(FSRandCtx *ctx);
 
-/// Seed the random context
+// Seed the random context.
 void fsRandSeed(FSRandCtx *ctx, u32 seed);
 
-/// Update the engine with a new random piece
+// Retrieve the next random piece in the queue for the specified engine.
 FSBlock fsNextRandomPiece(struct FSEngine *f);
 
 #endif // FS_RAND_H

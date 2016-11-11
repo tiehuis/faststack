@@ -1,5 +1,5 @@
 ///
-// fsRotation.c
+// rotation.c
 // ==========
 //
 // A rotation system consists of wallkicks and initial piece offsets.
@@ -11,9 +11,9 @@
 // wallkick for the rotation `0 -> R` we would check table.kicksR[0];
 ///
 
-#include "fsCore.h"
-#include "fsRotation.h"
-#include "fsInternal.h"
+#include "core.h"
+#include "rotation.h"
+#include "internal.h"
 
 // The C99 standard specifies that static variables are 0 initialized
 // (section 6.7.8 item 10) which we rely on during initialization.

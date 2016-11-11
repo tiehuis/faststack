@@ -1,6 +1,6 @@
 ///
-// fsHiscore.h
-// ===========
+// hiscore.h
+// =========
 //
 // Hiscore related functionality.
 ///

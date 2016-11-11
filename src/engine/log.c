@@ -1,6 +1,6 @@
 ///
-// fsLog.c
-// =======
+// log.c
+// =====
 //
 // Logging functions which can have their level changed at runtime.
 //
@@ -11,7 +11,7 @@
 #define _XOPEN_SOURCE 500
 #include <unistd.h>
 
-#include "fsLog.h"
+#include "log.h"
 
 #include <stdarg.h>
 #include <stdio.h>

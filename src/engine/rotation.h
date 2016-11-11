@@ -1,18 +1,17 @@
 ///
-// fsRotation.h
+// rotation.h
 // ==========
 //
-// Specifies all static tables used by FastStack. These all relate
-// to wallkick/rotation schemes.
-//
-// This includes all Rotation/Wallkick declarations as well.
+// Defines structures for working with wallkick/rotation data. This data is
+// exposed through public externs and and is accessed through indexing via the
+// `FST_ROTSYS_*` enumeration values.
 ///
 
 #ifndef FS_ROTATION_H
 #define FS_ROTATION_H
 
-#include "fsCore.h"
-#include "fsConfig.h"
+#include "core.h"
+#include "config.h"
 
 enum RotationSystemType {
     FST_ROTSYS_SIMPLE,

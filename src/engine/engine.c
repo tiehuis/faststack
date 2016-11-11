@@ -1,15 +1,15 @@
 ///
-// fsEngine.c
-// ==========
+// engine.c
+// ========
 //
 // FastStack Engine implementation.
 ///
 
-#include "fsEngine.h"
-#include "fsDefault.h"
-#include "fsHiscore.h"
-#include "fsInternal.h"
-#include "fsRand.h"
+#include "engine.h"
+#include "default.h"
+#include "hiscore.h"
+#include "internal.h"
+#include "rand.h"
 
 #include <stdio.h>
 #include <string.h>

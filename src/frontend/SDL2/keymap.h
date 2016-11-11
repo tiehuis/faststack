@@ -12,7 +12,7 @@
 #define KEYMAP_H
 
 #include <SDL_keycode.h>
-#include <fsOption.h>
+#include <faststack.h>
 
 #define KEY_NONE (-1)
 

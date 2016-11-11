@@ -1,14 +1,14 @@
 ///
-// fsControl.c
-// ===========
+// control.c
+// =========
 //
 // Implementation of the function to convert key input into simplified actions
 // for the FastStack engine.
 ///
 
-#include "fsEngine.h"
-#include "fsControl.h"
-#include "fsInternal.h"
+#include "engine.h"
+#include "control.h"
+#include "internal.h"
 
 #include <stdio.h>
 

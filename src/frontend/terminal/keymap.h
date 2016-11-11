@@ -10,8 +10,7 @@
 
 #include <ctype.h>
 #include <linux/input.h>
-
-#include "fsOption.h"
+#include <faststack.h>
 
 #define KEY_NONE (-1)
 

@@ -1,19 +1,19 @@
 ///
-// fsKeySpec.c
-// ===========
+// keyspec.c
+// =========
 //
-// This file specifies which keys are valid in a configuration file. All these
-// keys **must** be mapped by any frontend else we could encounter odd errors.
+// A listing of all virtual keys which are valid for use in an ini file.
+// Any frontend implementation **must** map all these keys else it runs the
+// risk of not conforming.
 //
-// The names mirror `SDL_Keycode`'s as found in the `SDL2` library for the
-// most part.
+// Names mirror those as found within the `SDL2` library.
 ///
 
-typedef int _;  // Discard IS0 C99 empty translation warning
+typedef int _;  // Ignore IS0 C99 empty translation warning.
 
 #if 0
 enum KeySpec {
-    // We support ascii (of course)
+    // Standard
     a,
     b,
     c,
@@ -59,7 +59,7 @@ enum KeySpec {
     Space,
     Enter,
 
-    // Numpad (keypad)
+    // Keypad
     kp0,
     kp1,
     kp2,

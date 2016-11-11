@@ -1,10 +1,13 @@
 ///
-// fsOption.h
-// ==========
+// option.h
+// ========
 //
-// Exposes common macros for processing and setting key value pairs read from
-// ini files. These are exposed to allow frontend code to deal with options in
-// the same manner as the engine code for better consistency.
+// Header file for option parsing. This exposes functions which perform
+// command-line option parsing, ini file parsing and also helper methods
+// for frontends performing their own option parsing as well.
+//
+// These functions are very assumptious, so read the documentation
+// thoroughly!
 ///
 
 #ifndef FS_OPTION_H
@@ -15,30 +18,19 @@
 #include <errno.h>
 #include <limits.h>
 
-///
-// Perform a case-insensitive strcmp.
-int strcmpi(const char *a, const char *b);
+struct FSPSView;
+struct FSView;
 
-/// Command-line option struct.
+// A struct containing command line option parameters for a generic FastStack
+// frontend implementation.
 typedef struct {
-    /// Verbosity level.
     int verbosity;
-
-    /// Should we skip processing of an ini file.
     bool no_ini;
-
-    /// Filename of replay
     char *replay;
 } FSOptions;
 
-///
-// Parse an option string.
+int strcmpi(const char *a, const char *b);
 void fsParseOptString(FSOptions *o, int argc, char **argv);
-
-///
-// Parse an ini file.
-struct FSPSView;
-struct FSView;
 void fsParseIniFile(struct FSPSView *p, struct FSView *v, const char *fname);
 
 ///
@@ -60,13 +52,9 @@ void fsParseIniFile(struct FSPSView *p, struct FSView *v, const char *fname);
 //  We assume the following:
 //
 //    * If we find a key match, there will be nothing else to do after assignment
-//
 //    * Positive values are expected by default
-//
 //    * `dst` is a pointer to a struct which contains the _id in question
-//
 //    * `key` will store the key we are checking
-//
 //    * `value` will store the value associated with this key
 ///
 

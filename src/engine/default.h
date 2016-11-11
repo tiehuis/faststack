@@ -1,17 +1,14 @@
 ///
-// fsDefault.h
-// ===========
+// default.h
+// =========
 //
-// Defualt parameters used for every FSEngine instance.
+// Default parameters used within an `FSEngine` type.
 //
-// These provide a fallback for if user specified options from an ini file
-// could not be loaded or if no ini file support is wanted.
+// These are the standard fallback values if no ini file was specified or a
+// corresponding option could not be loaded from another location. These have
+// minimum priority and will always be overridden if possible.
 //
-// Any default value specified here should be able to be overridden in the ini
-// file.
-//
-// See `FSEngine` declaration in `fsEngine.h` for documentation on what each value
-// is expected to be.
+// See `FSEngine` for documentation regarding option behavior.
 ///
 
 #ifndef FS_DEFAULT_H

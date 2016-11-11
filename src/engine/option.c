@@ -1,6 +1,6 @@
 ///
-// fsOption.c
-// ==========
+// option.c
+// ========
 //
 // Handle parsing of configuration files and the associated setting of value
 // within a `FSEngine` instance.
@@ -10,9 +10,9 @@
 // approaches into here.
 ///
 
-#include "fsEngine.h"
-#include "fsInternal.h"
-#include "fsInterface.h"
+#include "engine.h"
+#include "internal.h"
+#include "interface.h"
 
 #include <stdio.h>
 #include <stdlib.h>

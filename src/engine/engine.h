@@ -1,6 +1,6 @@
 ///
-// fsEngine.h
-// ==========
+// engine.h
+// ========
 //
 // Header file for the FastStack engine.
 //
@@ -21,14 +21,14 @@
 #ifndef FS_H
 #define FS_H
 
-#include "fsCore.h"
-#include "fsConfig.h"
-#include "fsControl.h"
-#include "fsLog.h"
-#include "fsRand.h"
-#include "fsReplay.h"
-#include "fsOption.h"
-#include "fsRotation.h"
+#include "core.h"
+#include "config.h"
+#include "control.h"
+#include "log.h"
+#include "rand.h"
+#include "replay.h"
+#include "option.h"
+#include "rotation.h"
 
 #include <stdbool.h>
 #include <string.h>
@@ -185,7 +185,7 @@ typedef struct FSEngine {
     i8 fieldHidden;
 
     /// @E: Next available pieces.
-    FSBlock nextPiece[FS_PREVIEW_MAX];
+    FSBlock nextPiece[FS_MAX_PREVIEW_COUNT];
 
     /// @I: Current random state context.
     FSRandCtx randomContext;

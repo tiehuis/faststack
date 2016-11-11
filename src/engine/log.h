@@ -1,8 +1,14 @@
 ///
-// fsLog.h
-// =======
+// log.h
+// =====
 //
-// Header file for logging messages.
+// Header file for logging system.
+//
+// The logging system exposes two global variables. These are used to tweak the
+// level and output stream which logging messages will be written to.
+//
+// Issues:
+//  - Allow mock logging implementations to be used if `NDEBUG` is defined.
 ///
 
 #ifndef FS_LOG_H
@@ -10,41 +16,18 @@
 
 #include <stdio.h>
 
-///
-// We want to allow any client to set this variable to alter all logging.
-///
 extern int fsCurrentLogLevel;
-
-///
-// We want to allow a user to adjust output stream as required.
-///
 extern FILE *fsLogStream;
 
-///
-// Represents a level of logging.
-///
-enum FS_LOG_LEVEL {
-    /// Debug log message.
+enum LogLevel {
     FS_LOG_LEVEL_DEBUG = 1,
-
-    /// Informational log message.
     FS_LOG_LEVEL_INFO,
-
-    /// Warning log message.
     FS_LOG_LEVEL_WARNING,
-
-    /// Error log message.
     FS_LOG_LEVEL_ERROR,
-
-    /// Fatal log message.
     FS_LOG_LEVEL_FATAL
 };
 
-///
-// Generic interface to log a message.
-//
-// This should not usually be used, prefer the specific defines.
-///
+// Generic logging function. Prefer macro definitions instead.
 void fsLog(int level, ...);
 
 #define fsLogDebug(...) fsLog(FS_LOG_LEVEL_DEBUG, __VA_ARGS__)
