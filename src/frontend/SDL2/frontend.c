@@ -15,7 +15,7 @@
 
 const char *fsiFrontendName = "sdl2";
 
-void fsiPreInit(FSPSView *v)
+void fsiPreInit(FSFrontend *v)
 {
     // These defaults can be overridden by an ini file.
     v->width = 800;
@@ -38,7 +38,7 @@ int calcFontSize(int width)
     return width / 40;
 }
 
-void fsiInit(FSPSView *v)
+void fsiInit(FSFrontend *v)
 {
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) != 0) {
         fsLogFatal("SDL_Init error: %s", SDL_GetError());
@@ -108,7 +108,7 @@ void fsiInit(FSPSView *v)
     SDL_RenderClear(v->renderer);
 }
 
-void fsiFree(FSPSView *v)
+void fsiFini(FSFrontend *v)
 {
 #ifdef USE_SOUND
     // Assume WAV data is reclaimed by the OS for now
@@ -129,19 +129,19 @@ const int CBLUE[7]  = {221, 234,   0, 240,  31,   0,   0};
 // Defines how we work out a color pattern for a specific block id.
 #define BLOCK_RGBA_TRIPLE(id) CRED[(id)], CGREEN[(id)], CBLUE[(id)], 255
 
-i32 fsiGetTime(FSPSView *v)
+i32 fsiGetTime(FSFrontend *v)
 {
     (void) v;
     return SDL_GetTicks() * 1000;
 }
 
-void fsiSleepUs(FSPSView *v, i32 time)
+void fsiSleep(FSFrontend *v, i32 time)
 {
     (void) v;
     SDL_Delay(time / 1000);
 }
 
-u32 fsiReadKeys(FSPSView *v)
+u32 fsiReadKeys(FSFrontend *v)
 {
     (void) v;
     SDL_PumpEvents();
@@ -164,7 +164,7 @@ u32 fsiReadKeys(FSPSView *v)
 }
 
 // Audio is not buffered by default under SDL_Mixer which is what we want.
-void fsiPlaySe(FSPSView *v, u32 se)
+void fsiPlaySe(FSFrontend *v, u32 se)
 {
 #ifdef USE_SOUND
     #define PlayWav(name)                                                   \
@@ -207,7 +207,7 @@ void fsiPlaySe(FSPSView *v, u32 se)
 // Notes:
 //  * This is really unoptimized. We should create a surface mapping on font
 //    load and simply reuse this for every character instead.
-static void renderString(FSPSView *v, const char *s, int x, int y)
+static void renderString(FSFrontend *v, const char *s, int x, int y)
 {
     FC_Draw(v->font, v->renderer, x, y, s);
 }
@@ -216,7 +216,7 @@ static void renderString(FSPSView *v, const char *s, int x, int y)
 // Render a string onto the middle of the field.
 //
 // The string will be centered, and truncated if too long.
-void fsiRenderFieldString(FSPSView *v, const char *msg)
+void fsiRenderFieldString(FSFrontend *v, const char *msg)
 {
     int w = FC_GetWidth(v->font, msg);
     renderString(v, msg, FIELD_X + FIELD_W / 2 - w / 2 , FIELD_Y + FIELD_H / 2);
@@ -224,7 +224,7 @@ void fsiRenderFieldString(FSPSView *v, const char *msg)
 
 ///
 // We only need to pump events once per frame.
-void fsiPreFrameHook(FSPSView *v)
+void fsiPreFrameHook(FSFrontend *v)
 {
     SDL_PumpEvents();
 
@@ -248,14 +248,14 @@ void fsiPreFrameHook(FSPSView *v)
 
 ///
 // Execute after everything else in the frame.
-void fsiPostFrameHook(FSPSView *v)
+void fsiPostFrameHook(FSFrontend *v)
 {
     (void) v;
 }
 
 ///
 // Draws a rudimentary debug screen in the upper right corner of the screen.
-void drawDebug(FSPSView *v)
+void drawDebug(FSFrontend *v)
 {
     const FSEngine *f = v->view->game;
 
@@ -279,7 +279,7 @@ void drawDebug(FSPSView *v)
     const int elapsedTime = fsiGetTime(v);
 
     // Should only look at a window here  but oh well
-    const float renderFPS = (float) elapsedTime / (1000 * v->view->totalFramesDrawn);
+    const float renderFPS = (float) elapsedTime / (1000 * f->totalTicks / f->ticksPerDraw);
     const float logicFPS = (float) elapsedTime / (1000 * f->totalTicks);
 
     const int lineSkipY = FC_GetLineHeight(v->font);
@@ -333,7 +333,7 @@ void drawDebug(FSPSView *v)
     renderString(v, writeBuffer, ux, uy + c++ * lineSkipY);
 }
 
-static void drawHoldPiece(FSPSView *v)
+static void drawHoldPiece(FSFrontend *v)
 {
     SDL_Rect block = {
         .x = -1,
@@ -349,7 +349,7 @@ static void drawHoldPiece(FSPSView *v)
     }
 
     i8x2 blocks[FS_NBP];
-    fsPieceToBlocks(f, blocks, f->holdPiece, 0, 0, 0);
+    fsGetBlocks(f, blocks, f->holdPiece, 0, 0, 0);
     SDL_SetRenderDrawColor(v->renderer, BLOCK_RGBA_TRIPLE(f->holdPiece));
 
     int bxoff = f->holdPiece != FS_O && f->holdPiece != 0 ? BLOCK_SL / 2 : 0;
@@ -366,7 +366,7 @@ static void drawHoldPiece(FSPSView *v)
 ///
 // This **must** be called after drawField to ensure the piece and shadow
 // is above any lying pieces.
-static void drawPieceAndShadow(FSPSView *v)
+static void drawPieceAndShadow(FSFrontend *v)
 {
     // We need to draw the actual piece last in case there is overlap
     SDL_Rect block = {
@@ -384,7 +384,7 @@ static void drawPieceAndShadow(FSPSView *v)
     }
 
     i8x2 blocks[FS_NBP];
-    fsPieceToBlocks(f, blocks, pid, f->x, f->hardDropY - f->fieldHidden, f->theta);
+    fsGetBlocks(f, blocks, pid, f->x, f->hardDropY - f->fieldHidden, f->theta);
 
     for (int i = 0; i < FS_NBP; ++i) {
         block.x = FIELD_X + blocks[i].x * BLOCK_SL;
@@ -404,7 +404,7 @@ static void drawPieceAndShadow(FSPSView *v)
         SDL_RenderFillRect(v->renderer, &block);
     }
 
-    fsPieceToBlocks(f, blocks, pid, f->x, f->y - f->fieldHidden, f->theta);
+    fsGetBlocks(f, blocks, pid, f->x, f->y - f->fieldHidden, f->theta);
 
     for (int i = 0; i < FS_NBP; ++i) {
         block.x = FIELD_X + blocks[i].x * BLOCK_SL;
@@ -427,7 +427,7 @@ static void drawPieceAndShadow(FSPSView *v)
 //  y - [15%, 83.333%]
 //
 //  We assume a width and height of 10, 20 for the moment.
-void drawField(FSPSView *v)
+void drawField(FSFrontend *v)
 {
     const FSEngine *f = v->view->game;
 
@@ -465,7 +465,7 @@ void drawField(FSPSView *v)
     }
 }
 
-static void drawPreviewSection(FSPSView *v)
+static void drawPreviewSection(FSFrontend *v)
 {
     // Clear preview area
     const SDL_Rect border = {
@@ -494,7 +494,7 @@ static void drawPreviewSection(FSPSView *v)
     for (int i = 0; i < previewCount; ++i) {
         i8x2 blocks[FS_NBP];
         const FSBlock pid = f->nextPiece[i];
-        fsPieceToBlocks(f, blocks, pid, 0, 0, 0);
+        fsGetBlocks(f, blocks, pid, 0, 0, 0);
 
         // Set field to grey currently
         const int by = PVIEW_Y + BLOCK_SL * (i * 4);
@@ -519,7 +519,7 @@ static void drawPreviewSection(FSPSView *v)
     }
 }
 
-static void drawInfoSection(FSPSView *v)
+static void drawInfoSection(FSFrontend *v)
 {
     const FSEngine *f = v->view->game;
 
@@ -590,7 +590,7 @@ static void drawInfoSection(FSPSView *v)
 }
 
 // Draw the prewview pieces
-void fsiDraw(FSPSView *v)
+void fsiDraw(FSFrontend *v)
 {
     // Clear entire screen
     SDL_SetRenderDrawColor(v->renderer, 0, 0, 0, 255);
@@ -606,12 +606,12 @@ void fsiDraw(FSPSView *v)
         drawDebug(v);
 }
 
-void fsiBlit(FSPSView *v)
+void fsiBlit(FSFrontend *v)
 {
     SDL_RenderPresent(v->renderer);
 }
 
-void fsiAddToKeymap(FSPSView *v, int virtualKey, const char *keyValue, bool isDefault)
+void fsiAddToKeymap(FSFrontend *v, int virtualKey, const char *keyValue, bool isDefault)
 {
     const SDL_Keycode kc = fsKeyToPhysicalKey(keyValue);
     if (kc) {
@@ -632,9 +632,9 @@ void fsiAddToKeymap(FSPSView *v, int virtualKey, const char *keyValue, bool isDe
 }
 
 // parse ini will call this function and pass appropriate values
-void fsiUnpackFrontendOption(FSPSView *v, const char *key, const char *value)
+void fsiUnpackFrontendOption(FSFrontend *v, const char *key, const char *value)
 {
-    FSPSView *dst = v;
+    FSFrontend *dst = v;
 
     TS_BOOL(showDebug);
     TS_INT(height);

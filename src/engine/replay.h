@@ -8,10 +8,8 @@
 #ifndef FS_REPLAY_H
 #define FS_REPLAY_H
 
-#include <stdbool.h>
 #include <stdio.h>
 #include "core.h"
-#include "config.h"
 
 // A generic loader/reader of a replay file.
 struct FSReplay {

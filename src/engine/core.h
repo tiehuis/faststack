@@ -8,6 +8,7 @@
 #ifndef FS_TYPES_H
 #define FS_TYPES_H
 
+#include <stdbool.h>
 #include <stdint.h>
 
 // Every structure is typedef here instead of at their declaration. The reason
@@ -18,7 +19,7 @@ typedef struct FSEngine FSEngine;
 typedef struct FSInput FSInput;
 typedef struct FSControl FSControl;
 typedef struct FSView FSView;
-typedef struct FSPSView FSPSView;
+typedef struct FSFrontend FSFrontend;
 typedef struct FSOptions FSOptions;
 typedef struct FSReplay FSReplay;
 typedef struct FSRotationSystem FSRotationSystem;

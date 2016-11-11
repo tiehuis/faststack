@@ -11,7 +11,6 @@
 // wallkick for the rotation `0 -> R` we would check table.kicksR[0];
 ///
 
-#include "core.h"
 #include "rotation.h"
 #include "internal.h"
 

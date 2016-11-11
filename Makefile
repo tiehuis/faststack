@@ -1,7 +1,7 @@
 CC      ?= clang
 CFLAGS  += -Wall -Wextra -std=c99 -pedantic -O2 -Isrc -Isrc/engine ${EXTRA}
 CDFLAGS += -g
-LDFLAGS += -lm
+LDFLAGS +=
 
 PROGRAM := FastStack
 SOURCE  := src/engine/*.c src/*.c

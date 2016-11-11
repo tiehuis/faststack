@@ -18,6 +18,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <string.h>
 #include <time.h>
 
 #include <errno.h>
@@ -51,7 +52,7 @@ static void sigintHandler(int signal)
     caughtSigint = 1;
 }
 
-void fsiPreInit(FSPSView *v)
+void fsiPreInit(FSFrontend *v)
 {
     // We must explicitly clear the keymap else garbage keys could be pressed.
     for (int i = 0; i < FST_VK_COUNT; ++i) {
@@ -64,7 +65,7 @@ void fsiPreInit(FSPSView *v)
     }
 }
 
-void fsiInit(FSPSView *v)
+void fsiInit(FSFrontend *v)
 {
     // TODO: Determine how we can procedurally retrieve the keyboard device.
     static const char *inputDeviceName =
@@ -105,7 +106,7 @@ void fsiInit(FSPSView *v)
     v->invalidateBuffers = true;
 }
 
-void fsiFree(FSPSView *v)
+void fsiFini(FSFrontend *v)
 {
     tcsetattr(STDIN_FILENO, TCSANOW, &v->initialTerminalState);
 
@@ -123,7 +124,7 @@ void fsiFree(FSPSView *v)
     }
 }
 
-void fsiPlaySe(FSPSView *v, u32 se)
+void fsiPlaySe(FSFrontend *v, u32 se)
 {
     (void) v;
     (void) se;
@@ -134,7 +135,7 @@ void fsiPlaySe(FSPSView *v, u32 se)
 //
 // Notes:
 //  * Should use CLOCK_MONOTONIC_RAW where available.
-i32 fsiGetTime(FSPSView *v)
+i32 fsiGetTime(FSFrontend *v)
 {
     (void) v;
 
@@ -148,7 +149,7 @@ i32 fsiGetTime(FSPSView *v)
 //
 // Notes:
 //  * Should clock_nanosleep instead for consistency.
-void fsiSleepUs(FSPSView *v, i32 time)
+void fsiSleep(FSFrontend *v, i32 time)
 {
     (void) v;
 
@@ -179,7 +180,7 @@ void fsiSleepUs(FSPSView *v, i32 time)
 // Notes:
 //  * Can we replace the required getchar() with an ioctl call to mute the
 //    output on this terminal?
-u32 fsiReadKeys(FSPSView *v)
+u32 fsiReadKeys(FSFrontend *v)
 {
     char keystate[(KEY_MAX + 7) / 8] = {0};
 
@@ -243,7 +244,7 @@ static uint16_t attr_colour(int piece)
     return attrmap[piece];
 }
 
-static void drawHold(FSPSView *v)
+static void drawHold(FSFrontend *v)
 {
     i8x2 blocks[4];
     const FSEngine *f = v->view->game;
@@ -252,7 +253,7 @@ static void drawHold(FSPSView *v)
         return;
     }
 
-    fsPieceToBlocks(f, blocks, f->holdPiece, 0, 0, 0);
+    fsGetBlocks(f, blocks, f->holdPiece, 0, 0, 0);
     for (int i = 0; i < FS_NBP; ++i) {
         const int xoffset = f->holdPiece == FS_I || f->holdPiece == FS_O ? 0 : 1;
 
@@ -267,7 +268,7 @@ static void drawHold(FSPSView *v)
     }
 }
 
-static void drawField(FSPSView *v)
+static void drawField(FSFrontend *v)
 {
     i8x2 blocks[4];
     const FSEngine *f = v->view->game;
@@ -306,7 +307,7 @@ static void drawField(FSPSView *v)
 
     ///
     // Current piece ghost
-    fsPieceToBlocks(f, blocks, f->piece, f->x, f->hardDropY - f->fieldHidden, f->theta);
+    fsGetBlocks(f, blocks, f->piece, f->x, f->hardDropY - f->fieldHidden, f->theta);
     for (int i = 0; i < FS_NBP; ++i) {
         if (blocks[i].y < 0) {
             continue;
@@ -324,7 +325,7 @@ static void drawField(FSPSView *v)
 
     ///
     // Current piece
-    fsPieceToBlocks(f, blocks, f->piece, f->x, f->y - f->fieldHidden, f->theta);
+    fsGetBlocks(f, blocks, f->piece, f->x, f->y - f->fieldHidden, f->theta);
     for (int i = 0; i < FS_NBP; ++i) {
         if (blocks[i].y < 0) {
             continue;
@@ -346,7 +347,7 @@ static void drawField(FSPSView *v)
 //
 // Notes:
 //  * Extend the maximum preview count beyond four in some way.
-static void drawPreview(FSPSView *v)
+static void drawPreview(FSFrontend *v)
 {
     i8x2 blocks[FS_NBP];
     const FSEngine *f = v->view->game;
@@ -355,7 +356,7 @@ static void drawPreview(FSPSView *v)
                                 : f->nextPieceCount;
 
     for (int i = 0; i < previewCount; ++i) {
-        fsPieceToBlocks(f, blocks, f->nextPiece[i], 0, 0, 0);
+        fsGetBlocks(f, blocks, f->nextPiece[i], 0, 0, 0);
         const int xpo = f->nextPiece[i] == FS_I || f->nextPiece[i] == FS_O ? 0 : 1;
 
         for (int j = 0; j < FS_NBP; ++j) {
@@ -379,7 +380,7 @@ static void drawPreview(FSPSView *v)
 //
 // If this extends beyond the maximum terminal width then the string will be
 // clipped to fit.
-static void putStrAt(FSPSView *v, const char *s, int y, int x, int attrs)
+static void putStrAt(FSFrontend *v, const char *s, int y, int x, int attrs)
 {
     if (y < 0 || FS_TERM_HEIGHT <= y || x < 0 || FS_TERM_WIDTH <= x) {
         return;
@@ -402,14 +403,14 @@ static void putStrAt(FSPSView *v, const char *s, int y, int x, int attrs)
 // Render a string onto the middle of the field.
 //
 // The string will be centered, and truncated if too long.
-void fsiRenderFieldString(FSPSView *v, const char *msg)
+void fsiRenderFieldString(FSFrontend *v, const char *msg)
 {
     const FSEngine *f = v->view->game;
     const int w = strlen(msg);
     putStrAt(v, msg, FIELD_Y + FIELD_H / 2, FIELD_X + FIELD_W / 2 - w / 2 + 1, 0);
 }
 
-static void drawInfo(FSPSView *v)
+static void drawInfo(FSFrontend *v)
 {
     const FSEngine *f = v->view->game;
 
@@ -468,7 +469,7 @@ static void drawInfo(FSPSView *v)
 //
 // A complete redraw is performed if the invalidateBuffers flag is set. This
 // will be unset after the function completes.
-void fsiBlit(FSPSView *v)
+void fsiBlit(FSFrontend *v)
 {
     // This seems pointless (and is!) but may be slightly tweaked in future.
     if (caughtSigwinch) {
@@ -530,7 +531,7 @@ void fsiBlit(FSPSView *v)
 
 ///
 // Add a trigger for the physical key from this virtual key.
-void fsiAddToKeymap(FSPSView *v, int virtualKey, const char *keyValue, bool isDefault)
+void fsiAddToKeymap(FSFrontend *v, int virtualKey, const char *keyValue, bool isDefault)
 {
     const int kc = fsKeyToPhysicalKey(keyValue);
     if (kc) {
@@ -558,7 +559,7 @@ void fsiAddToKeymap(FSPSView *v, int virtualKey, const char *keyValue, bool isDe
 //
 //  * This should be placed in a seperate file for better containment. (along
 //    with future command line parsing).
-void fsiUnpackFrontendOption(FSPSView *v, const char *key, const char *value)
+void fsiUnpackFrontendOption(FSFrontend *v, const char *key, const char *value)
 {
     (void) v;
     (void) key;
@@ -567,7 +568,7 @@ void fsiUnpackFrontendOption(FSPSView *v, const char *key, const char *value)
 
 ///
 // Perform a complete render -> blit loop.
-void fsiDraw(FSPSView *v)
+void fsiDraw(FSFrontend *v)
 {
     for (int y = 0; y < FS_TERM_HEIGHT; ++y) {
         for (int x = 0; x < FS_TERM_WIDTH; ++x) {
@@ -589,7 +590,7 @@ void fsiDraw(FSPSView *v)
 //
 // Signal flags are handled here and not within the handlers themselves to
 // avoid any unforeseen behaviour.
-void fsiPreFrameHook(FSPSView *v)
+void fsiPreFrameHook(FSFrontend *v)
 {
     (void) v;
 
@@ -605,7 +606,7 @@ void fsiPreFrameHook(FSPSView *v)
 
 ///
 // Run after every tick.
-void fsiPostFrameHook(FSPSView *v)
+void fsiPostFrameHook(FSFrontend *v)
 {
     (void) v;
 }

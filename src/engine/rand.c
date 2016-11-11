@@ -14,12 +14,12 @@
 // seed.
 ///
 
-#include "engine.h"
-
-#include <stdint.h>
 #include <stdlib.h>
-#include <stdio.h>
 #include <time.h>
+
+#include "engine.h"
+#include "rand.h"
+#include "log.h"
 
 ///
 // Return a decent seed value.
@@ -28,8 +28,7 @@
 // game restart.
 u32 fsGetRoughSeed(void)
 {
-    u32 seed = time(NULL);
-    return seed * (u32) clock();
+    return time(NULL) * clock();
 }
 
 ///

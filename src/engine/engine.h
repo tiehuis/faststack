@@ -21,17 +21,10 @@
 #ifndef FS_H
 #define FS_H
 
-#include "core.h"
 #include "config.h"
 #include "control.h"
-#include "log.h"
+#include "core.h"
 #include "rand.h"
-#include "replay.h"
-#include "option.h"
-#include "rotation.h"
-
-#include <stdbool.h>
-#include <string.h>
 
 enum SoundEffectIndex {
     FST_SE_GAMEOVER,
@@ -354,32 +347,6 @@ struct FSEngine {
 };
 
 ///
-// A generic view of a games components.
-//
-// The 'FSEngine' instance does not handle all the components, such as input.
-// This view encapsulates all these components into one structure.
-///
-struct FSView {
-    /// Current game instance.
-    FSEngine *game;
-
-    /// Current input state.
-    FSControl *control;
-
-    /// Replay state.
-    FSReplay *replay;
-
-    /// Is this a replay playback?
-    bool replayPlayback;
-
-    /// Filename of the replay to load
-    char *replayName;
-
-    /// Number of draw requests made during this views lifetime.
-    i32 totalFramesDrawn;
-};
-
-///
 // Clear the specified game instance.
 //
 // This only resets internal variables and will not overwrite any user specified
@@ -434,7 +401,7 @@ void fsGameTick(FSEngine *f, const FSInput *i);
 //      Rotation state of the piece.
 //
 ///
-void fsPieceToBlocks(const FSEngine *f, i8x2 dst[static FS_NBP],
+void fsGetBlocks(const FSEngine *f, i8x2 dst[static FS_NBP],
                      i8 piece, int x, int y, int theta);
 
 #endif // FS_H

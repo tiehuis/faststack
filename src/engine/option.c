@@ -11,25 +11,21 @@
 ///
 
 #include "engine.h"
-#include "internal.h"
+#include "option.h"
+#include "log.h"
+#include "rotation.h"
+#include "rand.h"
 #include "interface.h"
+#include "view.h"
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <errno.h>
-#include <float.h>
-#include <limits.h>
-#include <math.h>
 #include <string.h>
+#include <ctype.h>
 
 // Maximum values for input when parsing ini options
 #define MAX_LINE_LENGTH 512
 #define MAX_ID_LENGTH 32
-
-///
-// This variable must be present in the frontend.
-///
-extern const char *fsiFrontendName;
 
 int strcmpi(const char *a, const char *b)
 {
@@ -106,7 +102,7 @@ static inline int fsInitialActionStyleLookup(const char *value)
 //
 // All keys are case-insensitive.
 ///
-static void unpackOptionValue(struct FSPSView *p, FSView *v, const char *k,
+static void unpackOptionValue(struct FSFrontend *p, FSView *v, const char *k,
                               const char *value)
 {
     if (!strncmp(k, "game.", 5)) {
@@ -276,7 +272,7 @@ static inline void eat_space(char **s)
     }
 }
 
-void fsParseIniFile(struct FSPSView *p, FSView *v, const char *fname)
+void fsParseIniFile(struct FSFrontend *p, FSView *v, const char *fname)
 {
     char buffer[MAX_LINE_LENGTH];
     int optionsCounted, c;

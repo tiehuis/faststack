@@ -9,13 +9,13 @@
 // the standard provided functions (prefixed with `fs`).
 // frontend.
 //
-// Each frontend implementation is expected to implement an actual `FSPSView`
+// Each frontend implementation is expected to implement an actual `FSFrontend`
 // type itself.
 //
 // This **should** be declared with one field `view` of type `FSView`.
 //
 // Notes:
-//  * Do we require microsecond granularity for `fsiGetTime` and `fsiSleepUs`?.
+//  * Do we require microsecond granularity for `fsiGetTime` and `fsiSleep`?.
 //  * Weak-linking potentially unimplemented functions could improve
 //    ergonomics. The problem with this is that it requires non-standard
 //    extensions.
@@ -25,8 +25,9 @@
 #define FS_INTERFACE_H
 
 #include "core.h"
-#include "engine.h"
 
+// Name of the frontend. Used during option parsing.
+extern const char *fsiFrontendName;
 
 ///
 // Pre-initialize. This is currently necessary as the structure needs to
@@ -36,23 +37,23 @@
 //  * This does not load the graphics themselves and should be removed in an
 //    ideal world.
 ///
-void fsiPreInit(FSPSView *v);
+void fsiPreInit(FSFrontend *v);
 
 ///
-// Initialize the FSPSView structure.
+// Initialize the FSFrontend structure.
 ///
-void fsiInit(FSPSView *v);
+void fsiInit(FSFrontend *v);
 
 ///
-// Free any data of a FSPSView structure.
+// Free any data of a FSFrontend structure.
 ///
-void fsiFree(FSPSView *v);
+void fsiFini(FSFrontend *v);
 
 ///
 // TODO:
 // This would be less efficient than readKeys but can be used by the menu-like
 // keys which do not support rebinding themselves.
-// int fsiKeyIsPressed(FSPSView *v);
+// int fsiKeyIsPressed(FSFrontend *v);
 
 ///
 // Render the specified string in the center of the field.
@@ -63,19 +64,19 @@ void fsiFree(FSPSView *v);
 //  * "GO"
 //  * "EXCELLENT"
 ///
-void fsiRenderFieldString(FSPSView *v, const char *msg);
+void fsiRenderFieldString(FSFrontend *v, const char *msg);
 
 ///
 // Return the current time with microsecond granularity.
 //
 // The reference clock should be monotonic.
 ///
-i32 fsiGetTime(FSPSView *v);
+i32 fsiGetTime(FSFrontend *v);
 
 ///
 // Sleep for the specific number of microseconds.
 ///
-void fsiSleepUs(FSPSView *v, i32 time);
+void fsiSleep(FSFrontend *v, i32 time);
 
 ///
 // Return the set of virtual keys that are currently pressed.
@@ -83,41 +84,41 @@ void fsiSleepUs(FSPSView *v, i32 time);
 // The translation from physical keys to virtual keys must be handled by the
 // frontend.
 ///
-u32 fsiReadKeys(FSPSView *v);
+u32 fsiReadKeys(FSFrontend *v);
 
 ///
 // Draw the specified view to the screen.
 ///
-void fsiDraw(FSPSView *v);
+void fsiDraw(FSFrontend *v);
 
 ///
 // Blit any pending screen changes to the screen.
 ///
-void fsiBlit(FSPSView *v);
+void fsiBlit(FSFrontend *v);
 
 ///
 // This hook is called at the start of every frame.
 ///
-void fsiPreFrameHook(FSPSView *v);
+void fsiPreFrameHook(FSFrontend *v);
 
 ///
 // This hook is called at the end of every frame (before we sleep).
 ///
-void fsiPostFrameHook(FSPSView *v);
+void fsiPostFrameHook(FSFrontend *v);
 
 ///
 // Play the specified sound effect.
 ///
-void fsiPlaySe(FSPSView *v, u32 se);
+void fsiPlaySe(FSFrontend *v, u32 se);
 
 ///
 // Try to register the specified key with the views keymap.
 ///
-void fsiAddToKeymap(FSPSView *v, const int vkey, const char *key, bool isDefault);
+void fsiAddToKeymap(FSFrontend *v, const int vkey, const char *key, bool isDefault);
 
 ///
 // Process an key-value pair option.
 ///
-void fsiUnpackFrontendOption(FSPSView *v, const char *key, const char *value);
+void fsiUnpackFrontendOption(FSFrontend *v, const char *key, const char *value);
 
 #endif // FS_INTERFACE_H

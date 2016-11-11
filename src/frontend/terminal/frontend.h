@@ -99,7 +99,7 @@ typedef struct {
 // Represents a generic view which is passed around by the FastStack interface
 // code.
 ///
-struct FSPSView {
+struct FSFrontend {
     /// A generic platform-independent view.
     FSView *view;
 

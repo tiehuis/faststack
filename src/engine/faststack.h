@@ -12,9 +12,19 @@
 #ifndef FASTSTACK_H
 #define FASTSTACK_H
 
-#include "engine.h"
+#include "config.h"
+#include "control.h"
+#include "core.h"
 #include "default.h"
-#include "option.h"
+#include "engine.h"
+#include "hiscore.h"
 #include "interface.h"
+#include "internal.h"
+#include "log.h"
+#include "option.h"
+#include "rand.h"
+#include "replay.h"
+#include "rotation.h"
+#include "view.h"
 
 #endif

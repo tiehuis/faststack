@@ -14,8 +14,8 @@
 #define FS_OPTION_H
 
 #include <stdbool.h>
-#include <ctype.h>
 #include <errno.h>
+#include <float.h>
 #include <limits.h>
 
 // A struct containing command line option parameters for a generic FastStack
@@ -28,7 +28,7 @@ struct FSOptions {
 
 int strcmpi(const char *a, const char *b);
 void fsParseOptString(FSOptions *o, int argc, char **argv);
-void fsParseIniFile(FSPSView *p, FSView *v, const char *fname);
+void fsParseIniFile(FSFrontend *p, FSView *v, const char *fname);
 
 ///
 // The following macros provide more robust parsing of key-value pairs into
@@ -55,6 +55,17 @@ void fsParseIniFile(FSPSView *p, FSView *v, const char *fname);
 //    * `value` will store the value associated with this key
 ///
 
+// Ceiling of the base 2 logarithm of x.
+inline static u32 cilog2(long long x)
+{
+    int r = 1;
+    while (x) {
+        x >>= 1;
+        r += 1;
+    }
+    return r;
+}
+
 #define TS_INT(_id) TS_INT_RANGE(_id, 0, LLONG_MAX)
 
 #define TS_INT_RANGE(_id, _lo, _hi)                                             \
@@ -78,10 +89,10 @@ do {                                                                            
                 fsLogWarning("Ignoring %s since it is not in allowed range [%lld, %lld]",\
                         value, _lo, _hi);                                       \
             }                                                                   \
-            else if (ceil(log2(llabs(_ival))) > 8 * sizeof(dst->_id) - 1) {     \
+            else if (cilog2(llabs(_ival)) > 8 * sizeof(dst->_id) - 1) {         \
                 fsLogWarning("Ignoring %s since it requires %d bits to represent"\
                              " when target requires %d",                        \
-                             ceil(log2(llabs(_ival))), 8 * sizeof(dst->_id) -1);\
+                             cilog2(llabs(_ival)), 8 * sizeof(dst->_id) -1);    \
             }                                                                   \
             else {                                                              \
                 dst->_id = _ival;                                               \

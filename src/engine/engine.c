@@ -8,7 +8,9 @@
 #include "engine.h"
 #include "default.h"
 #include "hiscore.h"
+#include "rotation.h"
 #include "internal.h"
+#include "log.h"
 #include "rand.h"
 
 #include <stdio.h>
@@ -117,7 +119,7 @@ void fsGameInit(FSEngine *f)
 ///
 // Return the set of `FS_NBP` locations the specified piece fills.
 ///
-void fsPieceToBlocks(const FSEngine *f, i8x2 *dst, i8 piece, int x, int y, int theta)
+void fsGetBlocks(const FSEngine *f, i8x2 *dst, i8 piece, int x, int y, int theta)
 {
     // A rotation system could be offset
     const FSRotationSystem *rs = rotationSystems[f->rotationSystem];
@@ -149,7 +151,7 @@ static bool isCollision(const FSEngine *f, int x, int y, int theta)
 {
     i8x2 blocks[FS_NBP];
 
-    fsPieceToBlocks(f, blocks, f->piece, x, y, theta);
+    fsGetBlocks(f, blocks, f->piece, x, y, theta);
 
     for (int i = 0; i < FS_NBP; ++i) {
         if (isOccupied(f, blocks[i].x, blocks[i].y)) {
@@ -165,7 +167,7 @@ static bool isCollision(const FSEngine *f, int x, int y, int theta)
 static void lockPiece(FSEngine *f)
 {
     i8x2 blocks[FS_NBP];
-    fsPieceToBlocks(f, blocks, f->piece, f->x, f->y, f->theta);
+    fsGetBlocks(f, blocks, f->piece, f->x, f->y, f->theta);
     f->blocksPlaced += 1;
 
     for (int i = 0; i < FS_NBP; ++i) {

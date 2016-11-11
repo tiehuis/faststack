@@ -6,8 +6,6 @@
 // functions.
 ///
 
-// Need to include the actual frontend we are using here so we know the storage
-// size.
 #include "faststack.h"
 
 #include "frontend.h"
@@ -16,7 +14,7 @@
 #include <stdlib.h>
 #include <math.h>
 
-static void fsLoadDefaultKeys(FSPSView *v)
+static void fsLoadDefaultKeys(FSFrontend *v)
 {
 #define ADD_KEY(name) fsiAddToKeymap(v, FST_VK_##name, FSD_KEY_##name, true)
 
@@ -34,7 +32,7 @@ static void fsLoadDefaultKeys(FSPSView *v)
 #undef ADD_KEY
 }
 
-static void updateGameLogic(FSPSView *v, FSView *g)
+static void updateGameLogic(FSFrontend *v, FSView *g)
 {
     FSEngine *f = g->game;
     FSControl *ctl = g->control;
@@ -55,7 +53,7 @@ static void updateGameLogic(FSPSView *v, FSView *g)
     fsGameTick(f, &in);
 }
 
-static void drawStateStrings(FSPSView *v, FSView *g)
+static void drawStateStrings(FSFrontend *v, FSView *g)
 {
     switch (g->game->state) {
         case FSS_READY:
@@ -68,15 +66,14 @@ static void drawStateStrings(FSPSView *v, FSView *g)
             break;
     }
 }
-static void updateGameView(FSPSView *v, FSView *g)
+static void updateGameView(FSFrontend *v, FSView *g)
 {
     fsiDraw(v);
     drawStateStrings(v, g);
     fsiPlaySe(v, g->game->se);
-    g->totalFramesDrawn += 1;
 }
 
-static void playGameLoop(FSPSView *v, FSView *g)
+static void playGameLoop(FSFrontend *v, FSView *g)
 {
     FSEngine *f = g->game;
     i32 tickRate = f->msPerTick * 1000;
@@ -138,7 +135,7 @@ static void playGameLoop(FSPSView *v, FSView *g)
         // If frame has taken too long to render then this could be negative.
         // Avoid the underflow (resulting in a long sleep).
         const i32 value = tickEnd - lag - currentTime;
-        fsiSleepUs(v, value > 0 ? value : 0);
+        fsiSleep(v, value > 0 ? value : 0);
     }
 
     // Cross-reference the in-game time (as calculated from the number of
@@ -153,7 +150,7 @@ static void playGameLoop(FSPSView *v, FSView *g)
 }
 
 // As close to a menu as we'll get.
-void gameLoop(FSPSView *v, FSView *g)
+void gameLoop(FSFrontend *v, FSView *g)
 {
     enum {
         IN_GAME, IN_EXCELLENT, IN_WAIT
@@ -253,7 +250,7 @@ start:;
         }
 
         fsiBlit(v);
-        fsiSleepUs(v, 16 * 1000);
+        fsiSleep(v, 16 * 1000);
         counter++;
     }
 end:;
@@ -265,9 +262,8 @@ int main(int argc, char **argv)
     FSControl control;
     FSReplay replay;
     FSView gView = { .game = &game, .control = &control, .replay = &replay,
-                     .replayName = NULL, .replayPlayback = false,
-                     .totalFramesDrawn = 0 };
-    FSPSView pView = { .view = &gView };
+                     .replayName = NULL, .replayPlayback = false };
+    FSFrontend pView = { .view = &gView };
 
     FSOptions o;
     fsParseOptString(&o, argc, argv);
@@ -298,7 +294,7 @@ int main(int argc, char **argv)
     fsiInit(&pView);
     gameLoop(&pView, &gView);
 
-    fsiFree(&pView);
+    fsiFini(&pView);
 
 #ifdef FS_USE_TERMINAL
     fclose(fsLogStream);

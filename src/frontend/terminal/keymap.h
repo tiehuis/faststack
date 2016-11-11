@@ -10,9 +10,10 @@
 
 #include <ctype.h>
 #include <linux/input.h>
-#include <faststack.h>
 
 #define KEY_NONE (-1)
+
+int strcmpi(const char *a, const char *b);
 
 ///
 // Convert an fsKey string to a physical key.
