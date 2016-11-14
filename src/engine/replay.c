@@ -14,6 +14,9 @@
 #include <time.h>
 #include <inttypes.h>
 
+#define REPLAY_TMPDIR "replay/"
+#define REPLAY_TMPFILE ".current"
+
 // We ignore invalid boolean reads. A boolean must be at least 8 bits on
 // any reasonable platform so this should be fine for the most part.
 #pragma GCC diagnostic ignored "-Wformat"
@@ -122,8 +125,7 @@ void fsReplayInit(const struct FSEngine *f, FSReplay *r)
         return;
     }
 
-    strcpy(r->fname, "replay/.current");
-    r->handle = fopen(r->fname, "w+");
+    r->handle = fopen(REPLAY_TMPDIR REPLAY_TMPFILE, "w+");
     if (r->handle != NULL) {
         r->lastKeystate = 0;
         serializeOptions(f, r);
@@ -154,11 +156,11 @@ void fsReplaySave(const struct FSEngine *f, FSReplay *r)
         fclose(r->handle);
 
         char target[64];
-        strcpy(target, "replay/");
+        strcpy(target, REPLAY_TMPDIR);
         strcat(target, replayFileName(f));
 
         // Rename the current file with the current time
-        rename(r->fname, target);
+        rename(REPLAY_TMPDIR REPLAY_TMPFILE, target);
     }
 }
 
@@ -177,6 +179,7 @@ void fsReplayLoad(struct FSEngine *f, FSReplay *r, const char *filename)
     }
     else {
         fsLogWarning("failed to load replay file");
+        exit(1);
     }
 }
 
@@ -200,7 +203,7 @@ u32 fsReplayGet(FSReplay *r, u32 ticks)
 void fsReplayClear(FSReplay *r)
 {
     if (!r->error) {
-        remove(r->fname);
         fclose(r->handle);
+        remove(REPLAY_TMPDIR REPLAY_TMPFILE);
     }
 }

@@ -182,9 +182,7 @@ start:;
                     g->game->seed = fsGetRoughSeed();
                     fsReplayInit(g->game, g->replay);
                 }
-                else {
-                    fsReplayLoad(g->game, g->replay, g->replayName);
-                }
+                // If we are in playback, we will have loaded the file already
 
                 fsGameReset(g->game);
                 // TODO: Fix this disgusting code.
@@ -287,8 +285,11 @@ int main(int argc, char **argv)
     }
 
     if (o.replay) {
+        // Attempt to load a replay file here before we initialize the
+        // graphics itself to avoid a flicker on invalid replays.
         gView.replayPlayback = true;
         gView.replayName = o.replay;
+        fsReplayLoad(&game, &replay, gView.replayName);
     }
 
     fsiInit(&pView);
