@@ -314,7 +314,7 @@ void drawDebug(FSFrontend *v)
     snprintf(writeBuffer, writeBufferSize, "Field:");
     renderString(v, writeBuffer, ux, uy + c++ * lineSkipY);
 
-    snprintf(writeBuffer, writeBufferSize, "    gravity: %.3f", f->gravity);
+    snprintf(writeBuffer, writeBufferSize, "    gravity: %.3f", (float) f->gravity / 1000000);
     renderString(v, writeBuffer, ux, uy + c++ * lineSkipY);
 
     snprintf(writeBuffer, writeBufferSize, "Input:");

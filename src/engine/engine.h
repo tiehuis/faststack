@@ -210,8 +210,8 @@ struct FSEngine {
     // integer can provide.
     //
     //  * Constraints
-    //      * y == (float) actualY
-    float actualY;
+    //      * actualY == tofix(y)
+    int32_t actualY;
 
     /// @I: Greatest 'y' the current piece can exist at without a collision.
     i8 hardDropY;
@@ -289,10 +289,10 @@ struct FSEngine {
     i8 rotationSystem;
 
     /// @O: How many blocks a piece will fall by every ms.
-    float gravity;
+    int32_t gravity;
 
     /// @O: How many blocks a piece will fall by every ms when soft dropping.
-    float softDropGravity;
+    int32_t softDropGravity;
 
     /// @E: Current state of the internal engine.
     i8 state;

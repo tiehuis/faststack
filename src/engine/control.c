@@ -89,7 +89,8 @@ void fsVirtualKeysToInput(FSInput *dst, u32 keys, const FSEngine *f, FSControl *
 
     const int sdKeysToCheck = f->oneShotSoftDrop ? newKeys : keys;
     if (sdKeysToCheck & FST_VK_FLAG_DOWN) {
-        dst->gravity = f->msPerTick * f->softDropGravity;
+        // Note: This fix/unfix is a little messy and should be consolidated
+        dst->gravity = unfixflr(f->msPerTick * f->softDropGravity);
     }
 
     if (newKeys & FST_VK_FLAG_ROTL) {

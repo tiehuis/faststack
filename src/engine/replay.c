@@ -23,7 +23,6 @@
 
 #define pi8(id) fprintf(r->handle, "%"PRId8"\n", f->id)
 #define pi32(id) fprintf(r->handle, "%"PRId32"\n", f->id)
-#define pf(id) fprintf(r->handle, "%f\n", f->id)
 
 void serializeOptions(const struct FSEngine *f, FSReplay *r)
 {
@@ -42,8 +41,8 @@ void serializeOptions(const struct FSEngine *f, FSReplay *r)
     pi8(floorkickLimit);
     pi8(oneShotSoftDrop);
     pi8(rotationSystem);
-    pf(gravity);
-    pf(softDropGravity);
+    pi32(gravity);
+    pi32(softDropGravity);
     pi8(randomizer);
     pi32(readyPhaseLength);
     pi32(goPhaseLength);
@@ -66,7 +65,6 @@ void serializeOptions(const struct FSEngine *f, FSReplay *r)
 
 #define si8(id) C(1, fscanf(r->handle, "%"SCNd8"\n", &f->id))
 #define si32(id) C(1, fscanf(r->handle, "%"SCNd32"\n", &f->id))
-#define sf(id) C(1, fscanf(r->handle, "%f\n", &f->id))
 
 void deserializeOptions(struct FSEngine *f, FSReplay *r)
 {
@@ -85,8 +83,8 @@ void deserializeOptions(struct FSEngine *f, FSReplay *r)
     si8(floorkickLimit);
     si8(oneShotSoftDrop);
     si8(rotationSystem);
-    sf(gravity);
-    sf(softDropGravity);
+    si32(gravity);
+    si32(softDropGravity);
     si8(randomizer);
     si32(readyPhaseLength);
     si32(goPhaseLength);

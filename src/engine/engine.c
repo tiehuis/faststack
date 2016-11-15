@@ -189,7 +189,7 @@ static void newPiece(FSEngine *f)
     // We cannot spawn at 0, else Z, S cannot rotate under sega rules.
     // NOTE: Adjust hidden value on render side potentially to account.
     f->y = 1;
-    f->actualY = f->y;
+    f->actualY = fix(f->y);
     f->theta = 0;
     f->lockTimer = 0;
     f->floorkickCount = 0;
@@ -336,7 +336,7 @@ static bool doRotate(FSEngine *f, i8 direction)
 
             // Preserve the fractional y drop during rotation to disallow
             // implicit lock reset.
-            f->actualY = (float) kickY + (f->actualY - (int) f->actualY);
+            f->actualY = fix(kickY) + unfixfrc(f->actualY);
             f->y = kickY;
             f->x = kickX;
             f->theta = newDir;
@@ -354,12 +354,12 @@ static bool doRotate(FSEngine *f, i8 direction)
 ///
 static void doPieceGravity(FSEngine *f, i8 gravity)
 {
-    f->actualY += (f->msPerTick * f->gravity) + gravity;
+    f->actualY += (f->msPerTick * f->gravity) + fix(gravity);
 
     // If we overshoot the bottom of the field, fix to the lowest possible y
     // value the piece is valid at instead.
-    if (f->actualY >= f->hardDropY) {
-        f->actualY = f->hardDropY;
+    if (f->actualY >= fix(f->hardDropY)) {
+        f->actualY = fix(f->hardDropY);
         f->y = f->hardDropY;
 
         if (f->state == FSS_FALLING) {
@@ -368,11 +368,11 @@ static void doPieceGravity(FSEngine *f, i8 gravity)
     }
     else {
         if ((f->lockStyle == FST_LOCK_STEP || f->lockStyle == FST_LOCK_MOVE) &&
-                (int) f->actualY > f->y) {
+                unfixflr(f->actualY) > f->y) {
             f->lockTimer = 0;
         }
 
-        f->y = (i8) f->actualY;
+        f->y = unfixflr(f->actualY);
         f->state = FSS_FALLING;
     }
 }
@@ -461,7 +461,7 @@ static bool tryHold(FSEngine *f)
             // NOTE: Abstract into new piece of type theta
             f->x = f->fieldWidth / 2 - 1;
             f->y = 1;
-            f->actualY = f->y;
+            f->actualY = fix(f->y);
             f->theta = 0;
 
             // NOTE: Utilize new piece here to reset variables

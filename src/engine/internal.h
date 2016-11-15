@@ -18,4 +18,9 @@
 // `FSEngine` is within scope and bound to the variable `f`.
 #define TICKS(x) ((x) / (f->msPerTick))
 
+// Fixed-point calculations
+#define fix(x)      (x * 1000000)
+#define unfixflr(x) (x / 1000000)
+#define unfixfrc(x) (x % 1000000)
+
 #endif // FS_INTERNAL_H

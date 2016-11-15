@@ -119,38 +119,6 @@ do {                                                                            
     }                                                                           \
 } while (0)
 
-#define TS_FLT(_id) TS_FLT_RANGE(_id, 0.0, DBL_MAX)
-
-#define TS_FLT_RANGE(_id, _lo, _hi)                                             \
-do {                                                                            \
-    if (!strcmpi(#_id, key)) {                                                  \
-        errno = 0;                                                              \
-        char *_endptr;                                                          \
-        const double _ival = strtod(value, &_endptr);                           \
-                                                                                \
-        if (errno == ERANGE) {                                                  \
-            fsLogWarning("Ignoring %s since it does not fit in a double", value);\
-        }                                                                       \
-        else if (_endptr == value) {                                            \
-            fsLogError("Internal error: Found zero-length option value for %s", value);\
-        }                                                                       \
-        else {                                                                  \
-            if (*_endptr != '\0') {                                             \
-                fsLogWarning("Ignoring %s since it contains trailing garbage", value);\
-            }                                                                   \
-            else if (_ival < (_lo) || (_hi) < _ival) {                          \
-                fsLogWarning("Ignoring %s since it is not in allowed range [%lf, %lf]",\
-                        value, _lo, _hi);                                       \
-            }                                                                   \
-            else {                                                              \
-                dst->_id = _ival;                                               \
-            }                                                                   \
-        }                                                                       \
-                                                                                \
-        return;                                                                 \
-    }                                                                           \
-} while (0)
-
 #define TS_BOOL(_id)                                                            \
 do {                                                                            \
     if (!strcmpi(#_id, key)) {                                                  \

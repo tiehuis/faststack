@@ -129,8 +129,8 @@ static void unpackOptionValue(struct FSFrontend *p, FSView *v, const char *k,
         TS_INT       (goPhaseLength);
         TS_INT       (nextPieceCount);
         TS_INT       (goal);
-        TS_FLT       (gravity);
-        TS_FLT       (softDropGravity);
+        TS_INT_RANGE (gravity, 0, INT_MAX);
+        TS_INT_RANGE (softDropGravity, 0, INT_MAX);
         TS_INT_FUNC  (initialActionStyle, fsInitialActionStyleLookup);
     }
     else if (!strncmp(k, "keybind.", 8)) {
