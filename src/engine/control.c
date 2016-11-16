@@ -93,15 +93,23 @@ void fsVirtualKeysToInput(FSInput *dst, u32 keys, const FSEngine *f, FSControl *
         dst->gravity = unfixflr(f->msPerTick * f->softDropGravity);
     }
 
+    // A double keypress should only affect finesse once. Arguably we want two
+    // flags here but unsure how common this case would be anyway.
+    if (newKeys & (FST_VK_FLAG_RIGHT | FST_VK_FLAG_LEFT)) {
+        dst->extra |= FST_INPUT_FINESSE_MOVE;
+    }
     if (newKeys & FST_VK_FLAG_ROTL) {
         dst->rotation -= 1;
+        dst->extra |= FST_INPUT_FINESSE_ROTATE;
     }
     if (newKeys & FST_VK_FLAG_ROTR) {
         dst->rotation += 1;
+        dst->extra |= FST_INPUT_FINESSE_ROTATE;
     }
     // A 180 degree rotation takes priority over any 90 degree rotations
     if (newKeys & FST_VK_FLAG_ROTH) {
         dst->rotation = 2;
+        dst->extra |= FST_INPUT_FINESSE_ROTATE;
     }
     if (newKeys & FST_VK_FLAG_HOLD) {
         dst->extra |= FST_INPUT_HOLD;

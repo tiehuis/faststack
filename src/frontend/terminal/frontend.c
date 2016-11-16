@@ -459,6 +459,12 @@ static void drawInfo(FSFrontend *v)
              f->blocksPlaced ? (float) f->totalKeysPressed / f->blocksPlaced
                              : 0.0f);
     putStrAt(v, buf, INFO_Y + 11, INFO_X, ATTR_BRIGHT);
+
+    snprintf(buf, bufsiz, "Faults");
+    putStrAt(v, buf, INFO_Y + 13, INFO_X, ATTR_UNDERLINE);
+    ;
+    snprintf(buf, bufsiz, "%d", f->finesse);
+    putStrAt(v, buf, INFO_Y + 14, INFO_X, ATTR_BRIGHT);
 }
 
 ///

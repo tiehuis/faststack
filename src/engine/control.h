@@ -17,11 +17,13 @@
 #include "core.h"
 
 enum InputExtraFlag {
-    FST_INPUT_HARD_DROP = 0x01,
-    FST_INPUT_HOLD      = 0x02,
-    FST_INPUT_LOCK      = 0x04,
-    FST_INPUT_QUIT      = 0x08,
-    FST_INPUT_RESTART   = 0x10
+    FST_INPUT_HARD_DROP      = 0x01,
+    FST_INPUT_HOLD           = 0x02,
+    FST_INPUT_LOCK           = 0x04,
+    FST_INPUT_QUIT           = 0x08,
+    FST_INPUT_RESTART        = 0x10,
+    FST_INPUT_FINESSE_MOVE   = 0x20,
+    FST_INPUT_FINESSE_ROTATE = 0x40
 };
 
 // In order to handle key input in a cross-frontend way, we need one more level

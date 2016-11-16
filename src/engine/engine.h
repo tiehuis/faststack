@@ -198,6 +198,15 @@ struct FSEngine {
     /// @E: Current pieces type.
     FSBlock piece;
 
+    /// @I: How many rotations have been done for the current piece.
+    i32 pieceRotateCount;
+
+    /// @I: How many movement presses have been done for the current piece.
+    i32 pieceMovePressCount;
+
+    /// @E: Overall finesse counter for the game
+    i32 finesse;
+
     /// @E: Current pieces x position.
     i8 x;
 

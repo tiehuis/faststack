@@ -5,12 +5,13 @@
 // FastStack Engine implementation.
 ///
 
-#include "engine.h"
 #include "default.h"
+#include "engine.h"
+#include "finesse.h"
 #include "hiscore.h"
-#include "rotation.h"
 #include "internal.h"
 #include "log.h"
+#include "rotation.h"
 #include "rand.h"
 
 #include <stdio.h>
@@ -58,6 +59,7 @@ void fsGameReset(FSEngine *f)
     f->totalKeysPressed = 0;
     f->totalTicks = 0;
     f->totalTicksRaw = 0;
+    f->finesse = 0;
     f->lockTimer = 0;
     f->lastState = FSS_UNKNOWN;
     f->linesCleared = 0;
@@ -173,6 +175,17 @@ static void lockPiece(FSEngine *f)
     for (int i = 0; i < FS_NBP; ++i) {
         f->b[blocks[i].y][blocks[i].x] = pieceColors[f->piece];
     }
+
+    // Rotation in x field, Movement in y field
+    const i8x2 optFinesse = fsMinimalFinesseCount(f->piece, f->x, f->theta);
+
+    i8 rotation = f->pieceRotateCount - optFinesse.x;
+    if (rotation < 0) { rotation = 0; }
+
+    i8 movement = f->pieceMovePressCount - optFinesse.y;
+    if (movement < 0) { movement = 0; }
+
+    f->finesse += rotation + movement;
 }
 
 ///
@@ -192,6 +205,8 @@ static void newPiece(FSEngine *f)
     f->actualY = fix(f->y);
     f->theta = 0;
     f->lockTimer = 0;
+    f->pieceRotateCount = 0;
+    f->pieceMovePressCount = 0;
     f->floorkickCount = 0;
     f->piece = nextPreviewPiece(f);
     f->holdAvailable = true;
@@ -506,6 +521,14 @@ void fsGameTick(FSEngine *f, const FSInput *i)
     }
     if (i->extra & FST_INPUT_QUIT) {
         f->state = FSS_QUIT;
+    }
+
+    // Always update the current piece finesse counters
+    if (i->extra & FST_INPUT_FINESSE_ROTATE) {
+        f->pieceRotateCount += 1;
+    }
+    if (i->extra & FST_INPUT_FINESSE_MOVE) {
+        f->pieceMovePressCount += 1;
     }
 
     // Always count the number of new keys pressed

@@ -587,6 +587,13 @@ static void drawInfoSection(FSFrontend *v)
                              : 0.0f
     );
     renderString(v, writeBuffer, INFOS_X, INFOS_Y + c++ * lineSkipY);
+
+    ++c;
+
+    snprintf(writeBuffer, writeBufferSize, "Faults");
+    renderString(v, writeBuffer, INFOS_X, INFOS_Y + c++ * lineSkipY);
+    snprintf(writeBuffer, writeBufferSize, "%d", f->finesse);
+    renderString(v, writeBuffer, INFOS_X, INFOS_Y + c++ * lineSkipY);
 }
 
 // Draw the prewview pieces
