@@ -1,6 +1,8 @@
 FastStack-Term
 ==============
 
+<a href="https://asciinema.org/a/5odjv7x273oonbmhq51sfbf4l"><img src="https://asciinema.org/a/5odjv7x273oonbmhq51sfbf4l.png" width="600"/></a>
+
 This is a frontend that strictly utilizes a text-based environment for
 output. It should require the least dependencies of any version.
 
