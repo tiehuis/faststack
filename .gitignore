@@ -1,5 +1,6 @@
-FastStack
+faststack
 libfs.a
 fs.log
 fs.hiscore
 replay/*
+build

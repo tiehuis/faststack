@@ -3,7 +3,7 @@ CFLAGS  += -Wall -Wextra -std=c99 -pedantic -O2 -Isrc -Isrc/engine ${EXTRA}
 CDFLAGS += -g
 LDFLAGS +=
 
-PROGRAM := FastStack
+PROGRAM := faststack
 SOURCE  := src/engine/*.c src/*.c
 
 SDL2_SOURCE := src/frontend/SDL2/*.c src/frontend/SDL2/deps/SDL_FontCache/*.c
