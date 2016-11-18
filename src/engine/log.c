@@ -11,6 +11,7 @@
 #define _XOPEN_SOURCE 500
 #include <unistd.h>
 
+#include "core.h"
 #include "log.h"
 
 #include <stdarg.h>
@@ -20,12 +21,15 @@
 ///
 // Global variable used to filter which messages are printed.
 ///
-int fsCurrentLogLevel = FS_LOG_LEVEL_WARNING;
+static int fsCurrentLogLevel = FS_LOG_LEVEL_WARNING;
 
 ///
 // Global variable for which stream to logging.
 ///
-FILE *fsLogStream = NULL;
+static FILE *fsLogStream = NULL;
+
+// Is this a file our stream?
+static bool using_file = false;
 
 ///
 // Return a string with the current time.
@@ -66,6 +70,47 @@ static int logLevelColorCode(int level)
     };
 
     return logLevelColors[level];
+}
+
+///
+// Set the output file used for logging. stdout by default.
+///
+void fsSetLogFile(const char *name)
+{
+    if (name[0] == '-' && name[1] == '\0') {
+        fsLogStream = stderr;
+        using_file = false;
+    }
+    else {
+        using_file = true;
+        FILE *fd = fopen(name, "w+");
+        if (fd == NULL) {
+            fsLogError("failed to use file output. Falling back to stderr");
+            fsLogStream = stderr;
+            using_file = false;
+        }
+        else {
+            fsLogStream = fd;
+            using_file = true;
+        }
+    }
+
+}
+
+///
+// Set the logging level used.
+///
+void fsSetLogLevel(int level)
+{
+    fsCurrentLogLevel = level;
+}
+
+/// Only does something if this is an actual file (not stderr)
+void fsCloseLogFile(void)
+{
+    if (using_file) {
+        fclose(fsLogStream);
+    }
 }
 
 ///

@@ -7,12 +7,9 @@
 ///
 
 #include "faststack.h"
-
 #include "frontend.h"
 
-#include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
 
 static void fsLoadDefaultKeys(FSFrontend *v)
 {
@@ -146,7 +143,7 @@ static void playGameLoop(FSFrontend *v, FSView *g)
     fsLogDebug("Average frame time: %d", avgFrame);
     fsLogDebug("Actual time elapsed: %lf", actualElapsed);
     fsLogDebug("Ingame time elapsed: %lf", ingameElapsed);
-    fsLogDebug("Maximum Difference: %lf", fabs(actualElapsed - ingameElapsed));
+    fsLogDebug("Maximum Difference: %lf", actualElapsed - ingameElapsed);
 }
 
 // As close to a menu as we'll get.
@@ -267,13 +264,13 @@ int main(int argc, char **argv)
     fsParseOptString(&o, argc, argv);
 
 #ifdef FS_USE_TERMINAL
-    fsLogStream = fopen(FS_LOG_FILENAME, "w+");
+    fsSetLogFile(FS_LOG_FILENAME);
 #else
-    fsLogStream = stderr;
+    fsSetLogFile("-");
 #endif
 
     if (o.verbosity) {
-        fsCurrentLogLevel = o.verbosity;
+        fsSetLogLevel(o.verbosity);
     }
 
     fsiPreInit(&pView);
@@ -298,6 +295,6 @@ int main(int argc, char **argv)
     fsiFini(&pView);
 
 #ifdef FS_USE_TERMINAL
-    fclose(fsLogStream);
+    fsCloseLogFile();
 #endif
 }

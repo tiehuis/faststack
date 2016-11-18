@@ -14,10 +14,9 @@
 #ifndef FS_LOG_H
 #define FS_LOG_H
 
-#include <stdio.h>
-
-extern int fsCurrentLogLevel;
-extern FILE *fsLogStream;
+void fsSetLogFile(const char *name);
+void fsSetLogLevel(int level);
+void fsCloseLogFile(void);
 
 enum LogLevel {
     FS_LOG_LEVEL_DEBUG = 1,

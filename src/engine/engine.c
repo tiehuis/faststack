@@ -14,10 +14,8 @@
 #include "rotation.h"
 #include "rand.h"
 
-#include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <time.h>
 
 /// Specifies the value stored in each cell. Not currently utilized much.
 const i8 pieceColors[FS_NPT] = {

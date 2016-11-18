@@ -10,8 +10,6 @@
 #include "control.h"
 #include "internal.h"
 
-#include <stdio.h>
-
 i32 popcount(u32 x)
 {
     i32 c = 0;
