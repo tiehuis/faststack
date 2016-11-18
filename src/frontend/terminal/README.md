@@ -15,7 +15,9 @@ Installation
 ```
 git clone https://github.com/tiehuis/FastStack
 cd FastStack
-make terminal
+mkdir build && cd build
+cmake -Duse_terminal=ON -Duse_sdl2=OFF ..
+make
 ```
 
 Running

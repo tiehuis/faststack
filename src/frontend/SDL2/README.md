@@ -18,5 +18,7 @@ Installation
 apt install libsdl2-2.0-0 libsdl2-ttf-2.0-0
 git clone https://github.com/tiehuis/FastStack
 cd FastStack
+mkdir build && cd build
+cmake ..
 make
 ```
