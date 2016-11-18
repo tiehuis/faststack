@@ -1,5 +1,6 @@
 faststack
 libfs.a
+/fs.ini
 fs.log
 fs.hiscore
 replay/*
