@@ -14,14 +14,15 @@ compiler:
 addons:
   apt:
     packages:
-      - pkg-config
       - libsdl2-dev
       - libsdl2-mixer-dev
       - libsdl2-ttf-dev
 
 script:
-  - make sdl2
-  - make terminal
+  - mkdir build
+  - cd build
+  - cmake .. && make
+  - cmake -Duse_terminal=ON -Duse_sdl2=OFF .. && make
 
 notifications:
   email: false
