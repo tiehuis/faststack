@@ -8,8 +8,11 @@
 #ifndef FS_REPLAY_H
 #define FS_REPLAY_H
 
-#include <stdio.h>
 #include "core.h"
+
+#ifndef FS_DISABLE_REPLAY
+
+#include <stdio.h>
 
 // A generic loader/reader of a replay file.
 struct FSReplay {
@@ -31,6 +34,7 @@ struct FSReplay {
     // Error flag preserved over re-initialization.
     bool error;
 };
+
 
 // Initializes a replay as a hidden file within the replay directory.
 //
@@ -68,5 +72,19 @@ u32 fsReplayGet(FSReplay *r, u32 ticks);
 //
 // This closes any open file handles.
 void fsReplayClear(FSReplay *r);
+
+#else
+
+// Struct must have at least one member in standard C
+struct FSReplay { char _; };
+
+#define fsReplayInit(f, r)
+#define fsReplayInsert(r, ticks, keystate)
+#define fsReplaySave(f, r)
+#define fsReplayLoad(f, r, filename)
+#define fsReplayGet(r, ticks) 0
+#define fsReplayClear(r)
+
+#endif // FS_DISABLE_REPLAY
 
 #endif

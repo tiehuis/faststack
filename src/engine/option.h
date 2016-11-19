@@ -27,7 +27,11 @@ struct FSOptions {
 };
 
 int strcmpi(const char *a, const char *b);
+
 void fsParseOptString(FSOptions *o, int argc, char **argv);
+
+#ifndef FS_DISABLE_OPTION
+
 void fsParseIniFile(FSFrontend *p, FSView *v, const char *fname);
 
 ///
@@ -122,12 +126,15 @@ do {                                                                            
 #define TS_BOOL(_id)                                                            \
 do {                                                                            \
     if (!strcmpi(#_id, key)) {                                                  \
-        if (!strcmpi(value, "true") || !strcmpi(value, "yes") || !strcmpi(value, "1"))\
+        if (!strcmpi(value, "true") || !strcmpi(value, "yes") || !strcmpi(value, "1")) {\
             dst->_id = true;                                                    \
-        else if (!strcmpi(value, "false") || !strcmpi(value, "no") || !strcmpi(value, "0"))\
+        }                                                                       \
+        else if (!strcmpi(value, "false") || !strcmpi(value, "no") || !strcmpi(value, "0")) {\
             dst->_id = false;                                                   \
-        else                                                                    \
+        }                                                                       \
+        else {                                                                  \
             fsLogWarning("Invalid boolean value encountered %s", value);        \
+        }                                                                       \
                                                                                 \
         return;                                                                 \
     }                                                                           \
@@ -140,5 +147,17 @@ do {                                                                            
         return;                                                                 \
     }                                                                           \
 } while (0)
+
+#else
+
+#define fsParseIniFile(p, v, fname)
+
+#define TS_INT(_id)
+#define TS_INT_RANGE(_id, _lo, _hi)
+#define TS_INT_FUNC(_id, _func)
+#define TS_BOOL(_id)
+#define TS_KEY(_id, _vkey)
+
+#endif // FS_DISABLE_OPTION
 
 #endif // FS_OPTION_H

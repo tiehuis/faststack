@@ -18,6 +18,9 @@
 #include <stdio.h>
 #include <time.h>
 
+// TODO: Adjust how we disable features to avoid this
+#ifndef FS_DISABLE_LOG
+
 ///
 // Global variable used to filter which messages are printed.
 ///
@@ -140,3 +143,5 @@ void fsLog(int level, ...)
         fprintf(fsLogStream, "\n");
     }
 }
+
+#endif // FS_DISABLE_LOG
