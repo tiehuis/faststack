@@ -43,6 +43,7 @@ elseif (use_terminal)
     add_executable(faststack
         src/main.c
         src/frontend/terminal/frontend.c
+        src/frontend/terminal/glyph.c
     )
 
     target_include_directories(faststack PUBLIC src src/engine)

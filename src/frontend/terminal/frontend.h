@@ -8,6 +8,7 @@
 ///
 
 #include "keymap.h"
+#include "glyph.h"
 #include <faststack.h>
 #include <stdint.h>
 #include <termios.h>
@@ -43,16 +44,6 @@
 #define INFO_W  (-1)                      // Unused
 
 ///
-// Glyphs used to draw the field.
-#define GLYPH_WALL          '|'
-#define GLYPH_LWALL_FLOOR   '_'
-#define GLYPH_RWALL_FLOOR   '_'
-#define GLYPH_FLOOR         '_'
-#define GLYPH_EMPTY         ' '
-#define GLYPH_LBLOCK        ' '
-#define GLYPH_RBLOCK        ' '
-
-///
 // Attributes used when displaying cells.
 #define ATTR_COUNT 13
 
@@ -77,7 +68,7 @@ enum CellAttribute {
 ///
 typedef struct {
     /// Value stored in this cell.
-    u32 value;
+    uint32_t value;
 
     /// Attributes associated with this cell.
     uint16_t attrs;
@@ -114,6 +105,9 @@ struct FSFrontend {
 
     /// Indicate whether complete redraw must occur.
     bool invalidateBuffers;
+
+    /// Glyphs to use when displaying field items.
+    GlyphSet glyph;
 
     /// Field framebuffers.
     //

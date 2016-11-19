@@ -6,7 +6,7 @@
 ///
 
 #include "frontend.h"
-
+#include "glyph.h"
 #include "font.inc"
 
 #ifdef USE_SOUND

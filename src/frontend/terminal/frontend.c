@@ -63,6 +63,9 @@ void fsiPreInit(FSFrontend *v)
             };
         }
     }
+
+    // Default to ascii. Allow overwrite on ini load.
+    v->glyph = asciiGlyphSet;
 }
 
 void fsiInit(FSFrontend *v)
@@ -258,11 +261,11 @@ static void drawHold(FSFrontend *v)
         const int xoffset = f->holdPiece == FS_I || f->holdPiece == FS_O ? 0 : 1;
 
         v->bbuf[HOLD_Y + blocks[i].y][HOLD_X + 2*blocks[i].x + xoffset] = (TerminalCell) {
-            .value = GLYPH_LBLOCK,
+            .value = v->glyph.blockL,
             .attrs = ATTR_REVERSE | attr_colour(f->holdPiece)
         };
         v->bbuf[HOLD_Y + blocks[i].y][HOLD_X + 2*blocks[i].x + 1 + xoffset] = (TerminalCell) {
-            .value = GLYPH_RBLOCK,
+            .value = v->glyph.blockR,
             .attrs = ATTR_REVERSE | attr_colour(f->holdPiece)
         };
     }
@@ -275,16 +278,16 @@ static void drawField(FSFrontend *v)
 
     ///
     // Border
-    v->bbuf[FIELD_Y + f->fieldHeight - f->fieldHidden][FIELD_X + 1].value = GLYPH_LWALL_FLOOR;
-    v->bbuf[FIELD_Y + f->fieldHeight - f->fieldHidden][FIELD_X + 2*f->fieldWidth + 2].value = GLYPH_RWALL_FLOOR;
+    v->bbuf[FIELD_Y + f->fieldHeight - f->fieldHidden][FIELD_X + 1].value = v->glyph.borderLB;
+    v->bbuf[FIELD_Y + f->fieldHeight - f->fieldHidden][FIELD_X + 2*f->fieldWidth + 2].value = v->glyph.borderRB;
 
     for (int y = 0; y < f->fieldHeight - f->fieldHidden; ++y) {
-        v->bbuf[FIELD_Y + y][FIELD_X + 1].value = GLYPH_WALL;
-        v->bbuf[FIELD_Y + y][FIELD_X + 2*f->fieldWidth + 2].value = GLYPH_WALL;
+        v->bbuf[FIELD_Y + y][FIELD_X + 1].value = v->glyph.borderL;
+        v->bbuf[FIELD_Y + y][FIELD_X + 2*f->fieldWidth + 2].value = v->glyph.borderR;
     }
 
     for (int x = 0; x < 2 * f->fieldWidth; ++x) {
-        v->bbuf[FIELD_Y + f->fieldHeight - f->fieldHidden][FIELD_X + x + 2].value = GLYPH_FLOOR;
+        v->bbuf[FIELD_Y + f->fieldHeight - f->fieldHidden][FIELD_X + x + 2].value = v->glyph.borderB;
     }
 
     ///
@@ -292,7 +295,7 @@ static void drawField(FSFrontend *v)
     for (int y = f->fieldHidden; y < f->fieldHeight; ++y) {
         for (int x = 0; x < f->fieldWidth; ++x) {
             const TerminalCell sq = (TerminalCell) {
-                .value = GLYPH_EMPTY,
+                .value = v->glyph.blockE,
                 .attrs = f->b[y][x] ? ATTR_REVERSE | ATTR_WHITE  : 0
             };
 
@@ -314,11 +317,11 @@ static void drawField(FSFrontend *v)
         }
 
         v->bbuf[FIELD_Y + blocks[i].y][FIELD_X + 2*blocks[i].x + 2] = (TerminalCell) {
-            .value = GLYPH_LBLOCK,
+            .value = v->glyph.blockL,
             .attrs = ATTR_REVERSE | ATTR_DIM | attr_colour(f->piece)
         };
         v->bbuf[FIELD_Y + blocks[i].y][FIELD_X + 2*blocks[i].x + 3] = (TerminalCell) {
-            .value = GLYPH_RBLOCK,
+            .value = v->glyph.blockR,
             .attrs = ATTR_REVERSE | ATTR_DIM | attr_colour(f->piece)
         };
     }
@@ -332,11 +335,11 @@ static void drawField(FSFrontend *v)
         }
 
         v->bbuf[FIELD_Y + blocks[i].y][FIELD_X + 2*blocks[i].x + 2] = (TerminalCell) {
-            .value = GLYPH_LBLOCK,
+            .value = v->glyph.blockL,
             .attrs = ATTR_REVERSE | attr_colour(f->piece)
         };
         v->bbuf[FIELD_Y + blocks[i].y][FIELD_X + 2*blocks[i].x + 3] = (TerminalCell) {
-            .value = GLYPH_RBLOCK,
+            .value = v->glyph.blockR,
             .attrs = ATTR_REVERSE | attr_colour(f->piece)
         };
     }
@@ -364,11 +367,11 @@ static void drawPreview(FSFrontend *v)
             const int yo = PVIEW_Y + (4 * i) + blocks[j].y;
 
             v->bbuf[yo][xo] = (TerminalCell) {
-                .value = GLYPH_LBLOCK,
+                .value = v->glyph.blockL,
                 .attrs = ATTR_REVERSE | attr_colour(f->nextPiece[i])
             };
             v->bbuf[yo][xo + 1] = (TerminalCell) {
-                .value = GLYPH_RBLOCK,
+                .value = v->glyph.blockR,
                 .attrs = ATTR_REVERSE | attr_colour(f->nextPiece[i])
             };
         }
@@ -467,6 +470,43 @@ static void drawInfo(FSFrontend *v)
     putStrAt(v, buf, INFO_Y + 14, INFO_X, ATTR_BRIGHT);
 }
 
+// This prints a single unicode code-point stored as a utf-8 byte array
+// packed into a 32-bit value.
+//
+// Values are stored in reverse order, with the first first meaningful byte
+// (representing the length) stored in bits 0-8.
+static void put_single_utf8(uint32_t cp)
+{
+    const uint8_t bits[4] = {
+        (cp >>  0) & 0xff,
+        (cp >>  8) & 0xff,
+        (cp >> 16) & 0xff,
+        (cp >> 24) & 0xff,
+    };
+
+    if ((bits[0] & 0x80) == 0x00) {
+        putchar(bits[0]);
+    }
+    else if ((bits[0] & 0xe0) == 0xc0) {
+        putchar(bits[0]);
+        putchar(bits[1]);
+    }
+    else if ((bits[0] & 0xf0) == 0xe0) {
+        putchar(bits[0]);
+        putchar(bits[1]);
+        putchar(bits[2]);
+    }
+    else if ((bits[0] & 0xf8) == 0xf0) {
+        putchar(bits[0]);
+        putchar(bits[1]);
+        putchar(bits[2]);
+        putchar(bits[3]);
+    }
+    else {
+        fsLogFatal("invalid utf8 codepoint encountered!");
+    }
+}
+
 ///
 // Perform the actual draw for any pending operations.
 //
@@ -508,9 +548,6 @@ void fsiBlit(FSFrontend *v)
                     }
                 }
 
-                // Only update the cursor position if it is not in the correct
-                // position already. This an essential optimizations for entire
-                // redraws.
                 if (x != lx + 1 || y != ly) {
                     printf("\033[%d;%dH", y + 1, x + 1);
                 }
@@ -518,7 +555,7 @@ void fsiBlit(FSFrontend *v)
                 lx = x;
                 ly = y;
 
-                printf("%c", (char) v->bbuf[y][x].value);
+                put_single_utf8(v->bbuf[y][x].value);
 
                 // Only reset attributes if they were altered.
                 if (attr_set) {
@@ -567,9 +604,21 @@ void fsiAddToKeymap(FSFrontend *v, int virtualKey, const char *keyValue, bool is
 //    with future command line parsing).
 void fsiUnpackFrontendOption(FSFrontend *v, const char *key, const char *value)
 {
-    (void) v;
-    (void) key;
-    (void) value;
+    if (!strcmpi(key, "glyphs")) {
+        if (!strcmpi(value, "ascii")) {
+            v->glyph = asciiGlyphSet;
+        }
+        else if (!strcmpi(value, "unicode")) {
+            v->glyph = unicodeGlyphSet;
+        }
+        else {
+            fsLogWarning("Ignoring unknown value %s for key %s", value, key);
+        }
+
+        return;
+    }
+
+    fsLogWarning("No suitable key found for option %s = %s", key, value);
 }
 
 ///
