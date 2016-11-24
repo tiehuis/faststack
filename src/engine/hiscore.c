@@ -9,9 +9,9 @@
 // A sample hiscore file may look like the following:
 //
 // ```
-// time    blocks  tps      kpt      date
-// 41.230  107     2.31244  3.12312  2016-07-02 18:15:02
-// 47.439  127     2.13313  3.12312  2016-07-02 18:18:43
+// time,blocks,tps,kpt,date
+// 41.230,107,2.31244,3.12312,2016-07-02 18:15:02
+// 47.439,127,2.13313,3.12312,2016-07-02 18:18:43
 // ```
 ///
 
@@ -25,7 +25,7 @@
 
 static void hsWriteHeader(FILE *fd)
 {
-    fprintf(fd, "time   blocks  tps     kpt     goal   date\n");
+    fprintf(fd, "time,blocks,tps,kpt,goal,date\n");
 }
 
 static char* hsCurrentDate(void)
@@ -36,7 +36,7 @@ static char* hsCurrentDate(void)
 
     time(&timer);
     tmInfo = localtime(&timer);
-    strftime(buffer, sizeof(buffer), "%F'%H:%M:%S", tmInfo);
+    strftime(buffer, sizeof(buffer), "%F %H:%M:%S", tmInfo);
     return buffer;
 }
 
@@ -77,7 +77,7 @@ void fsHiscoreInsert(const FSEngine *f)
     }
 
     const int msElapsed = f->msPerTick * f->totalTicks;
-    fprintf(fd, "%.3f %d     %.5f %.5f %d    %s\n",
+    fprintf(fd, "%.3f,%d,%.5f,%.5f,%d,%s\n",
             (float) msElapsed / 1000,
             f->blocksPlaced,
             (float) f->blocksPlaced / ((float) msElapsed / 1000),
