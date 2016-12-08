@@ -68,25 +68,92 @@ void fsiPreInit(FSFrontend *v)
     v->glyph = asciiGlyphSet;
 }
 
-void fsiInit(FSFrontend *v)
-{
-    // TODO: Determine how we can procedurally retrieve the keyboard device.
-    static const char *inputDeviceName =
-        "/dev/input/by-path/platform-i8042-serio-0-event-kbd";
+#define PROC_DEVICE_FILENAME "/proc/bus/input/devices"
+#define DEV_INPUT_PREFIX "/dev/input"
 
-    v->inputFd = open(inputDeviceName, O_RDONLY);
-    if (v->inputFd == -1) {
-        // Access error is a common one so explicitly specify steps to fix.
-        if (errno == EACCES) {
-            fsLogFatal("Insufficient permission to open device: %s",
-                       inputDeviceName);
-            fsLogFatal("Try adding yourself to the group 'input'");
-        } else {
-            fsLogFatal("Failed to open input device: %s", strerror(errno));
+// This should work across most linux machines (untested).
+static int openInputDevice(void)
+{
+    char buf[128] = {0};
+    char deviceName[10] = {0};
+    char evTypes[10] = {0};
+
+    FILE *fd = fopen(PROC_DEVICE_FILENAME, "rb");
+    if (fd == NULL) { printf("failed to open device\n"); return 0; }
+
+    while (1) {
+        // Mark the end of the buffer so we can determine excessive lines
+        buf[sizeof(buf) - 1] = 'Z';
+
+        if (fgets(buf, sizeof(buf), fd) == NULL) {
+            break;
         }
 
-        exit(1);
+        // Discard long lines since they were likely uninteresting
+        if (buf[sizeof(buf) - 1] == '\0' && buf[sizeof(buf) - 2] != '\n') {
+            int ch;
+            while ((ch = fgetc(fd)) != '\n' && ch != EOF) {}
+        }
+
+        if (buf[0] == '\n') {
+            if ((evTypes[0] == '1') &&
+                (evTypes[1] == '0' || evTypes[1] == '2') &&
+                (evTypes[2] == '0') &&
+                (evTypes[3] == '0') &&
+                (evTypes[4] == '1') &&
+                (evTypes[5] == '3' || evTypes[5] == 'F' || evTypes[5] == 'f'))
+            {
+                fclose(fd);
+
+                fsLogInfo("determined input device to be %s\n", deviceName);
+                snprintf(buf, sizeof(buf), DEV_INPUT_PREFIX "/" "%s", deviceName);
+                const int fd = open(buf, O_RDONLY);
+
+                if (fd == -1) {
+                    if (errno == EACCES) {
+                        fsLogFatal("Insufficient permission to open device: %s",
+                                   deviceName);
+                        fsLogFatal("Try adding yourself to the group 'input'");
+                    } else {
+                        fsLogFatal("Failed to open input device: %s", strerror(errno));
+                    }
+
+                    exit(1);
+                }
+
+                return fd;
+            }
+
+            evTypes[0] = '\0';
+            deviceName[0] = '\0';
+        }
+        else {
+            if (!strncmp(buf, "H: Handlers=", 12)) {
+                const char *st = strstr(buf + 12, "event");
+                if (st) {
+                    char *en = strpbrk(st, " \n");
+                    if (en) {
+                        *en = '\0';
+                    }
+
+                    strncpy(deviceName, st, sizeof(deviceName));
+                }
+            }
+            else if (!strncmp(buf, "B: EV=", 6)) {
+                strncpy(evTypes, buf + 6, sizeof(evTypes));
+            }
+        }
     }
+
+    // Note: Can be overridden by an option?
+    fclose(fd);
+    fsLogFatal("Could not find an input device!\n");
+    exit(1);
+}
+
+void fsiInit(FSFrontend *v)
+{
+    v->inputFd = openInputDevice();
 
     // Clear the cursor
     printf("\033[?25l");

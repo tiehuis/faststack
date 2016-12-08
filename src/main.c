@@ -261,13 +261,14 @@ int main(int argc, char **argv)
     FSFrontend pView = { .view = &gView };
 
     FSOptions o;
-    fsParseOptString(&o, argc, argv);
 
 #ifdef FS_USE_TERMINAL
     fsSetLogFile(FS_LOG_FILENAME);
 #else
     fsSetLogFile("-");
 #endif
+
+    fsParseOptString(&o, argc, argv);
 
     if (o.verbosity) {
         fsSetLogLevel(o.verbosity);
