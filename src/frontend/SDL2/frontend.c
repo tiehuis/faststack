@@ -337,8 +337,8 @@ static void drawHoldPiece(FSFrontend *v)
     SDL_Rect block = {
         .x = -1,
         .y = -1,
-        .w = BLOCK_SL,
-        .h = BLOCK_SL
+        .w = BLOCK_SL + 1,
+        .h = BLOCK_SL + 1
     };
 
     const FSEngine *f = v->view->game;
@@ -371,8 +371,8 @@ static void drawPieceAndShadow(FSFrontend *v)
     SDL_Rect block = {
         .x = -1,
         .y = -1,
-        .w = BLOCK_SL,
-        .h = BLOCK_SL
+        .w = BLOCK_SL + 1,
+        .h = BLOCK_SL + 1
     };
 
     const FSEngine *f = v->view->game;
@@ -447,8 +447,8 @@ void drawField(FSFrontend *v)
     SDL_Rect block = {
         .x = 0,
         .y = 0,
-        .w = BLOCK_SL,
-        .h = BLOCK_SL
+        .w = BLOCK_SL + 1,
+        .h = BLOCK_SL + 1
     };
 
     for (int y = f->fieldHidden; y < f->fieldHeight; ++y){
@@ -480,8 +480,8 @@ static void drawPreviewSection(FSFrontend *v)
     SDL_Rect block = {
         .x = PVIEW_X,
         .y = 0,
-        .w = BLOCK_SL,
-        .h = BLOCK_SL
+        .w = BLOCK_SL + 1,
+        .h = BLOCK_SL + 1
     };
 
     const FSEngine *f = v->view->game;
