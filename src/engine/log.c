@@ -14,8 +14,10 @@
 #include "core.h"
 #include "log.h"
 
+#include <errno.h>
 #include <stdarg.h>
 #include <stdio.h>
+#include <string.h>
 #include <time.h>
 
 // TODO: Adjust how we disable features to avoid this
@@ -33,6 +35,14 @@ static FILE *fsLogStream = NULL;
 
 // Is this a file our stream?
 static bool using_file = false;
+
+// Was anything written at all?
+static bool wrote_data = false;
+
+// Name of the log file. We don't use a static buffer here since every filename
+// is expected to be a string literal which is stored in static memory anyway
+// according to the C standard.
+static char *fsLogFilename = NULL;
 
 ///
 // Return a string with the current time.
@@ -77,6 +87,8 @@ static int logLevelColorCode(int level)
 
 ///
 // Set the output file used for logging. stdout by default.
+//
+// The value of `name` MUST be a string literal or have static storage duration.
 ///
 void fsSetLogFile(const char *name)
 {
@@ -85,7 +97,10 @@ void fsSetLogFile(const char *name)
         using_file = false;
     }
     else {
+        // We need to store the filename specified
         using_file = true;
+        // This value will not be edited so ignore non-const cast
+        fsLogFilename = (char*) name;
         FILE *fd = fopen(name, "w+");
         if (fd == NULL) {
             fsLogError("failed to use file output. Falling back to stderr");
@@ -113,6 +128,13 @@ void fsCloseLogFile(void)
 {
     if (using_file) {
         fclose(fsLogStream);
+
+        // If we never wrote any data then remove the log file
+        if (!wrote_data) {
+            if (remove(fsLogFilename)) {
+                fsLogError("failed to remove empty log: %s", strerror(errno));
+            }
+        }
     }
 }
 
@@ -122,6 +144,8 @@ void fsCloseLogFile(void)
 void fsLog(int level, ...)
 {
     if (level >= fsCurrentLogLevel) {
+        wrote_data = true;
+
         int stat = isatty(fileno(fsLogStream));
 
         if (stat) {
