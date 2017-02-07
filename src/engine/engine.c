@@ -195,7 +195,7 @@ static void newPiece(FSEngine *f)
     // Else we are maintaining the current where we map only when the blocks
     // themselves are generated. Think about this.
 
-    f->x = f->fieldWidth / 2 - 1;
+    f->x = f->fieldWidth / 2 - 2;
 
     // We cannot spawn at 0, else Z, S cannot rotate under sega rules.
     // NOTE: Adjust hidden value on render side potentially to account.
