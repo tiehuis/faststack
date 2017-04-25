@@ -105,7 +105,7 @@ static int openInputDevice(void)
             {
                 fclose(fd);
 
-                fsLogInfo("determined input device to be %s\n", deviceName);
+                fsLogInfo("determined input device to be %s", deviceName);
                 snprintf(buf, sizeof(buf), DEV_INPUT_PREFIX "/" "%s", deviceName);
                 const int fd = open(buf, O_RDONLY);
 
@@ -147,7 +147,7 @@ static int openInputDevice(void)
 
     // Note: Can be overridden by an option?
     fclose(fd);
-    fsLogFatal("Could not find an input device!\n");
+    fsLogFatal("Could not find an input device!");
     exit(1);
 }
 

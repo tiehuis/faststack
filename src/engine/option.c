@@ -187,20 +187,20 @@ void fsParseOptString(FSOptions *o, int argc, char **argv)
     for (int i = 1; i < argc; ++i) {
         const char *opt = argv[i];
 
-        if (!strcmp("-vv", opt)) {
-            o->verbosity = FS_LOG_LEVEL_DEBUG;
-        }
-        else if (!strcmp("-v", opt)) {
+        if (!strcmp("-v", opt)) {
             o->verbosity = FS_LOG_LEVEL_INFO;
         }
-        else if (!strcmp("i", opt) || !strcmp("--no-ini", opt)) {
+        else if (!strcmp("-vv", opt)) {
+            o->verbosity = FS_LOG_LEVEL_DEBUG;
+        }
+        else if (!strcmp("-i", opt) || !strcmp("--no-ini", opt)) {
             o->no_ini = true;
         }
         else if (!strcmp("-h", opt) || !strcmp("--help", opt)) {
             printf("%s\n", usage);
             exit(0);
         }
-        else if (strncmp("-", opt, 1) || strncmp("--", opt, 2)) {
+        else if (!strncmp("-", opt, 1) && !strncmp("--", opt, 2)) {
             // Non-option argument is a replay (take last)
             o->replay = (char*) opt;
         }

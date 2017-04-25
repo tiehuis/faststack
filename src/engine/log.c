@@ -70,7 +70,7 @@ static const char* logLevelStr(int level)
         "debug", "info", "warning", "error", "fatal"
     };
 
-    return logLevelNames[level];
+    return logLevelNames[level - 1];
 }
 
 ///
@@ -82,7 +82,7 @@ static int logLevelColorCode(int level)
         39, 37, 33, 31, 31
     };
 
-    return logLevelColors[level];
+    return logLevelColors[level - 1];
 }
 
 ///
