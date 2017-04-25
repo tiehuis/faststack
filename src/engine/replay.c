@@ -176,7 +176,7 @@ void fsReplayLoad(struct FSEngine *f, FSReplay *r, const char *filename)
         }
     }
     else {
-        fsLogWarning("failed to load replay file");
+        printf("failed to load replay file: %s\n", filename);
         exit(1);
     }
 }

@@ -200,7 +200,7 @@ void fsParseOptString(FSOptions *o, int argc, char **argv)
             printf("%s\n", usage);
             exit(0);
         }
-        else if (!strncmp("-", opt, 1) && !strncmp("--", opt, 2)) {
+        else if (strncmp("-", opt, 1) && strncmp("--", opt, 2)) {
             // Non-option argument is a replay (take last)
             o->replay = (char*) opt;
         }
