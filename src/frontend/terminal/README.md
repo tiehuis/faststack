@@ -16,14 +16,14 @@ Installation
 git clone https://github.com/tiehuis/FastStack
 cd FastStack
 mkdir build && cd build
-cmake -Duse_terminal=ON -Duse_sdl2=OFF ..
+cmake .. -DFRONTEND=terminal
 make
 ```
 
 Running
 -------
 
-This requires root permission to read from the input device. To avoid requring
+This requires root permission to read from the input device. To avoid requiring
 root permissions for every task, you can add yourself to the required input
 group once so you can run with user permissions in the future.
 

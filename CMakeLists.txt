@@ -11,14 +11,9 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${ROOT}/cmake")
 add_subdirectory(src/engine)
 add_compile_options(-Wall -Wextra -std=c99 -pedantic -O2)
 
-option(use_sdl2 "Compile with the SDL2 frontend" ON)
-option(use_terminal "Compile with the terminal frontend" OFF)
+set(FRONTEND "sdl" CACHE STRING "Frontend target")
 
-if (use_sdl2 AND use_terminal)
-    message(FATAL_ERROR "Only one frontend can be chosen")
-endif()
-
-if (use_sdl2)
+if (${FRONTEND} MATCHES "sdl")
     message("Frontend: SDL2")
 
     add_definitions(-DFS_USE_SDL2)
@@ -36,7 +31,7 @@ if (use_sdl2)
     set(LIBS ${LIBS} ${SDL2_LIBRARY} ${SDL2_MIXER_LIBRARIES} ${SDL2_TTF_LIBRARIES})
     target_include_directories(faststack PUBLIC src src/engine src/frontend/SDL2/deps/SDL_FontCache)
 
-elseif (use_terminal)
+elseif (${FRONTEND} MATCHES "terminal")
     message("Frontend: Terminal")
 
     add_definitions(-DFS_USE_TERMINAL)
@@ -48,6 +43,12 @@ elseif (use_terminal)
 
     target_include_directories(faststack PUBLIC src src/engine)
 
+else()
+    message(FATAL_ERROR
+        "Invalid frontend specified"
+        "\n"
+        "Valid choices are 'terminal' or 'sdl'"
+    )
 endif()
 
 target_link_libraries(faststack libfs ${LIBS})
