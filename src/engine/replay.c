@@ -123,6 +123,8 @@ void fsReplayInit(const struct FSEngine *f, FSReplay *r)
         return;
     }
 
+    // TODO: Allow this to be resolved at runtime, adding a `local` flag to
+    // not use external directories.
     r->handle = fopen(REPLAY_TMPDIR REPLAY_TMPFILE, "w+");
     if (r->handle != NULL) {
         r->lastKeystate = 0;

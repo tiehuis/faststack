@@ -32,7 +32,7 @@ void fsParseOptString(FSOptions *o, int argc, char **argv);
 
 #ifndef FS_DISABLE_OPTION
 
-void fsParseIniFile(FSFrontend *p, FSView *v, const char *fname);
+void fsTryParseIniFile(FSFrontend *p, FSView *v);
 
 ///
 // The following macros provide more robust parsing of key-value pairs into
@@ -150,7 +150,7 @@ do {                                                                            
 
 #else
 
-#define fsParseIniFile(p, v, fname)
+#define fsTryParseIniFile(p, v, fname)
 
 #define TS_INT(_id)
 #define TS_INT_RANGE(_id, _lo, _hi)

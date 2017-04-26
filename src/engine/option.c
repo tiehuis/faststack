@@ -371,3 +371,66 @@ void fsParseIniFile(struct FSFrontend *p, FSView *v, const char *fname)
 
     fclose(fd);
 }
+
+///
+// TODO: Should use platform-specific access functions.
+int fileExists(const char *path)
+{
+    FILE *fd = fopen(path, "r");
+    if (fd) {
+        fclose(fd);
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
+///
+// Resolves which ini file we are loading.
+//
+// The load priority is as follows:
+//  - fs.ini (current directory)
+//  - $HOME/$XDG_CONFIG_HOME/FastStack/config.ini (linux)
+const char* getIniFilePath(void)
+{
+    if (fileExists(FS_CONFIG_FILENAME)) {
+        return FS_CONFIG_FILENAME;
+    }
+
+#ifdef __linux__
+    const char *faststackConfig = "faststack/config.ini";
+
+    char *homePath = getenv("HOME");
+    if (!homePath) {
+        // TODO: Unsure about how good this fallback value is
+        homePath = "~";
+    }
+
+    // XDG_CONFIG_HOME incorporates the HOME folder by default so we need to
+    // handle the case independently.
+    char *xdgPath = getenv("XDG_CONFIG_HOME");
+
+    static char iniPath[128];
+    if (xdgPath) {
+        snprintf(iniPath, sizeof(iniPath), "%s/%s", xdgPath, faststackConfig);
+    } else {
+        snprintf(iniPath, sizeof(iniPath), "%s/%s/%s",
+                 homePath, ".config", faststackConfig);
+    }
+
+    return iniPath;
+#endif
+
+    return NULL;
+}
+
+void fsTryParseIniFile(struct FSFrontend *p, FSView *v)
+{
+    const char *iniPath = getIniFilePath();
+    if (iniPath) {
+        fsLogInfo("loading config file from %s", iniPath);
+        fsParseIniFile(p, v, iniPath);
+    } else {
+        fsLogInfo("no configuration file found");
+    }
+}
