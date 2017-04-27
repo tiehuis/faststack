@@ -12,7 +12,6 @@
 
 #ifndef FS_DISABLE_HISCORE
 
-// Add an entry to the hiscore table
 void fsHiscoreInsert(const FSEngine *f);
 
 #else

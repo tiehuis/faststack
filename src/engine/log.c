@@ -129,7 +129,6 @@ void fsCloseLogFile(void)
     if (using_file) {
         fclose(fsLogStream);
 
-        // If we never wrote any data then remove the log file
         if (!wrote_data) {
             if (remove(fsLogFilename)) {
                 fsLogError("failed to remove empty log: %s", strerror(errno));

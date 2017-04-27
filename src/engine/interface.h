@@ -26,7 +26,7 @@
 
 #include "core.h"
 
-// Name of the frontend. Used during option parsing.
+// Used during option parsing.
 extern const char *fsiFrontendName;
 
 ///

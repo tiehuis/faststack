@@ -53,7 +53,6 @@ enum PieceType {
     FS_NONE
 };
 
-// These typedefs are done primarily for brevity.
 typedef int8_t FSBlock;
 typedef int8_t i8;
 typedef int32_t i32;

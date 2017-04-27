@@ -534,7 +534,6 @@ static void drawInfoSection(FSFrontend *v)
     snprintf(writeBuffer, writeBufferSize, "%d", remaining);
     renderString(v, writeBuffer, FIELD_X + FIELD_W / 2 - 10, FIELD_Y + FIELD_H + BLOCK_SL);
 
-    // Clear the screen on the segment we draw info
     const SDL_Rect infoSegment = {
         .x = INFOS_X,
         .y = INFOS_Y,
@@ -595,10 +594,9 @@ static void drawInfoSection(FSFrontend *v)
     renderString(v, writeBuffer, INFOS_X, INFOS_Y + c++ * lineSkipY);
 }
 
-// Draw the prewview pieces
+// Draw the preview pieces
 void fsiDraw(FSFrontend *v)
 {
-    // Clear entire screen
     SDL_SetRenderDrawColor(v->renderer, 0, 0, 0, 255);
     SDL_RenderClear(v->renderer);
 
@@ -632,7 +630,6 @@ void fsiAddToKeymap(FSFrontend *v, int virtualKey, const char *keyValue, bool is
             }
         }
 
-        // Keymap was full, warn user
         fsLogWarning("Could not insert key %s into full keymap", keyValue);
     }
 }

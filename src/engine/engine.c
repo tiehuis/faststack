@@ -17,7 +17,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-/// Specifies the value stored in each cell. Not currently utilized much.
+/// Not currently utilized much.
 const i8 pieceColors[FS_NPT] = {
     0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70
 };
@@ -121,7 +121,6 @@ void fsGameInit(FSEngine *f)
 ///
 void fsGetBlocks(const FSEngine *f, i8x2 *dst, i8 piece, int x, int y, int theta)
 {
-    // A rotation system could be offset
     const FSRotationSystem *rs = rotationSystems[f->rotationSystem];
     const int calcTheta = (theta + rs->entryTheta[piece]) & 3;
 
@@ -481,7 +480,6 @@ static bool tryHold(FSEngine *f)
             //       consistently.
             f->floorkickCount = 0;
 
-            // Swap block types
             FSBlock t = f->holdPiece;
             f->holdPiece = f->piece;
             f->piece = t;

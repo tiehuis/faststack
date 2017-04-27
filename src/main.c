@@ -78,7 +78,6 @@ static void playGameLoop(FSFrontend *v, FSView *g)
     i32 lastTime = fsiGetTime(v);
     i32 lag = 0;
 
-    // Length of an average frame
     i32 avgFrame = 0;
 
     // The game loop here uses a fixed timestep with lag reduction. The render
@@ -120,10 +119,8 @@ static void playGameLoop(FSFrontend *v, FSView *g)
             break;
         }
 
-        // When should the tick end (best-case)
         const i32 tickEnd = startTime + tickRate;
 
-        // Warn if a frame was too slow but don't do anything special.
         if (tickEnd < currentTime) {
             fsLogDebug("Tick %ld took %ld but tickrate is only %ld",
                         f->totalTicks, currentTime - startTime, tickRate);

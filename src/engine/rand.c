@@ -134,13 +134,10 @@ static FSBlock fromSimple(FSEngine *f)
 ///
 static void initTGM1(FSEngine *f)
 {
-    // Fill history with 4 Z's
     f->randBuf[0] = FS_Z;
     f->randBuf[1] = FS_Z;
     f->randBuf[2] = FS_Z;
     f->randBuf[3] = FS_Z;
-
-    // We use a circular buffer to manage history
     f->randBufIndex = 0;
 }
 
@@ -164,7 +161,6 @@ static FSBlock fromTGM1or2(FSEngine *f, int noOfRolls)
         }
     }
 
-    // Update history with current piece
     f->randBuf[f->randBufIndex] = piece;
     f->randBufIndex = (f->randBufIndex + 1) & 3;
     fsLogDebug("Returning piece: %d", piece);
@@ -179,13 +175,10 @@ static FSBlock fromTGM1or2(FSEngine *f, int noOfRolls)
 ///
 static void initTGM2(FSEngine *f)
 {
-    // Fill history with Z, S, S, Z
     f->randBuf[0] = FS_Z;
     f->randBuf[1] = FS_S;
     f->randBuf[2] = FS_S;
     f->randBuf[3] = FS_Z;
-
-    // We use a circular buffer to manage history
     f->randBufIndex = 0;
 }
 
