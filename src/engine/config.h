@@ -37,13 +37,13 @@
 // Maximum number of unique keys each action can be triggered by.
 #define FS_MAX_KEYS_PER_ACTION 3
 
-// FastStack configuration file name.
+// faststack configuration file name.
 #define FS_CONFIG_FILENAME "fs.ini"
 
-// FastStack log file name.
+// faststack log file name.
 #define FS_LOG_FILENAME "fs.log"
 
-// FastStack hiscore file name.
+// faststack hiscore file name.
 #define FS_HISCORE_FILENAME "fs.hiscore"
 
 #endif // FS_CONFIG_H

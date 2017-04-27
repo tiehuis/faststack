@@ -2,7 +2,7 @@
 // engine.c
 // ========
 //
-// FastStack Engine implementation.
+// faststack Engine implementation.
 ///
 
 #include "default.h"

@@ -1,4 +1,4 @@
-FastStack
+faststack
 =========
 
 <p align="center">
@@ -9,12 +9,12 @@ A heavily customisable speed-oriented puzzle game.
 
 This is primarily intended for line-race modes at the current stage. If you
 want a more feature-filled game, I would suggest
-[Nullpomino](https://github.com/nullpomino/nullpomino) instead.
+[NullpoMino](https://github.com/nullpomino/nullpomino) instead.
 
 Motivation
 ----------
 
-Nullpomino has a few problems on Linux with new Java versions so I needed
+NullpoMino has a few problems on Linux with new Java versions so I needed
 another lightweight game as an alternative. Another reason was that there are
 no decent terminal versions.
 

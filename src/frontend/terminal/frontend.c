@@ -2,7 +2,7 @@
 // frontend.c
 // ==========
 //
-// Linux Terminal frontend for the FastStack engine.
+// Linux Terminal frontend for the faststack engine.
 //
 // The following platform-specific functions are used:
 //  * Termios

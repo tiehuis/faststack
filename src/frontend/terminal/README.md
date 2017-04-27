@@ -1,4 +1,4 @@
-FastStack-Term
+faststack-term
 ==============
 
 <a href="https://asciinema.org/a/5odjv7x273oonbmhq51sfbf4l"><img src="https://asciinema.org/a/5odjv7x273oonbmhq51sfbf4l.png" width="600"/></a>
@@ -13,8 +13,8 @@ Installation
 ------------
 
 ```
-git clone https://github.com/tiehuis/FastStack
-cd FastStack
+git clone https://github.com/tiehuis/faststack
+cd faststack
 mkdir build && cd build
 cmake .. -DFRONTEND=terminal
 make

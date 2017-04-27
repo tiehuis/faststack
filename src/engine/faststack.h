@@ -2,7 +2,7 @@
 // faststack.h
 // ===========
 //
-// This exposes the entire public interface exposed by the `FastStack` engine.
+// This exposes the entire public interface exposed by the `faststack` engine.
 //
 // Notes:
 //  * A documented single header file would be ideal but is extra work for

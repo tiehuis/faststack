@@ -2,7 +2,7 @@
 // frontend.h
 // ==========
 //
-// Header file for the FastStack terminal implementation. This is solely done
+// Header file for the faststack terminal implementation. This is solely done
 // to seperate the many compile-time configuration variables and declarations
 // from the actual implementation.
 ///
@@ -85,9 +85,9 @@ typedef struct {
 } KeyEntry;
 
 ///
-// FastStack Platform Specific View
+// faststack Platform Specific View
 //
-// Represents a generic view which is passed around by the FastStack interface
+// Represents a generic view which is passed around by the faststack interface
 // code.
 ///
 struct FSFrontend {

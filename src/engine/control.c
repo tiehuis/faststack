@@ -3,7 +3,7 @@
 // =========
 //
 // Implementation of the function to convert key input into simplified actions
-// for the FastStack engine.
+// for the faststack engine.
 ///
 
 #include "engine.h"

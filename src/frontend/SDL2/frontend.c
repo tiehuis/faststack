@@ -2,7 +2,7 @@
 // frontend.c
 // ==========
 //
-// SDL2 frontend for FastStack.
+// SDL2 frontend for faststack.
 ///
 
 #include "frontend.h"
@@ -102,7 +102,7 @@ void fsiInit(FSFrontend *v)
     #undef LoadWav
 #endif
 
-    SDL_SetWindowTitle(v->window, "FastStack");
+    SDL_SetWindowTitle(v->window, "faststack");
     SDL_SetRenderDrawColor(v->renderer, 0, 0, 0, 255);
     SDL_RenderClear(v->renderer);
 }

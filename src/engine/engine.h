@@ -2,7 +2,7 @@
 // engine.h
 // ========
 //
-// Header file for the FastStack engine.
+// Header file for the faststack engine.
 //
 // The engine is mostly opaque to an outside user. A number of functions are
 // provided which provide some convenience when performing certain tasks.
@@ -14,8 +14,8 @@
 // ------
 // We use the following prefixes for enums.
 //
-//  FST_* - FastStack Type
-//  FSS_* - FastStack State
+//  FST_* - faststack Type
+//  FSS_* - faststack State
 ///
 
 #ifndef FS_H
@@ -134,7 +134,7 @@ enum GameState {
 };
 
 ///
-// A single FastStack game instance.
+// A single faststack game instance.
 //
 // Stores all internal variables and options pertaining to a field.
 // Values can be broken down into one of three classes.

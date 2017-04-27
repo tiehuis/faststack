@@ -162,7 +162,7 @@ static void unpackOptionValue(struct FSFrontend *p, FSView *v, const char *k,
 }
 
 const char *usage =
-"FastStack [-hiv]\n"
+"faststack [-hiv]\n"
 "\n"
 "Options:\n"
 "   -h --help       Display this message and quit\n"
@@ -390,7 +390,7 @@ int fileExists(const char *path)
 //
 // The load priority is as follows:
 //  - fs.ini (current directory)
-//  - $HOME/$XDG_CONFIG_HOME/FastStack/config.ini (linux)
+//  - $HOME/$XDG_CONFIG_HOME/faststack/config.ini (linux)
 const char* getIniFilePath(void)
 {
     if (fileExists(FS_CONFIG_FILENAME)) {

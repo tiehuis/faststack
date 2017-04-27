@@ -1,6 +1,6 @@
 # We target the current Ubuntu 12.04 LTS version
 cmake_minimum_required(VERSION 2.8.7 FATAL_ERROR)
-project(FastStack LANGUAGES C)
+project(faststack LANGUAGES C)
 
 set(ROOT ${CMAKE_SOURCE_DIR})
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "..")

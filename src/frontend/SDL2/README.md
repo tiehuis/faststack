@@ -1,4 +1,4 @@
-FastStack-SDL
+faststack-SDL
 =============
 
 This is built atop the SDL2 library. This is a popular cross-platform library
@@ -16,8 +16,8 @@ Installation
 
 ```
 apt install libsdl2-2.0-0 libsdl2-ttf-2.0-0
-git clone https://github.com/tiehuis/FastStack
-cd FastStack
+git clone https://github.com/tiehuis/faststack
+cd faststack
 mkdir build && cd build
 cmake ..
 make

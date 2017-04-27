@@ -18,7 +18,7 @@
 #include <float.h>
 #include <limits.h>
 
-// A struct containing command line option parameters for a generic FastStack
+// A struct containing command line option parameters for a generic faststack
 // frontend implementation.
 struct FSOptions {
     int verbosity;
