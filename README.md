@@ -2,7 +2,7 @@ FastStack
 =========
 
 <p align="center">
-    <img src="http://i.imgur.com/M9RXMpH.gif"/>
+    <img src="https://i.imgur.com/M9RXMpH.gif"/>
 </p>
 
 A heavily customisable speed-oriented puzzle game.
