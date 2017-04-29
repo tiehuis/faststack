@@ -43,6 +43,7 @@
 #define INFO_H  (-1)                      // Unused
 #define INFO_W  (-1)                      // Unused
 
+
 ///
 // Attributes used when displaying cells.
 #define ATTR_COUNT 13
@@ -105,6 +106,15 @@ struct FSFrontend {
 
     /// Indicate whether complete redraw must occur.
     bool invalidateBuffers;
+
+    /// Terminal width
+    int16_t width;
+
+    /// Terminal height
+    int16_t height;
+
+    /// Should the field be centered?
+    bool centerField;
 
     /// Glyphs to use when displaying field items.
     GlyphSet glyph;

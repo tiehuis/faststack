@@ -64,8 +64,9 @@ void fsiPreInit(FSFrontend *v)
         }
     }
 
-    // Default to ascii. Allow overwrite on ini load.
+    // Following can be overwritten by ini file options.
     v->glyph = asciiGlyphSet;
+    v->centerField = false;
 }
 
 #define PROC_DEVICE_FILENAME "/proc/bus/input/devices"
@@ -79,7 +80,9 @@ static int openInputDevice(void)
     char evTypes[10] = {0};
 
     FILE *fd = fopen(PROC_DEVICE_FILENAME, "rb");
-    if (fd == NULL) { printf("failed to open device\n"); return 0; }
+    if (fd == NULL) {
+        fsLogFatal("failed to open device: %s", PROC_DEVICE_FILENAME);
+    }
 
     while (1) {
         // Mark the end of the buffer so we can determine excessive lines
@@ -111,9 +114,9 @@ static int openInputDevice(void)
 
                 if (fd == -1) {
                     if (errno == EACCES) {
-                        fsLogFatal("Insufficient permission to open device: %s",
+                        fsLogFatal("Insufficient permission to open device: %s\n"
+                                   "Try adding yourself to the group 'input'",
                                    deviceName);
-                        fsLogFatal("Try adding yourself to the group 'input'");
                     } else {
                         fsLogFatal("Failed to open input device: %s", strerror(errno));
                     }
@@ -151,6 +154,20 @@ static int openInputDevice(void)
     exit(1);
 }
 
+void getTerminalDimensions(FSFrontend *v)
+{
+    struct winsize win;
+
+    if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &win) == -1 || win.ws_col == 0) {
+        fsLogWarning("could not determine terminal size");
+        v->width = v->height = -1;
+        return;
+    }
+
+    v->width = win.ws_col;
+    v->height = win.ws_row;
+}
+
 void fsiInit(FSFrontend *v)
 {
     v->inputFd = openInputDevice();
@@ -173,6 +190,8 @@ void fsiInit(FSFrontend *v)
     ns.c_cc[VMIN] = 0;
     tcsetattr(STDIN_FILENO, TCSANOW, &ns);
 
+    getTerminalDimensions(v);
+
     v->invalidateBuffers = true;
 }
 
@@ -182,7 +201,15 @@ void fsiFini(FSFrontend *v)
 
     // Show the cursor
     printf("\033[?25h");
-    printf("\033[%d;%dH", FS_TERM_HEIGHT, FS_TERM_WIDTH);
+
+    int w = FS_TERM_WIDTH;
+    int h = FS_TERM_HEIGHT;
+    if (v->centerField && v->width != -1) {
+        w = (v->width + FS_TERM_WIDTH) / 2;
+        h = (v->height + FS_TERM_HEIGHT) / 2;
+    }
+
+    printf("\033[%d;%dH", h, w);
 
     // Cursor is guaranteed to be at the end of the screen, so print some extra
     // lines on exit to better display score.
@@ -584,8 +611,14 @@ static void put_single_utf8(uint32_t cp)
 // will be unset after the function completes.
 void fsiBlit(FSFrontend *v)
 {
-    // This seems pointless (and is!) but may be slightly tweaked in future.
     if (caughtSigwinch) {
+        // We never try and get the terminal dimensions if the first request
+        // failed. It probably won't work again and we only want to log a
+        // warning once.
+        if (v->centerField && v->width != -1) {
+            getTerminalDimensions(v);
+        }
+
         v->invalidateBuffers = true;
         caughtSigwinch = 0;
     }
@@ -615,8 +648,22 @@ void fsiBlit(FSFrontend *v)
                     }
                 }
 
+                // Center the board if we know the terminal dimensions.
+                int y_offset = 0, x_offset = 0;
+                if (v->centerField && v->width != -1) {
+                    y_offset = (v->height - FS_TERM_HEIGHT) / 2;
+                    x_offset = (v->width - FS_TERM_WIDTH) / 2;
+
+                    if (y_offset < 0) {
+                        y_offset = 0;
+                    }
+                    if (x_offset < 0) {
+                        x_offset = 0;
+                    }
+                }
+
                 if (x != lx + 1 || y != ly) {
-                    printf("\033[%d;%dH", y + 1, x + 1);
+                    printf("\033[%d;%dH", y + y_offset + 1, x + x_offset + 1);
                 }
 
                 lx = x;
@@ -671,12 +718,26 @@ void fsiAddToKeymap(FSFrontend *v, int virtualKey, const char *keyValue, bool is
 //    with future command line parsing).
 void fsiUnpackFrontendOption(FSFrontend *v, const char *key, const char *value)
 {
+    // TODO: Abstract this and use the macros defined in `option.h`.
     if (!strcmpi(key, "glyphs")) {
         if (!strcmpi(value, "ascii")) {
             v->glyph = asciiGlyphSet;
         }
         else if (!strcmpi(value, "unicode")) {
             v->glyph = unicodeGlyphSet;
+        }
+        else {
+            fsLogWarning("Ignoring unknown value %s for key %s", value, key);
+        }
+
+        return;
+    }
+    else if (!strcmpi(key, "centerField")) {
+        if (!strcmpi(value, "true")) {
+            v->centerField = true;
+        }
+        else if (!strcmpi(value, "false")) {
+            v->centerField = false;
         }
         else {
             fsLogWarning("Ignoring unknown value %s for key %s", value, key);
@@ -714,14 +775,10 @@ void fsiDraw(FSFrontend *v)
 // avoid any unforeseen behaviour.
 void fsiPreFrameHook(FSFrontend *v)
 {
-    (void) v;
-
     // If we encountered a SIGINT, then we want to reset the screen before we
     // re-raise it so the user can see the game content on exit.
     if (caughtSigint) {
-        printf("\033[?25h");
-        printf("\033[%d;%dH", FS_TERM_HEIGHT, FS_TERM_WIDTH);
-        fflush(stdout);
+        fsiFini(v);
         raise(SIGINT);
     }
 }
