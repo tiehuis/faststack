@@ -10,6 +10,8 @@
 // approaches into here.
 ///
 
+#ifndef FS_DISABLE_OPTION
+
 #include "engine.h"
 #include "option.h"
 #include "log.h"
@@ -43,12 +45,24 @@ static inline int fsRandomizerLookup(const char *value)
 {
     if (M("simple") || M("0"))
         return FST_RAND_SIMPLE;
-    else if (M("noszobag7") || M("1"))
-        return FST_RAND_NOSZO_BAG7;
+    else if (M("bag7") || M("1"))
+        return FST_RAND_BAG7;
     else if (M("tgm1") || M("2"))
         return FST_RAND_TGM1;
     else if (M("tgm2") || M("3"))
         return FST_RAND_TGM2;
+    else if (M("tgm3") || M("4"))
+        return FST_RAND_TGM3;
+    else if (M("bag7-seam") || M("5"))
+        return FST_RAND_BAG7_SEAM_CHECK;
+    else if (M("bag6") || M("6"))
+        return FST_RAND_BAG6;
+    else if (M("bag14") || M("7"))
+        return FST_RAND_MULTI_BAG2;
+    else if (M("bag28") || M("8"))
+        return FST_RAND_MULTI_BAG4;
+    else if (M("bag63") || M("9"))
+        return FST_RAND_MULTI_BAG9;
 
     return -1;
 }
@@ -390,7 +404,7 @@ int fileExists(const char *path)
 //
 // The load priority is as follows:
 //  - fs.ini (current directory)
-//  - $HOME/$XDG_CONFIG_HOME/faststack/config.ini (linux)
+//  - $XDG_CONFIG_HOME/faststack/config.ini (linux)
 const char* getIniFilePath(void)
 {
     if (fileExists(FS_CONFIG_FILENAME)) {
@@ -434,3 +448,5 @@ void fsTryParseIniFile(struct FSFrontend *p, FSView *v)
         fsLogInfo("no configuration file found");
     }
 }
+
+#endif

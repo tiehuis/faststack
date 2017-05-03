@@ -29,7 +29,10 @@
 #define FS_MAX_PREVIEW_COUNT 5
 
 // Maximum scratch space for internal randomizer buffer.
-#define FS_RAND_BUFFER_LEN (2 * 7)
+#define FS_RAND_BUFFER_LEN 63
+
+// Maximum scratch space for extra randomizer buffer details.
+#define FS_RAND_BUFFER_EXTRA_LEN 15
 
 // Maximum number of wallkick tables per rotation system.
 #define FS_MAX_NO_OF_WALLKICK_TABLES 10

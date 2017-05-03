@@ -186,6 +186,9 @@ struct FSEngine {
     /// @I: Buffer for calculating next pieces.
     FSBlock randBuf[FS_RAND_BUFFER_LEN];
 
+    /// @I: An extra buffer for caching special values across rolls.
+    u32 randBufExtra[FS_RAND_BUFFER_EXTRA_LEN];
+
     /// @I: Index for `randBuf`
     int randBufIndex;
 
