@@ -1,0 +1,1 @@
+option('frontend', type : 'string', value : 'terminal')

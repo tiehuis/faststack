@@ -16,6 +16,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 #include <time.h>
 
 #include "engine.h"
@@ -195,6 +196,8 @@ static void initTGM1(FSEngine *f)
 // TODO: Wrong variance calculated for TGM2 6 roll variant.
 static FSBlock fromTGM1or2(FSEngine *f, int noOfRolls)
 {
+    assert(noOfRolls > 0);
+
     if (!f->randBufExtra[0]) {
         f->randBufExtra[0] = 1;
         const FSBlock choice[] = { FS_J, FS_I, FS_L, FS_T };

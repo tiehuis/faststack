@@ -1,0 +1,12 @@
+[host_machine]
+system = 'linux'
+cpu_family = 'x86_64'
+cpu = 'i686'
+endian = 'little'
+
+[binaries]
+c = '/usr/bin/x86_64-w64-mingw32-gcc'
+ar = '/usr/bin/x86_64-w64-mingw32-ar'
+strip = '/usr/bin/x86_64-w64-ming32-strip'
+pkgconfig = '/usr/bin/pkg-config'
+exe_wrapper = 'wine'
