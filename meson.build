@@ -8,6 +8,7 @@ add_project_arguments(['-Wall', '-Wextra', '-std=c99', '-pedantic'],
 )
 
 subdir('src/engine')
+
 src = ['src/main.c']
 inc = [engine_inc]
 deps = []
@@ -37,3 +38,6 @@ executable('faststack',
     link_with : engine_lib,
     dependencies : deps
 )
+
+subdir('test')
+
