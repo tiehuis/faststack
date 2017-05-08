@@ -661,6 +661,23 @@ beginTick:
 
       case FSS_FALLING:
       case FSS_LANDED:
+        // If a hard drop occurs we want to immediately drop the piece and not
+        // apply any other movement. This is far more natural and results in
+        // less misdrops than if movement is processed prior.
+        //
+        // See issue #49 for details.
+        if ((i->extra & FST_INPUT_HARD_DROP) ||
+                // We must recheck the lock timer state here since we may have
+                // moved back to FALLING from LANDED on the last frame and do
+                // **not** want to lock in mid-air!
+                (f->lockTimer >= TICKS(f->lockDelay) && f->state == FSS_LANDED)) {
+            f->state = FSS_LINES;
+
+            // Still need to apply piece gravity before entering FSS_LINES.
+            doPieceGravity(f, i->gravity);
+            break;
+        }
+
         if (i->extra & FST_INPUT_HOLD) {
             tryHold(f);
         }
@@ -700,14 +717,6 @@ beginTick:
         }
 
         doPieceGravity(f, i->gravity);
-
-        if ((i->extra & FST_INPUT_HARD_DROP) ||
-                // We must recheck the lock timer state here since we may have
-                // moved back to FALLING from LANDED on the last frame and do
-                // **not** want to lock in mid-air!
-                (f->lockTimer >= TICKS(f->lockDelay) && f->state == FSS_LANDED)) {
-            f->state = FSS_LINES;
-        }
 
         // This must occur after we process the lockTimer to allow floorkick
         // limits to be processed correctly. If we encounter a floorkick limit
