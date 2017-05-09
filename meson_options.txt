@@ -1,1 +1,5 @@
 option('frontend', type : 'string', value : 'terminal')
+option('disable-log', type : 'boolean', value : false)
+option('disable-option', type : 'boolean', value : false)
+option('disable-hiscore', type : 'boolean', value : false)
+option('disable-replay', type : 'boolean', value : false)

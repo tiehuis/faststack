@@ -150,7 +150,7 @@ do {                                                                            
 
 #else
 
-#define fsTryParseIniFile(p, v, fname)
+#define fsTryParseIniFile(p, v)
 
 #define TS_INT(_id)
 #define TS_INT_RANGE(_id, _lo, _hi)

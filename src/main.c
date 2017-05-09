@@ -132,6 +132,7 @@ static void playGameLoop(FSFrontend *v, FSView *g)
         fsiSleep(v, value > 0 ? value : 0);
     }
 
+#ifndef FS_DISABLE_LOG
     // Cross-reference the in-game time (as calculated from the number of
     // elapsed ticks) to a reference clock to ensure it runs accurately.
     const double actualElapsed = (double) f->actualTime / 1000000;
@@ -141,6 +142,7 @@ static void playGameLoop(FSFrontend *v, FSView *g)
     fsLogDebug("Actual time elapsed: %lf", actualElapsed);
     fsLogDebug("Ingame time elapsed: %lf", ingameElapsed);
     fsLogDebug("Maximum Difference: %lf", actualElapsed - ingameElapsed);
+#endif
 }
 
 // As close to a menu as we'll get.

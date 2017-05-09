@@ -14,6 +14,19 @@ inc = [engine_inc]
 deps = []
 defines = []
 
+if get_option('disable-option')
+    defines += ['-DFS_DISABLE_OPTION']
+endif
+if get_option('disable-log')
+    defines += ['-DFS_DISABLE_LOG']
+endif
+if get_option('disable-replay')
+    defines += ['-DFS_DISABLE_REPLAY']
+endif
+if get_option('disable-hiscore')
+    defines += ['-DFS_DISABLE_HISCORE']
+endif
+
 frontend = get_option('frontend')
 if frontend == 'sdl'
     subdir('src/frontend/SDL2')
