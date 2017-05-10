@@ -15,6 +15,8 @@
 // ```
 ///
 
+#ifndef FS_DISABLE_HISCORE
+
 #include "core.h"
 #include "config.h"
 #include "engine.h"
@@ -88,3 +90,5 @@ void fsHiscoreInsert(const FSEngine *f)
 
     fclose(fd);
 }
+
+#endif // FS_DISABLE_HISCORE

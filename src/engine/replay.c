@@ -5,6 +5,8 @@
 // Manages loading and saving of replay files.
 ///
 
+#ifndef FS_DISABLE_REPLAY
+
 #include "engine.h"
 #include "replay.h"
 #include "log.h"
@@ -207,3 +209,5 @@ void fsReplayClear(FSReplay *r)
         remove(REPLAY_TMPDIR REPLAY_TMPFILE);
     }
 }
+
+#endif // FS_DISABLE_REPLAY

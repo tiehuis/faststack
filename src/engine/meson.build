@@ -2,6 +2,7 @@ engine_src = [
     'control.c',
     'engine.c',
     'finesse.c',
+    'fslibc.c',
     'hiscore.c',
     'log.c',
     'option.c',

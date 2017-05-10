@@ -7,6 +7,8 @@
 // NOTE: Not thread-safe.
 ///
 
+#ifndef FS_DISABLE_LOG
+
 // TODO(#39): Platform-specific for `isatty` and `fileno`
 #define _XOPEN_SOURCE 500
 #include <unistd.h>
@@ -21,7 +23,6 @@
 #include <time.h>
 
 // TODO: Adjust how we disable features to avoid this
-#ifndef FS_DISABLE_LOG
 
 ///
 // Global variable used to filter which messages are printed.

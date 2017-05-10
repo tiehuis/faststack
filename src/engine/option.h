@@ -13,7 +13,8 @@
 #ifndef FS_OPTION_H
 #define FS_OPTION_H
 
-#include <stdbool.h>
+#include "core.h"
+
 #include <errno.h>
 #include <float.h>
 #include <limits.h>

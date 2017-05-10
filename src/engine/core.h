@@ -8,8 +8,7 @@
 #ifndef FS_TYPES_H
 #define FS_TYPES_H
 
-#include <stdbool.h>
-#include <stdint.h>
+#include "fslibc.h"
 
 // Every structure is typedef here instead of at their declaration. The reason
 // for this is to remove the requirement to forward-declare these types

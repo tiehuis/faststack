@@ -14,9 +14,6 @@
 #include "rotation.h"
 #include "rand.h"
 
-#include <string.h>
-#include <stdlib.h>
-
 /// Not currently utilized much.
 const i8 pieceColors[FS_NPT] = {
     0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70
@@ -294,7 +291,7 @@ static bool doRotate(FSEngine *f, i8 direction)
     i8 newDir = (f->theta + 4 + direction) & 3;
     const FSRotationSystem *rs = rotationSystems[f->rotationSystem];
 
-    i8 tableNo;
+    i8 tableNo = 0;
     switch (direction) {
       case FST_ROT_CLOCKWISE:
         tableNo = rs->kicksR[f->piece];

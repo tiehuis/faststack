@@ -14,14 +14,15 @@
 // seed.
 ///
 
-#include <stdlib.h>
-#include <string.h>
-#include <assert.h>
-#include <time.h>
-
 #include "engine.h"
 #include "rand.h"
 #include "log.h"
+
+// TODO: Remove this conditional when the freestanding kernel has some
+// random source available.
+#if __STDC_HOSTED__ == 1
+#include <time.h>
+#endif
 
 ///
 // Return a decent seed value.
@@ -30,7 +31,11 @@
 // game restart.
 u32 fsGetRoughSeed(void)
 {
+#if __STDC_HOSTED__ == 1
     return time(NULL) * clock();
+#else
+    return 0;
+#endif
 }
 
 ///
@@ -204,7 +209,7 @@ static FSBlock fromTGM1or2(FSEngine *f, int noOfRolls)
         return choice[fsRandInRange(&f->randomContext, 0, sizeof(choice))];
     }
 
-    FSBlock piece;
+    FSBlock piece = 0;
     for (int i = 0; i < noOfRolls; ++i) {
         // TODO: 'vectorize' this by generating four pieces at once to speed
         // up by a factor of four/six. Slow for testing.
@@ -415,6 +420,9 @@ FSBlock fsNextRandomPiece(FSEngine *f)
             return fromMultiBag(f, 9);
         default:
             fsLogFatal("Unknown randomizer: %d", f->randomizer);
-            exit(1);
+            abort();
     }
+
+    // unreachable
+    return 0;
 }
