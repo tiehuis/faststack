@@ -1,2 +1,3 @@
 stackos.bin
-*.o
+stackos.log
+build/
