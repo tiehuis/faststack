@@ -1,54 +1,95 @@
+#include "core.h"
 #include "tty.h"
 
-size_t terminal_row;
-size_t terminal_column;
-uint8_t terminal_color;
-uint16_t *terminal_buffer;
+struct {
+    uint16_t cursor_x;
+    uint16_t cursor_y;
+    uint16_t *buffer;
+    uint8_t color;
+} tty;
 
-void terminal_putc_at(char c, uint8_t color, size_t x, size_t y)
+// Set the hardware cursor.
+static void tty_set_cursor(void)
+{
+    uint16_t cursor = tty.cursor_y * VGA_WIDTH + tty.cursor_x;
+    outb(0x3D4, 14);
+    outb(0x3D5, cursor >> 8);
+    outb(0x3D4, 15);
+    outb(0x3D5, cursor & 0xFF);
+}
+
+void tty_putc_at(char c, uint8_t color, size_t x, size_t y)
 {
     const size_t index = y * VGA_WIDTH + x;
-    terminal_buffer[index] = vga_entry(c, color);
+    tty.buffer[index] = vga_entry(c, color);
 }
 
-void terminal_putc(char c)
+void tty_putc(char c)
 {
-    terminal_putc_at(c, terminal_color, terminal_column, terminal_row);
+    switch (c) {
+        case '\n':
+            tty.cursor_x = 0;
+            tty.cursor_y += 1;
+            break;
 
-    if (++terminal_column == VGA_WIDTH) {
-        terminal_column = 0;
-        if (++terminal_row == VGA_HEIGHT) {
-            terminal_row = 0;
-        }
+        case '\t':
+            tty.cursor_x = (tty.cursor_y + 8) & ~7;
+            break;
+
+        case '\r':
+            tty.cursor_x = 0;
+
+        default:
+            tty_putc_at(c, tty.color, tty.cursor_x, tty.cursor_y);
+            tty.cursor_x += 1;
+            break;
     }
+
+    if (tty.cursor_x >= VGA_WIDTH) {
+        tty.cursor_x = 0;
+        tty.cursor_y += 1;
+    }
+
+    if (tty.cursor_y >= VGA_HEIGHT) {
+        tty.cursor_y = 0;
+    }
+
+    tty_set_cursor();
 }
 
-void terminal_write(const char *data, size_t size)
+void tty_write(const char *data, size_t size)
 {
     for (size_t i = 0; i < size; ++i) {
-        terminal_putc(data[i]);
+        tty_putc(data[i]);
     }
 }
 
-void terminal_puts(const char *data)
+void tty_puts(const char *data)
 {
     char *p = (char*) data;
     while (*p) {
-        terminal_putc(*p++);
+        tty_putc(*p++);
     }
 }
 
-void terminal_initialize(void)
+void tty_clear(void)
 {
-    terminal_row = 0;
-    terminal_column = 0;
-    terminal_color = vga_entry_color(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK);
-    terminal_buffer = (uint16_t*) 0xB8000;
-
     for (size_t y = 0; y < VGA_HEIGHT; ++y) {
         for (size_t x = 0; x < VGA_WIDTH; ++x) {
             const size_t index = y * VGA_WIDTH + x;
-            terminal_buffer[index] = vga_entry(' ', terminal_color);
+            const uint8_t color = vga_entry_color(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK);
+            tty.buffer[index] = vga_entry(' ', color);
         }
     }
+
+    tty.cursor_x = 0;
+    tty.cursor_y = 0;
+    tty_set_cursor();
+}
+
+void init_tty(void)
+{
+    tty.color = vga_entry_color(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK);
+    tty.buffer = (uint16_t*) 0xB8000;
+    tty_clear();
 }
