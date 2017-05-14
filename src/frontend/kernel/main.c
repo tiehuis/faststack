@@ -9,9 +9,11 @@ void kernel_main(void)
     init_tty();
 
     tty_puts("Hello, world!");
-    //com_puts("Check");
 
     asm volatile ("int $0x4");
+    asm volatile ("int $0x3");
+    asm volatile ("int $0x2");
+    asm volatile ("int $0x1");
 
     while (1) {
     }

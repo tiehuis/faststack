@@ -1,6 +1,4 @@
-global isr0
-
-%macro ISR_ERR 1
+%macro ISR 1
 global isr%1
 isr%1:
     cli
@@ -9,7 +7,7 @@ isr%1:
     jmp isr_handler_setup
 %endmacro
 
-%macro ISR_NO_ERR 1
+%macro ISR_ERR 1
 global isr%1
 isr%1:
     cli
@@ -17,38 +15,38 @@ isr%1:
     jmp isr_handler_setup
 %endmacro
 
-ISR_ERR 0
-ISR_ERR 1
-ISR_ERR 2
-ISR_ERR 3
-ISR_ERR 4
-ISR_ERR 5
-ISR_ERR 6
-ISR_ERR 7
-ISR_NO_ERR 8
-ISR_ERR 9
-ISR_NO_ERR 10
-ISR_NO_ERR 11
-ISR_NO_ERR 12
-ISR_NO_ERR 13
-ISR_NO_ERR 14
-ISR_ERR 15
-ISR_ERR 16
-ISR_ERR 17
-ISR_ERR 18
-ISR_ERR 19
-ISR_ERR 20
-ISR_ERR 21
-ISR_ERR 22
-ISR_ERR 23
-ISR_ERR 24
-ISR_ERR 25
-ISR_ERR 26
-ISR_ERR 27
-ISR_ERR 28
-ISR_ERR 29
-ISR_ERR 30
-ISR_ERR 31
+ISR 0
+ISR 1
+ISR 2
+ISR 3
+ISR 4
+ISR 5
+ISR 6
+ISR 7
+ISR_ERR 8
+ISR 9
+ISR_ERR 10
+ISR_ERR 11
+ISR_ERR 12
+ISR_ERR 13
+ISR_ERR 14
+ISR 15
+ISR 16
+ISR 17
+ISR 18
+ISR 19
+ISR 20
+ISR 21
+ISR 22
+ISR 23
+ISR 24
+ISR 25
+ISR 26
+ISR 27
+ISR 28
+ISR 29
+ISR 30
+ISR 31
 
 isr_handler_setup:
     pusha
@@ -64,7 +62,7 @@ isr_handler_setup:
     extern isr_handler
     call isr_handler
 
-    pop eax,
+    pop ebx,
     mov ds, ax
     mov es, ax
     mov fs, ax

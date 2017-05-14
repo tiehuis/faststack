@@ -1,6 +1,5 @@
 #include "isr.h"
 #include "com.h"
-#include "tty.h"
 
 void isr_handler(struct regs r)
 {
