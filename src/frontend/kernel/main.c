@@ -8,7 +8,7 @@ void kernel_main(void)
 {
     init_dt();
     init_tty();
-    init_timer(10);
+    init_timer();
 
     tty_puts("Hello, world!\n");
 
@@ -18,6 +18,7 @@ void kernel_main(void)
     asm volatile ("int $0x1");
 
     while (1) {
-        hlt();  // Power-save
+        tty_puts("!");
+        timer_sleep(1000);
     }
 }

@@ -3,6 +3,7 @@
 
 #include "core.h"
 
-void init_timer(uint32_t hz);
+void init_timer(void);
+void timer_sleep(uint32_t ms);
 
 #endif
