@@ -21,7 +21,6 @@ void com_puts(const char *data)
 
 static char hex_to_char(uint8_t n)
 {
-    // General protection fault?
     return n + ((n < 10) ? '0' : 'A' - 10);
 }
 
