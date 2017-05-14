@@ -1,4 +1,5 @@
 #include "core.h"
+#include "kbd.h"
 #include "dt.h"
 #include "com.h"
 #include "timer.h"
@@ -7,8 +8,9 @@
 void kernel_main(void)
 {
     init_dt();
-    init_tty();
     init_timer();
+    init_tty();
+    init_kbd();
 
     tty_puts("Hello, world!\n");
 
@@ -18,7 +20,6 @@ void kernel_main(void)
     asm volatile ("int $0x1");
 
     while (1) {
-        tty_puts("!");
         timer_sleep(1000);
     }
 }

@@ -16,7 +16,7 @@ void irq_handler(struct regs r)
 {
     if (interrupt_handlers[r.int_no] != 0) {
         isr_handler_t handler = interrupt_handlers[r.int_no];
-        handler(r);
+        handler(&r);
     }
 
     if (r.int_no >= 40) {

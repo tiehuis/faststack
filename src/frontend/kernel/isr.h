@@ -16,7 +16,7 @@ struct regs {
     uint32_t eip, cs, eflags, useresp, ss;
 };
 
-typedef void (*isr_handler_t)(struct regs r);
+typedef void (*isr_handler_t)(struct regs *r);
 void register_interrupt_handler(uint8_t n, isr_handler_t handler);
 
 #endif
