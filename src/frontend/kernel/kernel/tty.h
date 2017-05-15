@@ -40,6 +40,7 @@ vga_entry(char uc, uint8_t color)
 
 void init_tty(void);
 void tty_move_cursor(size_t x, size_t y);
+void tty_get_cursor(size_t *x, size_t *y);
 void tty_putc_at(char c, uint8_t color, size_t x, size_t y);
 void tty_putc(char c);
 void tty_write(const char *data, size_t size);

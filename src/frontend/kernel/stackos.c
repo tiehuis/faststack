@@ -6,24 +6,28 @@
 
 #include <faststack.h>
 
+// Offset before the start of the field (hold space).
+const int field_x_offset = 2 * 6;
+
 // Main tetris engine.
 FSEngine engine;
 
 // Control options for the tetris engine.
 FSControl control;
 
+// TODO: Make arrow keys work.
 int vk_keymap[FST_VK_COUNT] = {
-    KEY_SPACE,          // FST_VK_UP
-    KEY_ARROW_DOWN,     // FST_VK_DOWN
-    KEY_ARROW_LEFT,     // FST_VK_LEFT
-    KEY_ARROW_RIGHT,    // FST_VK_RIGHT
+    KEY_K,              // FST_VK_UP
+    KEY_J,              // FST_VK_DOWN
+    KEY_H,              // FST_VK_LEFT
+    KEY_L,              // FST_VK_RIGHT
     KEY_Z,              // FST_VK_ROTL
     KEY_X,              // FST_VK_ROTR
     KEY_A,              // FST_VK_ROTH
     KEY_C,              // FST_VK_HOLD
-    KEY_P, // Make enter!          // FST_VK_START
+    KEY_V, // Make enter!          // FST_VK_START
     KEY_RSHIFT,         // FST_VK_RESTART
-    KEY_Q               // FST_VK_QUIT
+    0                   // FST_VK_QUIT
 };
 
 uint32_t read_keys(void)
@@ -41,13 +45,14 @@ uint32_t read_keys(void)
     return keys;
 }
 
-// TODO: Buffer draws and don't always redraw.
-void draw(void)
+static void draw_field(void)
 {
-    tty_clear();
-
-    // Draw field.
     for (int y = engine.fieldHidden; y < engine.fieldHeight; ++y) {
+        for (int i = 0; i < field_x_offset - 1; ++i) {
+            tty_putc(' ');
+        }
+        tty_putc('|');
+
         for (int x = 0; x < engine.fieldWidth; ++x) {
             if (engine.b[y][x]) {
                 tty_puts("##");
@@ -57,10 +62,41 @@ void draw(void)
             }
         }
 
+        tty_putc('|');
         tty_putc('\n');
     }
 
+    // Bottom border
+    for (int i = 0; i < field_x_offset - 1; ++i) {
+        tty_putc(' ');
+    }
+    tty_putc('-');
+    for (int x = 0; x < engine.fieldWidth; ++x) {
+        tty_puts("--");
+    }
+    tty_putc('-');
+    tty_putc('\n');
+}
+
+static void draw_block(void)
+{
     i8x2 blocks[4];
+
+    // Draw block ghost
+    fsGetBlocks(&engine, blocks, engine.piece, engine.x,
+                engine.hardDropY - engine.fieldHidden, engine.theta);
+    for (int i = 0; i < FS_NBP; ++i) {
+        if (blocks[i].y < 0) {
+            continue;
+        }
+
+        const int tty_color = vga_entry_color(VGA_COLOR_BLUE, VGA_COLOR_BLACK);
+        const int x_offset = 2 * blocks[i].x + field_x_offset;
+        tty_putc_at('@', tty_color, x_offset, blocks[i].y);
+        tty_putc_at('@', tty_color, x_offset + 1, blocks[i].y);
+    }
+
+    // Draw block
     fsGetBlocks(&engine, blocks, engine.piece, engine.x,
                 engine.y - engine.fieldHidden, engine.theta);
     for (int i = 0; i < FS_NBP; ++i) {
@@ -69,9 +105,68 @@ void draw(void)
         }
 
         const int tty_color = vga_entry_color(VGA_COLOR_BLUE, VGA_COLOR_BLACK);
-        tty_putc_at('@', tty_color, 2 * blocks[i].x    , blocks[i].y);
-        tty_putc_at('@', tty_color, 2 * blocks[i].x + 1, blocks[i].y);
+        const int x_offset = 2 * blocks[i].x + field_x_offset;
+        tty_putc_at('@', tty_color, x_offset, blocks[i].y);
+        tty_putc_at('@', tty_color, x_offset + 1, blocks[i].y);
     }
+}
+
+static void draw_hold(void)
+{
+    i8x2 blocks[4];
+
+    if (engine.holdPiece != FS_NONE) {
+        fsGetBlocks(&engine, blocks, engine.holdPiece, 0, 0, 0);
+        for (int i = 0; i < FS_NBP; ++i) {
+            const int tty_color = vga_entry_color(VGA_COLOR_BLUE, VGA_COLOR_BLACK);
+            const int x_offset = 2 + (engine.holdPiece == FS_I ||
+                                        engine.holdPiece == FS_O ? 0 : 1);
+            tty_putc_at('#', tty_color, x_offset + 2 * blocks[i].x, blocks[i].y);
+            tty_putc_at('#', tty_color, x_offset + 2 * blocks[i].x + 1, blocks[i].y);
+        }
+    }
+}
+
+static void draw_preview(void)
+{
+    i8x2 blocks[4];
+
+    const int preview_count = engine.nextPieceCount > FS_MAX_PREVIEW_COUNT ?
+                                FS_MAX_PREVIEW_COUNT : engine.nextPieceCount;
+    for (int i = 0; i < preview_count; ++i) {
+        fsGetBlocks(&engine, blocks, engine.nextPiece[i], 0, 0, 0);
+        const int tty_color = vga_entry_color(VGA_COLOR_BLUE, VGA_COLOR_BLACK);
+        const int x_offset = (engine.holdPiece == FS_I ||
+                                engine.holdPiece == FS_O ? 0 : 1);
+        for (int j = 0; j < FS_NBP; ++j) {
+            const int x_ot = 2 * blocks[j].x + x_offset + field_x_offset + 2 * 11;
+            const int y_ot = blocks[j].y + (4 * i);
+
+            tty_putc_at('#', tty_color, x_ot, y_ot);
+            tty_putc_at('#', tty_color, x_ot + 1, y_ot);
+        }
+    }
+}
+
+static void draw_target(void)
+{
+    const int remaining = engine.goal - engine.linesCleared > 0 ?
+                            engine.goal - engine.linesCleared : 0;
+    tty_move_cursor(field_x_offset + (2 * 10) / 2 - 1, engine.fieldHeight);
+    tty_putc(remaining / 10 % 10 + '0');
+    tty_putc(remaining % 10 + '0');
+}
+
+// TODO: Buffer draws and don't always redraw.
+void draw(void)
+{
+    tty_clear();
+
+    draw_field();
+    draw_block();
+    draw_hold();
+    draw_preview();
+    draw_target();
 }
 
 void update(void)
@@ -81,11 +176,6 @@ void update(void)
 
     fsVirtualKeysToInput(&input, keystate, &engine, &control);
     fsGameTick(&engine, &input);
-
-    static int i = 0;
-    com_puts("update!: ");
-    com_put_hex(i++);
-    com_puts("\n");
 }
 
 static void init_kernel(void)
@@ -101,7 +191,16 @@ void kernel_main(void)
     init_kernel();
     fsGameInit(&engine);
 
+    // TODO: Restart does not refresh screen as we would like.
     while (1) {
+        // Disallow quiting since we are the OS!
+        if (engine.state == FSS_RESTART || engine.state == FSS_QUIT) {
+            fsGameInit(&engine);
+        }
+        else if (engine.state == FSS_GAMEOVER) {
+            hlt();  // Power-save until next input
+        }
+
         update();
         draw();
         timer_sleep(16);

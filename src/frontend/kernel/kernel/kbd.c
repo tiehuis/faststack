@@ -21,15 +21,15 @@ static const unsigned char keymap_us[128] = {
     0,                                  // Num-Lock
     0,                                  // Scroll-Lock
     0,                                  // Home Key
-    0,                                  // Up Arrow
+    KEY_ARROW_UP,                       // Up Arrow
     0,                                  // Page Up
     0, /* -? */
-    0,                                  // Left Arrow
+    KEY_ARROW_LEFT,                     // Left Arrow
     0,
-    0,                                  // Right Arrow
+    KEY_ARROW_RIGHT,                    // Right Arrow
     '+',
     0,                                  // End Key
-    0,                                  // Down Array
+    KEY_ARROW_DOWN,                     // Down Array
     0,                                  // Page Down
     0,                                  // Insert
     0,                                  // Delete

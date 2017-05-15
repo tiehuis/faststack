@@ -25,6 +25,12 @@ void tty_move_cursor(size_t x, size_t y)
     tty_set_hw_cursor();
 }
 
+void tty_get_cursor(size_t *x, size_t *y)
+{
+    *x = tty.cursor_x;
+    *y = tty.cursor_y;
+}
+
 void tty_putc_at(char c, uint8_t color, size_t x, size_t y)
 {
     const size_t index = y * VGA_WIDTH + x;
