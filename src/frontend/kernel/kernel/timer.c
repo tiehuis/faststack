@@ -24,6 +24,11 @@ void init_timer(void)
     outb(0x40, divisor >> 8);
 }
 
+uint32_t timer_ticks(void)
+{
+    return ticks;
+}
+
 // Enter the processors low-power mode waking up after the specified time has
 // elapsed.
 void timer_sleep(uint32_t ms)

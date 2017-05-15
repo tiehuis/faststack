@@ -8,14 +8,21 @@ struct {
     uint8_t color;
 } tty;
 
-// Set the hardware cursor.
-static void tty_set_cursor(void)
+// Sets the hardware cursor only!
+static void tty_set_hw_cursor(void)
 {
     uint16_t cursor = tty.cursor_y * VGA_WIDTH + tty.cursor_x;
     outb(0x3D4, 14);
     outb(0x3D5, cursor >> 8);
     outb(0x3D4, 15);
     outb(0x3D5, cursor & 0xFF);
+}
+
+void tty_move_cursor(size_t x, size_t y)
+{
+    tty.cursor_x = x > VGA_WIDTH ? VGA_WIDTH - 1 : x;
+    tty.cursor_y = y > VGA_HEIGHT ? VGA_HEIGHT - 1 : y;
+    tty_set_hw_cursor();
 }
 
 void tty_putc_at(char c, uint8_t color, size_t x, size_t y)
@@ -54,7 +61,7 @@ void tty_putc(char c)
         tty.cursor_y = 0;
     }
 
-    tty_set_cursor();
+    tty_set_hw_cursor();
 }
 
 void tty_write(const char *data, size_t size)
@@ -82,14 +89,12 @@ void tty_clear(void)
         }
     }
 
-    tty.cursor_x = 0;
-    tty.cursor_y = 0;
-    tty_set_cursor();
+    tty_move_cursor(0, 0);
 }
 
 void init_tty(void)
 {
     tty.color = vga_entry_color(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK);
-    tty.buffer = (uint16_t*) 0xB8000;
+    tty.buffer = (uint16_t*) VGA_MEMORY_ADDRESS;
     tty_clear();
 }

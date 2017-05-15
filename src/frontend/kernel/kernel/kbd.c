@@ -3,6 +3,7 @@
 #include "tty.h"
 #include "kbd.h"
 
+__attribute__((unused))
 static const unsigned char keymap_us[128] = {
     // Read from top-left to bottom-right across rows (mostly).
     0, 27, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', '\b',
@@ -22,7 +23,7 @@ static const unsigned char keymap_us[128] = {
     0,                                  // Home Key
     0,                                  // Up Arrow
     0,                                  // Page Up
-    '-',
+    0, /* -? */
     0,                                  // Left Arrow
     0,
     0,                                  // Right Arrow
@@ -38,6 +39,9 @@ static const unsigned char keymap_us[128] = {
     0
 };
 
+// By default we assume characters are down.
+static uint8_t keymap_state[128] = { 0 };
+
 // TODO: Don't print put keep track of an internal keyboard buffer.
 static void kbd_callback(struct regs *r)
 {
@@ -45,13 +49,15 @@ static void kbd_callback(struct regs *r)
 
     // Guaranteed to have data since if tied to IRQ1.
     uint8_t scancode = inb(0x60);
+    const int index = scancode & ~0x80;
+    keymap_state[index] = !(scancode & 0x80);
+}
 
-    if (scancode & 0x80) {
-        // Key released.
-    }
-    else {
-        // Key pressed. Key may already be done due to auto-repeat.
-        tty_putc(keymap_us[scancode]);
+// The size of this array must be at least 128.
+void kbd_state(uint8_t *state)
+{
+    for (int i = 0; i < 128; ++i) {
+        state[i] = keymap_state[i];
     }
 }
 
