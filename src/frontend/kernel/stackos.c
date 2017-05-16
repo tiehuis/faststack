@@ -49,38 +49,39 @@ static void draw_field(void)
 {
     for (int y = engine.fieldHidden; y < engine.fieldHeight; ++y) {
         for (int i = 0; i < field_x_offset - 1; ++i) {
-            tty_putc(' ');
+            ttyb_putc(' ');
         }
-        tty_putc('|');
+        ttyb_putc('|');
 
         for (int x = 0; x < engine.fieldWidth; ++x) {
             if (engine.b[y][x]) {
-                tty_puts("##");
+                ttyb_puts("##");
             }
             else {
-                tty_puts("  ");
+                ttyb_puts("  ");
             }
         }
 
-        tty_putc('|');
-        tty_putc('\n');
+        ttyb_puts("|\n");
     }
 
     // Bottom border
     for (int i = 0; i < field_x_offset - 1; ++i) {
-        tty_putc(' ');
+        ttyb_putc(' ');
     }
-    tty_putc('-');
+    ttyb_putc('-');
     for (int x = 0; x < engine.fieldWidth; ++x) {
-        tty_puts("--");
+        ttyb_puts("--");
     }
-    tty_putc('-');
-    tty_putc('\n');
+    ttyb_puts("-\n");
 }
 
 static void draw_block(void)
 {
     i8x2 blocks[4];
+
+    const int tty_color = vga_entry_color(VGA_COLOR_BLUE, VGA_COLOR_BLACK);
+    tty_set_color(tty_color);
 
     // Draw block ghost
     fsGetBlocks(&engine, blocks, engine.piece, engine.x,
@@ -90,10 +91,9 @@ static void draw_block(void)
             continue;
         }
 
-        const int tty_color = vga_entry_color(VGA_COLOR_BLUE, VGA_COLOR_BLACK);
         const int x_offset = 2 * blocks[i].x + field_x_offset;
-        tty_putc_at('@', tty_color, x_offset, blocks[i].y);
-        tty_putc_at('@', tty_color, x_offset + 1, blocks[i].y);
+        ttyb_putc_at('@', x_offset, blocks[i].y);
+        ttyb_putc_at('@', x_offset + 1, blocks[i].y);
     }
 
     // Draw block
@@ -104,69 +104,76 @@ static void draw_block(void)
             continue;
         }
 
-        const int tty_color = vga_entry_color(VGA_COLOR_BLUE, VGA_COLOR_BLACK);
         const int x_offset = 2 * blocks[i].x + field_x_offset;
-        tty_putc_at('@', tty_color, x_offset, blocks[i].y);
-        tty_putc_at('@', tty_color, x_offset + 1, blocks[i].y);
+        ttyb_putc_at('@', x_offset, blocks[i].y);
+        ttyb_putc_at('@', x_offset + 1, blocks[i].y);
     }
+
+    tty_reset_color();
 }
 
 static void draw_hold(void)
 {
     i8x2 blocks[4];
 
+    const int tty_color = vga_entry_color(VGA_COLOR_BLUE, VGA_COLOR_BLACK);
+    tty_set_color(tty_color);
+
     if (engine.holdPiece != FS_NONE) {
         fsGetBlocks(&engine, blocks, engine.holdPiece, 0, 0, 0);
         for (int i = 0; i < FS_NBP; ++i) {
-            const int tty_color = vga_entry_color(VGA_COLOR_BLUE, VGA_COLOR_BLACK);
             const int x_offset = 2 + (engine.holdPiece == FS_I ||
                                         engine.holdPiece == FS_O ? 0 : 1);
-            tty_putc_at('#', tty_color, x_offset + 2 * blocks[i].x, blocks[i].y);
-            tty_putc_at('#', tty_color, x_offset + 2 * blocks[i].x + 1, blocks[i].y);
+            ttyb_putc_at('#', x_offset + 2 * blocks[i].x, blocks[i].y);
+            ttyb_putc_at('#', x_offset + 2 * blocks[i].x + 1, blocks[i].y);
         }
     }
+
+    tty_reset_color();
 }
 
 static void draw_preview(void)
 {
     i8x2 blocks[4];
 
+    const int tty_color = vga_entry_color(VGA_COLOR_BLUE, VGA_COLOR_BLACK);
+    tty_set_color(tty_color);
+
     const int preview_count = engine.nextPieceCount > FS_MAX_PREVIEW_COUNT ?
                                 FS_MAX_PREVIEW_COUNT : engine.nextPieceCount;
     for (int i = 0; i < preview_count; ++i) {
         fsGetBlocks(&engine, blocks, engine.nextPiece[i], 0, 0, 0);
-        const int tty_color = vga_entry_color(VGA_COLOR_BLUE, VGA_COLOR_BLACK);
         const int x_offset = (engine.holdPiece == FS_I ||
                                 engine.holdPiece == FS_O ? 0 : 1);
         for (int j = 0; j < FS_NBP; ++j) {
             const int x_ot = 2 * blocks[j].x + x_offset + field_x_offset + 2 * 11;
             const int y_ot = blocks[j].y + (4 * i);
-
-            tty_putc_at('#', tty_color, x_ot, y_ot);
-            tty_putc_at('#', tty_color, x_ot + 1, y_ot);
+            ttyb_putc_at('#', x_ot, y_ot);
+            ttyb_putc_at('#', x_ot + 1, y_ot);
         }
     }
+
+    tty_reset_color();
 }
 
 static void draw_target(void)
 {
     const int remaining = engine.goal - engine.linesCleared > 0 ?
                             engine.goal - engine.linesCleared : 0;
-    tty_move_cursor(field_x_offset + (2 * 10) / 2 - 1, engine.fieldHeight);
-    tty_putc(remaining / 10 % 10 + '0');
-    tty_putc(remaining % 10 + '0');
+    tty_set_cursor(field_x_offset + (2 * 10) / 2 - 1, engine.fieldHeight);
+    ttyb_putc(remaining / 10 % 10 + '0');
+    ttyb_putc(remaining % 10 + '0');
 }
 
-// TODO: Buffer draws and don't always redraw.
 void draw(void)
 {
-    tty_clear();
-
+    tty_clear_backbuffer();
     draw_field();
     draw_block();
     draw_hold();
     draw_preview();
     draw_target();
+    tty_flip();
 }
 
 void update(void)
@@ -189,6 +196,8 @@ static void init_kernel(void)
 void kernel_main(void)
 {
     init_kernel();
+
+    tty_clear();
     fsGameInit(&engine);
 
     // TODO: Restart does not refresh screen as we would like.
