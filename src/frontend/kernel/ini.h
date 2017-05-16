@@ -1,0 +1,6 @@
+#define FSD_FIELD_WIDTH 10
+#define FSD_FIELD_HEIGHT 22
+#define FSD_FIELD_HIDDEN 2
+#define FSD_NEXT_PIECE_COUNT 5
+#define FSD_GOAL 40
+

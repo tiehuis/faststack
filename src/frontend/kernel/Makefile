@@ -27,8 +27,8 @@ build/%.o: kernel/%.s | mkdirs
 build/frontend/%.o: %.c | mkdirs
 	i686-elf-gcc -std=gnu99 $(CFLAGS) -c $< -o $@
 
-build/%.o: ../../engine/%.c | mkdirs
-	i686-elf-gcc $(DEFINES) -nostdlib $(CFLAGS) -c -o $@ $<
+build/%.o: ../../engine/%.c ini.h | mkdirs
+	i686-elf-gcc -imacros ini.h $(DEFINES) -nostdlib $(CFLAGS) -c -o $@ $<
 
 run: stackos.bin
 	qemu-system-i386 -serial file:stackos.log -kernel stackos.bin
