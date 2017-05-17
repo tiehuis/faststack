@@ -42,3 +42,18 @@ void timer_sleep(uint32_t ms)
         hlt();
     }
 }
+
+uint32_t timer_seed(void)
+{
+    uint32_t seed = 0xF789B102;
+
+    outb(0x70, 0x00);   // second
+    seed ^= inb(0x71);
+    outb(0x70, 0x02);   // minute
+    seed ^= inb(0x71);
+    outb(0x70, 0x04);   // hour
+    seed ^= inb(0x71);
+
+    // High frequency rtdsc for sub-second entropy.
+    return seed ^ rdtsc() ^ timer_ticks();
+}
