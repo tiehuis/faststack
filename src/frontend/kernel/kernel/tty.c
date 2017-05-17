@@ -11,10 +11,10 @@ struct {
 uint16_t front_buffer[VGA_WIDTH][VGA_HEIGHT];
 uint16_t back_buffer[VGA_WIDTH][VGA_HEIGHT];
 
-// Sets the hardware cursor only!
-static void tty_set_hw_cursor(void)
+static void tty_hide_hw_cursor(void)
 {
-    uint16_t cursor = tty.cursor_y * VGA_WIDTH + tty.cursor_x;
+    // Hide cursor by placing outside of screen view.
+    uint16_t cursor = 100 * VGA_WIDTH + 100;
     outb(0x3D4, 14);
     outb(0x3D5, cursor >> 8);
     outb(0x3D4, 15);
@@ -25,7 +25,6 @@ void tty_set_cursor(size_t x, size_t y)
 {
     tty.cursor_x = x > VGA_WIDTH ? VGA_WIDTH - 1 : x;
     tty.cursor_y = y > VGA_HEIGHT ? VGA_HEIGHT - 1 : y;
-    tty_set_hw_cursor();
 }
 
 void tty_get_cursor(size_t *x, size_t *y)
@@ -86,8 +85,6 @@ static void _tty_putc(void (*putc)(char, size_t, size_t), char c)
     if (tty.cursor_y >= VGA_HEIGHT) {
         tty.cursor_y = 0;
     }
-
-    tty_set_hw_cursor();
 }
 
 void tty_putc(char c)
@@ -165,6 +162,7 @@ void tty_flip(void)
 void init_tty(void)
 {
     tty.buffer = (uint16_t*) VGA_MEMORY_ADDRESS;
+    tty_hide_hw_cursor();
     tty_reset_color();
     tty_clear();
 }
