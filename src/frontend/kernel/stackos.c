@@ -15,7 +15,6 @@ FSEngine engine;
 // Control options for the tetris engine.
 FSControl control;
 
-// TODO: Make arrow keys work.
 int vk_keymap[FST_VK_COUNT] = {
     KEY_SPACE,          // FST_VK_UP
     KEY_ARROW_DOWN,     // FST_VK_DOWN
@@ -165,6 +164,27 @@ static void draw_target(void)
     ttyb_putc(remaining % 10 + '0');
 }
 
+static void draw_status_text(void)
+{
+    const int x = field_x_offset + 9;
+    const int y = 10;
+
+    switch (engine.state) {
+        case FSS_READY:
+            tty_set_cursor(x - 2, y);
+            ttyb_puts("READY");
+            break;
+        case FSS_GO:
+            tty_set_cursor(x, y);
+            ttyb_puts("GO");
+            break;
+        case FSS_GAMEOVER:
+            tty_set_cursor(x - 3, y);
+            ttyb_puts("GAMEOVER");
+            break;
+    }
+}
+
 void draw(void)
 {
     tty_clear_backbuffer();
@@ -173,6 +193,7 @@ void draw(void)
     draw_hold();
     draw_preview();
     draw_target();
+    draw_status_text();
     tty_flip();
 }
 
