@@ -17,15 +17,15 @@ FSControl control;
 
 // TODO: Make arrow keys work.
 int vk_keymap[FST_VK_COUNT] = {
-    KEY_K,              // FST_VK_UP
-    KEY_J,              // FST_VK_DOWN
-    KEY_H,              // FST_VK_LEFT
-    KEY_L,              // FST_VK_RIGHT
+    KEY_SPACE,          // FST_VK_UP
+    KEY_ARROW_DOWN,     // FST_VK_DOWN
+    KEY_ARROW_LEFT,     // FST_VK_LEFT
+    KEY_ARROW_RIGHT,    // FST_VK_RIGHT
     KEY_Z,              // FST_VK_ROTL
     KEY_X,              // FST_VK_ROTR
     KEY_A,              // FST_VK_ROTH
     KEY_C,              // FST_VK_HOLD
-    KEY_V, // Make enter!          // FST_VK_START
+    KEY_ENTER,          // FST_VK_START
     KEY_RSHIFT,         // FST_VK_RESTART
     0                   // FST_VK_QUIT
 };
