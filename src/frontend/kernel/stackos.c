@@ -30,13 +30,13 @@ const int vk_keymap[FST_VK_COUNT] = {
 };
 
 const int colormap[FS_NPT] = {
-	VGA_COLOR_BLUE,
-	VGA_COLOR_GREEN,
-	VGA_COLOR_CYAN,
-	VGA_COLOR_RED,
-	VGA_COLOR_MAGENTA,
-	VGA_COLOR_BROWN,
-	VGA_COLOR_LIGHT_GREY
+    VGA_COLOR_BLUE,
+    VGA_COLOR_GREEN,
+    VGA_COLOR_CYAN,
+    VGA_COLOR_RED,
+    VGA_COLOR_MAGENTA,
+    VGA_COLOR_BROWN,
+    VGA_COLOR_LIGHT_GREY
 };
 
 const int COLOR_DIM = 8;
@@ -173,7 +173,7 @@ static void draw_preview(void)
         const int x_offset = (engine.holdPiece == FS_I ||
                                 engine.holdPiece == FS_O ? 0 : 1);
         for (int j = 0; j < FS_NBP; ++j) {
-            const int x_ot = 2 * blocks[j].x + x_offset + field_x_offset + 2 * 11;
+            const int x_ot = 2 * blocks[j].x + x_offset + field_x_offset + 22;
             const int y_ot = blocks[j].y + (4 * i);
             ttyb_putc_at(' ', x_ot, y_ot);
             ttyb_putc_at(' ', x_ot + 1, y_ot);
@@ -183,13 +183,58 @@ static void draw_preview(void)
     tty_reset_color();
 }
 
+static void draw_statistics(void)
+{
+    int y = 1;
+    const int x = field_x_offset + 36;
+
+    const int tty_color = vga_entry_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK);
+    tty_set_color(tty_color);
+
+    const float s_elapsed = (float) engine.msPerTick * engine.totalTicks / 1000;
+    tty_set_cursor(x, y++);
+    ttyb_printf("TIME");
+    tty_set_cursor(x, y++);
+    ttyb_printf("%f", s_elapsed);
+    y++;
+
+    tty_set_cursor(x, y++);
+    ttyb_printf("BLOCKS");
+    tty_set_cursor(x, y++);
+    ttyb_printf("%d", engine.blocksPlaced);
+    y++;
+
+    const float tps = s_elapsed ? engine.blocksPlaced / s_elapsed : 0;
+    tty_set_cursor(x, y++);
+    ttyb_printf("TPS");
+    tty_set_cursor(x, y++);
+    ttyb_printf("%f", tps);
+    y++;
+
+    const float kpt = engine.blocksPlaced
+                        ? (float) engine.totalKeysPressed / engine.blocksPlaced
+                        : 0;
+    tty_set_cursor(x, y++);
+    ttyb_printf("KPT");
+    tty_set_cursor(x, y++);
+    ttyb_printf("%f", kpt);
+    y++;
+
+    tty_set_cursor(x, y++);
+    ttyb_printf("FAULTS");
+    tty_set_cursor(x, y++);
+    ttyb_printf("%d", engine.finesse);
+    y++;
+
+    tty_reset_color();
+}
+
 static void draw_target(void)
 {
     const int remaining = engine.goal - engine.linesCleared > 0 ?
                             engine.goal - engine.linesCleared : 0;
-    tty_set_cursor(field_x_offset + (2 * 10) / 2 - 1, engine.fieldHeight);
-    ttyb_putc(remaining / 10 % 10 + '0');
-    ttyb_putc(remaining % 10 + '0');
+    tty_set_cursor(field_x_offset + 9, engine.fieldHeight);
+    ttyb_printf("%d", remaining);
 }
 
 static void draw_status_text(void)
@@ -225,6 +270,7 @@ void draw(void)
     draw_hold();
     draw_preview();
     draw_target();
+    draw_statistics();
     draw_status_text();
     tty_flip();
 }
@@ -265,7 +311,9 @@ void kernel_main(void)
             restart_game();
         }
         else if (engine.state == FSS_GAMEOVER) {
-            hlt();  // Power-save until next input
+            // TODO: Stop correctly and don't update (timer interrupt will wake
+            // us up here and continue counter).
+            hlt();
         }
 
         update();

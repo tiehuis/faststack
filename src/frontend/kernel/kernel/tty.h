@@ -49,6 +49,8 @@ void tty_putc(char c);
 void ttyb_putc(char c);
 void tty_puts(const char *data);
 void ttyb_puts(const char *data);
+int tty_printf(const char *fmt, ...);
+int ttyb_printf(const char *fmt, ...);
 void tty_flip(void);
 void tty_clear_backbuffer(void);
 void tty_clear(void);

@@ -1,5 +1,6 @@
 #include "core.h"
 #include "tty.h"
+#include "vprintf.h"
 
 struct {
     uint16_t cursor_x;
@@ -157,6 +158,24 @@ void tty_flip(void)
             }
         }
     }
+}
+
+int tty_printf(const char *fmt, ...)
+{
+    va_list args;
+    va_start(args, fmt);
+    const int r = vprintf(tty_putc, fmt, args);
+    va_end(args);
+    return r;
+}
+
+int ttyb_printf(const char *fmt, ...)
+{
+    va_list args;
+    va_start(args, fmt);
+    const int r = vprintf(ttyb_putc, fmt, args);
+    va_end(args);
+    return r;
 }
 
 void init_tty(void)

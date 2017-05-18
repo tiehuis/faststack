@@ -12,6 +12,6 @@ enum com_port {
 
 void com_putc(char c);
 void com_puts(const char *data);
-void com_put_hex(uint32_t n);
+int com_printf(const char *fmt, ...);
 
 #endif

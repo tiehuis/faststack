@@ -1,4 +1,5 @@
 #include "com.h"
+#include "vprintf.h"
 
 int active_com_port = COM1_PORT;
 
@@ -19,22 +20,11 @@ void com_puts(const char *data)
     }
 }
 
-static char hex_to_char(uint8_t n)
+int com_printf(const char *fmt, ...)
 {
-    return n + ((n < 10) ? '0' : 'A' - 10);
-}
-
-void com_put_hex(uint32_t n)
-{
-    com_putc('0');
-    com_putc('x');
-
-    for (uint8_t i = 0; i < sizeof(n); ++i) {
-        const uint8_t c = (n >> (8 * ((sizeof(n) - 1) - i)));
-        const uint8_t c1 = (c >> 4) & 0xF;
-        const uint8_t c2 = c & 0xF;
-
-        com_putc(hex_to_char(c1));
-        com_putc(hex_to_char(c2));
-    }
+    va_list args;
+    va_start(args, fmt);
+    const int r = vprintf(com_putc, fmt, args);
+    va_end(args);
+    return r;
 }

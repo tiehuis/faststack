@@ -5,11 +5,7 @@ isr_handler_t interrupt_handlers[256] = { 0 };
 
 void isr_handler(struct regs r)
 {
-    com_puts("INT!: no=");
-    com_put_hex(r.int_no);
-    com_puts(", err=");
-    com_put_hex(r.err_code);
-    com_puts("\n");
+    com_printf("INT: no=%d, err=%d\n", r.int_no, r.err_code);
 }
 
 void irq_handler(struct regs r)
