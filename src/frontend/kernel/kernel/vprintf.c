@@ -1,6 +1,19 @@
 #include "core.h"
 #include "tty.h"
 
+static int ilen(int n, int base)
+{
+    if (n == 0) {
+        return 1;
+    }
+
+    int r = 0;
+    while (n /= base) {
+        r += 1;
+    }
+    return r;
+}
+
 static void print_int(void (*putc)(char), int n, int base)
 {
     int d = 1;
@@ -32,8 +45,10 @@ static void print_double(void (*putc)(char), double n, int precision)
         mult *= 10;
     }
 
-    // TODO: Doesn't handle fractional part correctly.
-    const int fract = ((n - (double) floor) * mult);
+    const int fract = mult * (n - floor);
+    for (int i = ilen(fract, 10); i < precision - (n ? 1 : 0); ++i) {
+        putc('0');
+    }
     print_int(putc, fract, 10);
 }
 
@@ -72,7 +87,7 @@ int vprintf(void (*putc)(char), const char *fmt, va_list args)
                 }
                 case 'f':
                 {
-                    const int c = va_arg(args, double);
+                    const double c = va_arg(args, double);
                     print_double(putc, c, 3);
                     break;
                 }
