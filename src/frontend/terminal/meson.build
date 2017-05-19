@@ -5,7 +5,7 @@ if not compiler.has_header('linux/input.h')
    error('missing linux/input.h header!')
 endif
 
-terminal_src = files(['frontend.c', 'glyph.c'])
+terminal_src = files(['main.c', 'frontend.c', 'glyph.c'])
 terminal_deps = []
 terminal_defines = ['-DFS_USE_TERMINAL']
 terminal_inc = []

@@ -1,4 +1,4 @@
-option('frontend', type : 'string', value : 'terminal')
+option('frontend', type : 'combo', choices : ['terminal', 'sdl'], value : 'terminal')
 option('disable-log', type : 'boolean', value : false)
 option('disable-option', type : 'boolean', value : false)
 option('disable-hiscore', type : 'boolean', value : false)

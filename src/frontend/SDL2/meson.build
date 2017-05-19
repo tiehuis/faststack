@@ -1,4 +1,4 @@
-sdl_src = files(['frontend.c', 'deps/SDL_FontCache/SDL_FontCache.c'])
+sdl_src = files(['main.c', 'frontend.c', 'deps/SDL_FontCache/SDL_FontCache.c'])
 sdl_deps = [
     dependency('sdl2', required : true),
     dependency('SDL2_ttf', required : true)

@@ -9,7 +9,7 @@ add_project_arguments(['-Wall', '-Wextra', '-std=c99', '-pedantic'],
 
 subdir('src/engine')
 
-src = ['src/main.c']
+src = []
 inc = [engine_inc]
 deps = []
 defines = []

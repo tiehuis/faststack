@@ -6,10 +6,10 @@
 // functions.
 ///
 
-#include "faststack.h"
-#include "frontend.h"
-
 #include <stdlib.h>
+#include <faststack.h>
+#include "frontend.h"
+#include "interface.h"
 
 static void fsLoadDefaultKeys(FSFrontend *v)
 {

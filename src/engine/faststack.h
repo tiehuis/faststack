@@ -17,7 +17,6 @@
 #include "core.h"
 #include "default.h"
 #include "engine.h"
-#include "interface.h"
 #include "internal.h"
 #include "rand.h"
 #include "rotation.h"

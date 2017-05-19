@@ -17,13 +17,18 @@
 #include "log.h"
 #include "rotation.h"
 #include "rand.h"
-#include "interface.h"
 #include "view.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+
+// TODO: Expose in a slightly better way to the frontend. Perhaps just require
+// a registration call for the following and otherwise default to NULL.
+extern const char *fsiFrontendName;
+void fsiUnpackFrontendOption(FSFrontend *v, const char *key, const char *value);
+void fsiAddToKeymap(FSFrontend *v, const int vkey, const char *key, bool isDefault);
 
 // Maximum values for input when parsing ini options
 #define MAX_LINE_LENGTH 512
