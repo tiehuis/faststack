@@ -292,28 +292,25 @@ static void init_kernel(void)
     init_kbd();
 }
 
-static void restart_game(void)
-{
-    engine.seed = timer_seed();
-    fsGameInit(&engine);
-}
-
 void kernel_main(void)
 {
     init_kernel();
 
+restart:
     tty_clear();
-    restart_game();
+    engine.seed = timer_seed();
+    fsGameInit(&engine);
 
     while (1) {
-        // Disallow quiting since we are the OS!
-        if (engine.state == FSS_RESTART || engine.state == FSS_QUIT) {
-            restart_game();
-        }
-        else if (engine.state == FSS_GAMEOVER) {
-            // TODO: Stop correctly and don't update (timer interrupt will wake
-            // us up here and continue counter).
-            hlt();
+        // Wait until restart/quit event then restart game.
+        if (engine.state == FSS_RESTART || engine.state == FSS_QUIT ||
+            engine.state == FSS_GAMEOVER)
+        {
+            while (engine.state == FSS_GAMEOVER) {
+                update();
+                hlt();
+            }
+            goto restart;
         }
 
         update();
