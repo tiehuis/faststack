@@ -9,6 +9,9 @@
 // Offset before the start of the field (hold space).
 const int field_x_offset = 2 * 6;
 
+// Offset from top of the screen
+const int field_y_offset = 2;
+
 // Main tetris engine.
 FSEngine engine;
 
@@ -58,6 +61,8 @@ uint32_t read_keys(void)
 
 static void draw_field(void)
 {
+    tty_set_cursor(0, field_y_offset);
+
     for (int y = engine.fieldHidden; y < engine.fieldHeight; ++y) {
         for (int i = 0; i < field_x_offset - 1; ++i) {
             ttyb_putc(' ');
@@ -114,8 +119,9 @@ static void draw_block(void)
         }
 
         const int x_offset = 2 * blocks[i].x + field_x_offset;
-        ttyb_putc_at(' ', x_offset, blocks[i].y);
-        ttyb_putc_at(' ', x_offset + 1, blocks[i].y);
+        const int y_offset = blocks[i].y + field_y_offset;
+        ttyb_putc_at(' ', x_offset, y_offset);
+        ttyb_putc_at(' ', x_offset + 1, y_offset);
     }
 
     tty_color = vga_entry_color(VGA_COLOR_BLACK,
@@ -131,8 +137,9 @@ static void draw_block(void)
         }
 
         const int x_offset = 2 * blocks[i].x + field_x_offset;
-        ttyb_putc_at(' ', x_offset, blocks[i].y);
-        ttyb_putc_at(' ', x_offset + 1, blocks[i].y);
+        const int y_offset = blocks[i].y + field_y_offset;
+        ttyb_putc_at(' ', x_offset, y_offset);
+        ttyb_putc_at(' ', x_offset + 1, y_offset);
     }
 
     tty_reset_color();
@@ -150,8 +157,9 @@ static void draw_hold(void)
         for (int i = 0; i < FS_NBP; ++i) {
             const int x_offset = 2 + (engine.holdPiece == FS_I ||
                                         engine.holdPiece == FS_O ? 0 : 1);
-            ttyb_putc_at(' ', x_offset + 2 * blocks[i].x, blocks[i].y);
-            ttyb_putc_at(' ', x_offset + 2 * blocks[i].x + 1, blocks[i].y);
+            const int y_offset = blocks[i].y + field_y_offset;
+            ttyb_putc_at(' ', x_offset + 2 * blocks[i].x, y_offset);
+            ttyb_putc_at(' ', x_offset + 2 * blocks[i].x + 1, y_offset);
         }
     }
 
@@ -174,7 +182,7 @@ static void draw_preview(void)
                                 engine.holdPiece == FS_O ? 0 : 1);
         for (int j = 0; j < FS_NBP; ++j) {
             const int x_ot = 2 * blocks[j].x + x_offset + field_x_offset + 22;
-            const int y_ot = blocks[j].y + (4 * i);
+            const int y_ot = blocks[j].y + (4 * i) + field_y_offset;
             ttyb_putc_at(' ', x_ot, y_ot);
             ttyb_putc_at(' ', x_ot + 1, y_ot);
         }
@@ -185,7 +193,7 @@ static void draw_preview(void)
 
 static void draw_statistics(void)
 {
-    int y = 1;
+    int y = 1 + field_y_offset;
     const int x = field_x_offset + 36;
 
     const int tty_color = vga_entry_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK);
@@ -233,14 +241,14 @@ static void draw_target(void)
 {
     const int remaining = engine.goal - engine.linesCleared > 0 ?
                             engine.goal - engine.linesCleared : 0;
-    tty_set_cursor(field_x_offset + 9, engine.fieldHeight);
+    tty_set_cursor(field_x_offset + 9, field_y_offset + engine.fieldHeight);
     ttyb_printf("%d", remaining);
 }
 
 static void draw_status_text(void)
 {
     const int x = field_x_offset + 9;
-    const int y = 10;
+    const int y = field_y_offset + 10;
     const int tty_color = vga_entry_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK);
 
     tty_set_color(tty_color);
