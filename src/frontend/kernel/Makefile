@@ -14,9 +14,21 @@ KERNEL_OBJS := $(KERNEL_OBJS) $(addprefix build/,$(notdir $(KERNEL_ASMS:.s=.o)))
 FRONTEND_SRCS := $(wildcard *.c)
 FRONTEND_OBJS := $(addprefix build/frontend/,$(notdir $(FRONTEND_SRCS:.c=.o)))
 
+all: stackos.bin
+
+iso: stackos.iso
+
+run: stackos.bin
+	qemu-system-i386 -serial file:stackos.log -kernel stackos.bin
+
 stackos.bin: linker.ld $(KERNEL_OBJS) $(ENGINE_OBJS) $(FRONTEND_SRCS)
 	i686-elf-gcc -T linker.ld -o stackos.bin $(CFLAGS) $(DEFINES) -nostdlib \
 		$(KERNEL_OBJS) $(ENGINE_OBJS) $(FRONTEND_SRCS) -lgcc
+
+stackos.iso: stackos.bin grub.cfg | mkdirs_iso
+	cp stackos.bin build/iso/boot/stackos.bin
+	cp grub.cfg build/iso/boot/grub/grub.cfg
+	grub-mkrescue -o stackos.iso build/iso
 
 build/%.o: kernel/%.c | mkdirs
 	i686-elf-gcc -std=gnu99 $(CFLAGS) -c $< -o $@
@@ -30,13 +42,13 @@ build/frontend/%.o: %.c | mkdirs
 build/%.o: ../../engine/%.c ini.h | mkdirs
 	i686-elf-gcc -imacros ini.h $(DEFINES) -nostdlib $(CFLAGS) -c -o $@ $<
 
-run: stackos.bin
-	qemu-system-i386 -serial file:stackos.log -kernel stackos.bin
-
 mkdirs:
-	@mkdir -p build build/frontend
+	@mkdir -p build
+
+mkdirs_iso:
+	@mkdir -p build/iso build/iso/boot build/iso/boot/grub
 
 clean:
-	@rm -rf build stackos.log stackos.bin
+	@rm -rf build stackos.log stackos.bin stackos.iso
 
 .PHONY: clean

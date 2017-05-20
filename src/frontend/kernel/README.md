@@ -1,12 +1,35 @@
-This directory contains code for compiling the faststack engine into a raw
-operating system with a minimal kernel.
+# stackos
+
+This is a simple kernel which allows the faststack engine to run atop it. It
+is very similar to the terminal interface.
+
+The kernel implements proper keyboard interrupt handling and timing and should
+conserve as much power as it can.
 
 ## Installation
 
-You will need an i686 cross-compiler such as `i686-elf-gcc` and associated
-binutils. You will also want `qemu` and your distributions extended architecture
-package for i386 support.
+You will need the following programs:
+
+ - `i686-elf-gcc`
+ - `nasm`
+ - `qemu-system-i386`  (for testing)
+ - `xorriso`, `mtools` (for iso building)
 
 ```
+# Build the kernel binary image
+make
+
+# Build the kernel binary image and run using i386 qemu
 make run
+
+# Build the iso from the binary image
+make iso
+```
+
+This can be copied to a bootable usb as always using dd (**Double check your
+drive partition numbers!**).
+
+```
+make iso
+dd if=stackos.iso of=/dev/sdX
 ```
