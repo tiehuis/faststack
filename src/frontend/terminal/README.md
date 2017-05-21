@@ -1,31 +1,38 @@
 faststack-term
 ==============
 
-<a href="https://asciinema.org/a/5odjv7x273oonbmhq51sfbf4l"><img src="https://asciinema.org/a/5odjv7x273oonbmhq51sfbf4l.png" width="600"/></a>
+<p align="center">
+    <img src="https://i.imgur.com/dCFmGih.png">
+</p>
+
+ - Platforms: linux
 
 This is a frontend that strictly utilizes a text-based environment for
 output. It should require the least dependencies of any version.
 
-Platform specific code is likely to be prevalent here, and portability across
-platforms is not guaranteed.
-
 Installation
 ------------
 
+From the project root directory.
+
 ```
-git clone https://github.com/tiehuis/faststack
-cd faststack
-mkdir build && cd build
-cmake .. -DFRONTEND=terminal
-make
+meson build # Only on first run
+cd build
+mesonconf -Dfrontend=terminal
+ninja
 ```
 
 Running
 -------
 
+**IMPORTANT**: The terminal engine requires access to the keyboard subsystem in
+order to retrieve keyboard events for fast play. If you are worried about
+the following permissions, see `main.c` and check what interactions are being
+made to the keyboard.
+
 This requires root permission to read from the input device. To avoid requiring
-root permissions for every task, you can add yourself to the required input
-group once so you can run with user permissions in the future.
+root permissions (sudo) for every task, you can add yourself to the required
+input group once so you can run with user permissions in the future.
 
 Determine the group which the event devices are part of (typically `input`):
 

@@ -1,5 +1,9 @@
 # stackos
 
+<p align="center">
+    <img src="https://i.imgur.com/WnTSfQi.png">
+</p>
+
 This is a simple kernel which allows the faststack engine to run atop it. It
 is very similar to the terminal interface.
 
@@ -12,8 +16,8 @@ You will need the following programs:
 
  - `i686-elf-gcc`
  - `nasm`
- - `qemu-system-i386`  (for testing)
- - `xorriso`, `mtools` (for iso building)
+ - `qemu-system-i386`  (optional: for testing)
+ - `xorriso`, `mtools` (optional: for iso building)
 
 ```
 # Build the kernel binary image
@@ -31,5 +35,5 @@ drive partition numbers!**).
 
 ```
 make iso
-dd if=stackos.iso of=/dev/sdX
+dd bs=4M if=stackos.iso of=/dev/sdX && sync
 ```
