@@ -10,7 +10,7 @@
 const int field_x_offset = 2 * 6;
 
 // Offset from top of the screen
-const int field_y_offset = 2;
+const int field_y_offset = 1;
 
 // Main tetris engine.
 FSEngine engine;
