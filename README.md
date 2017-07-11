@@ -21,21 +21,17 @@ Motivation
 Installation
 ------------
 
-This requires [`meson`](http://mesonbuild.com/Getting-meson.html) to build along
+This requires [`zig`](http://ziglang.org/) to build along
 with any C99 compiler. Some frontends have additional requirements.
 
 ```
-meson build
-cd build
-ninja
+zig build
 ```
 
 ### Switching Frontends
 
 ```
-cd build
-mesonconf -Dfrontend=sdl # or -Dfrontend=terminal
-ninja
+TODO
 ```
 
 NOTE: Some frontends have individual dependencies not listed here. See their
