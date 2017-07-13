@@ -1,1 +1,1 @@
-src/frontend/SDL2/*.inc linguist-vendored
+src/frontend/SDL2/*.inc linguist-generated=true

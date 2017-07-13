@@ -1,0 +1,55 @@
+#!/bin/bash
+
+# Dependencies:
+# - jq
+# - meson
+# - ninja
+# - xorriso
+# - zip
+# - mingw32-x86_64 toolchain
+# - i686-elf-gcc
+# - nasm
+# - xorriso
+# - mtools
+
+VERSION=$(mesonintrospect --projectinfo build | jq -r .version)
+
+rm -rf artifacts
+mkdir -p artifacts
+
+# Linux Releases
+rm -rf build
+LGT_V=faststack-$VERSION-unknown-linux-glibc
+mkdir -p artifacts/$LGT_V
+mkdir -p artifacts/$LGT_V/replay
+meson build -Dfrontend=terminal
+ninja -C build
+cp build/faststack artifacts/$LGT_V/faststack-terminal
+rm -rf build
+meson build -Dfrontend=sdl
+ninja -C build
+cp build/faststack artifacts/$LGT_V/faststack-sdl2
+cp examples/fs.ini artifacts/$LGT_V
+cd artifacts && tar -czvf $LGT_V.tar.gz $LGT_V && cd ..
+rm -rf artifacts/$LGT_V
+
+# Windows Releases
+rm -rf build
+WG_V=faststack-$VERSION-x86_64-windows-gnu
+mkdir -p artifacts/$WG_V
+mkdir -p artifacts/$WG_V/replay
+meson build -Dfrontend=sdl --cross-file=meson_cross.txt
+ninja -C build
+cp build/faststack artifacts/$WG_V
+cp examples/fs.ini artifacts/$WG_V
+cp dlls/libfreetype-6.dll dlls/SDL2.dll dlls/SDL2_ttf.dll dlls/zlib1.dll artifacts/$WG_V
+cd artifacts && zip -9 -r $WG_V.zip $WG_V && cd ..
+rm -rf artifacts/$WG_V
+
+# Iso Releases
+make -C src/frontend/kernel iso
+cp src/frontend/kernel/stackos.iso artifacts/stackos-$VERSION-x86.iso
+
+# Source Code Releases
+ninja -C build dist
+cp build/meson-dist/*.tar.xz artifacts

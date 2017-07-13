@@ -1,11 +1,15 @@
 project('faststack', 'c',
-    version : '0.3.0',
+    version : '0.3.1',
     license : 'GPLv3'
 )
 
 add_project_arguments(['-Wall', '-Wextra', '-std=c99', '-pedantic'],
     language : 'c'
 )
+
+if meson.is_cross_build()
+    add_project_link_arguments(['-L../dlls'], language : 'c')
+endif
 
 subdir('src/engine')
 

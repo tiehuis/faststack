@@ -11,6 +11,8 @@
 #include <faststack.h>
 
 #include <stdio.h>
+
+#define SDL_MAIN_HANDLED
 #include <SDL.h>
 #include <SDL_FontCache.h>
 
