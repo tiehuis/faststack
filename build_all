@@ -40,7 +40,7 @@ mkdir -p artifacts/$WG_V
 mkdir -p artifacts/$WG_V/replay
 meson build -Dfrontend=sdl --cross-file=meson_cross.txt
 ninja -C build
-cp build/faststack artifacts/$WG_V
+cp build/faststack artifacts/$WG_V/faststack.exe
 cp examples/fs.ini artifacts/$WG_V
 cp dlls/libfreetype-6.dll dlls/SDL2.dll dlls/SDL2_ttf.dll dlls/zlib1.dll artifacts/$WG_V
 cd artifacts && zip -9 -r $WG_V.zip $WG_V && cd ..
