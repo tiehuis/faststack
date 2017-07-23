@@ -38,7 +38,7 @@ static char* hsCurrentDate(void)
 
     time(&timer);
     tmInfo = localtime(&timer);
-    strftime(buffer, sizeof(buffer), "%F %H:%M:%S", tmInfo);
+    strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", tmInfo);
     return buffer;
 }
 

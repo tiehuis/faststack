@@ -6,10 +6,13 @@ project('faststack', 'c',
 add_project_arguments(['-Wall', '-Wextra', '-std=c99', '-pedantic'],
     language : 'c'
 )
-
 if meson.is_cross_build()
     add_project_link_arguments(['-L../dlls'], language : 'c')
+    add_project_arguments(['-Wno-pedantic-ms-format', '-D__USE_MINGW_ANSI_STDIO'],
+        language: 'c'
+    )
 endif
+
 
 subdir('src/engine')
 
