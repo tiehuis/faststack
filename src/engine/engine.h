@@ -359,6 +359,11 @@ struct FSEngine {
 };
 
 ///
+// Transform a field block into an actual block representation.
+///
+FSBlock fsFieldPieceBlock(FSBlock b);
+
+///
 // Clear the specified game instance.
 //
 // This only resets internal variables and will not overwrite any user specified

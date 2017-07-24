@@ -116,6 +116,9 @@ struct FSFrontend {
     /// Should the field be centered?
     bool centerField;
 
+    /// Should the piece be coloured or a single palette?
+    bool coloredField;
+
     /// Glyphs to use when displaying field items.
     GlyphSet glyph;
 

@@ -67,6 +67,7 @@ void fsiPreInit(FSFrontend *v)
     // Following can be overwritten by ini file options.
     v->glyph = asciiGlyphSet;
     v->centerField = false;
+    v->coloredField = false;
 }
 
 #define PROC_DEVICE_FILENAME "/proc/bus/input/devices"
@@ -388,9 +389,13 @@ static void drawField(FSFrontend *v)
     // Field state
     for (int y = f->fieldHidden; y < f->fieldHeight; ++y) {
         for (int x = 0; x < f->fieldWidth; ++x) {
+            const uint16_t color = v->coloredField
+                                      ? attr_colour(fsFieldPieceBlock(f->b[y][x]))
+                                      : ATTR_WHITE;
+
             const TerminalCell sq = (TerminalCell) {
                 .value = v->glyph.blockE,
-                .attrs = f->b[y][x] ? ATTR_REVERSE | ATTR_WHITE  : 0
+                .attrs = f->b[y][x] ? ATTR_REVERSE | color : 0
             };
 
             v->bbuf[FIELD_Y + (y - f->fieldHidden)][FIELD_X + 2*x + 2] = sq;
@@ -430,11 +435,11 @@ static void drawField(FSFrontend *v)
 
         v->bbuf[FIELD_Y + blocks[i].y][FIELD_X + 2*blocks[i].x + 2] = (TerminalCell) {
             .value = v->glyph.blockL,
-            .attrs = ATTR_REVERSE | attr_colour(f->piece)
+            .attrs = ATTR_REVERSE | ATTR_BRIGHT | attr_colour(f->piece)
         };
         v->bbuf[FIELD_Y + blocks[i].y][FIELD_X + 2*blocks[i].x + 3] = (TerminalCell) {
             .value = v->glyph.blockR,
-            .attrs = ATTR_REVERSE | attr_colour(f->piece)
+            .attrs = ATTR_REVERSE | ATTR_BRIGHT | attr_colour(f->piece)
         };
     }
 }
@@ -738,6 +743,19 @@ void fsiUnpackFrontendOption(FSFrontend *v, const char *key, const char *value)
         }
         else if (!strcmpi(value, "false")) {
             v->centerField = false;
+        }
+        else {
+            fsLogWarning("Ignoring unknown value %s for key %s", value, key);
+        }
+
+        return;
+    }
+    else if (!strcmpi(key, "coloredField")) {
+        if (!strcmpi(value, "true")) {
+            v->coloredField = true;
+        }
+        else if (!strcmpi(value, "false")) {
+            v->coloredField = false;
         }
         else {
             fsLogWarning("Ignoring unknown value %s for key %s", value, key);

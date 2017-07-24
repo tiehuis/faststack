@@ -16,8 +16,16 @@
 
 /// Not currently utilized much.
 const i8 pieceColors[FS_NPT] = {
-    0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70
+    1, 2, 3, 4, 5, 6, 7
 };
+
+///
+// Transform a field block into an actual block representation.
+///
+FSBlock fsFieldPieceBlock(FSBlock b)
+{
+    return (b > 0 ? b - 1 : 0) % FS_NPT;
+}
 
 ///
 // Return the next preview piece from the queue.
@@ -137,7 +145,7 @@ static bool isOccupied(const FSEngine *f, int x, int y)
         return true;
     }
 
-    return f->b[y][x] > 1;
+    return f->b[y][x] >= 1;
 }
 
 ///
