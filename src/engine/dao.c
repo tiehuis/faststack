@@ -67,6 +67,7 @@ static void setupHiscoreTable(FSDao *dao)
         "create table if not exists hiscore"
         "("
             "id INTEGER PRIMARY KEY,"
+            "replay_id INTEGER REFERENCES replay_overview(id),"
             "time FLOAT,"
             "tps FLOAT,"
             "kpt FLOAT,"
@@ -80,8 +81,8 @@ static void setupHiscoreTable(FSDao *dao)
     }
 
     const char insert_stmt[] =
-        "insert into hiscore (time, tps, kpt, goal, date) "
-        "values (?, ?, ?, ?, datetime(\"now\"));";
+        "insert into hiscore (replay_id, time, tps, kpt, goal, date) "
+        "values (?, ?, ?, ?, ?, datetime(\"now\"));";
 
     if (sqlite3_prepare_v2(
             dao->db,
@@ -101,10 +102,11 @@ void daoSaveHiscore(FSDao *dao, const FSEngine *f)
     sqlite3_stmt *s = dao->hiscore_stmt;
     const int msElapsed = f->msPerTick * f->totalTicks;
 
-    sqlite3_bind_double(s, 1, (double) msElapsed / 1000);
-    sqlite3_bind_double(s, 2, (double) f->blocksPlaced / ((double) msElapsed / 1000));
-    sqlite3_bind_double(s, 3, (double) f->totalKeysPressed / f->blocksPlaced);
-    sqlite3_bind_int(s, 4, f->goal);
+    sqlite3_bind_int(s, 1, dao->replay_overview_row_id);
+    sqlite3_bind_double(s, 2, (double) msElapsed / 1000);
+    sqlite3_bind_double(s, 3, (double) f->blocksPlaced / ((double) msElapsed / 1000));
+    sqlite3_bind_double(s, 4, (double) f->totalKeysPressed / f->blocksPlaced);
+    sqlite3_bind_int(s, 5, f->goal);
 
     sqlite3_step(s);
     sqlite3_clear_bindings(s);
@@ -225,8 +227,23 @@ static void setupReplayOverviewTable(FSDao *dao)
         exit(1);
     }
 
+    const char select_stmt[] =
+        "select * from replay_overview where id = ?;";
+
+    if (sqlite3_prepare_v2(
+            dao->db,
+            select_stmt,
+            sizeof(select_stmt),
+            &dao->replay_overview_select_stmt,
+            NULL
+        ) != SQLITE_OK)
+    {
+        fsLogFatal("%s\n", sqlite3_errmsg(dao->db));
+        exit(1);
+    }
+
     const char update_stmt[] =
-        "update replay_overview set complete=1 where id = ?";
+        "update replay_overview set complete=1 where id = ?;";
 
     if (sqlite3_prepare_v2(
             dao->db,
@@ -252,7 +269,7 @@ static void setupReplayInputTable(FSDao *dao)
         "create table if not exists replay_input"
         "("
             "id INTEGER PRIMARY KEY,"
-            "overview_id INTEGER REFERENCES replay_overview(id),"
+            "replay_id INTEGER REFERENCES replay_overview(id),"
             "tick INTEGER,"
             "keystate INTEGER"
         ");";
@@ -265,7 +282,7 @@ static void setupReplayInputTable(FSDao *dao)
     const char insert_stmt[] =
         "insert into replay_input"
         "("
-            "overview_id,"
+            "replay_id,"
             "tick,"
             "keystate"
         ")"
@@ -288,7 +305,24 @@ static void setupReplayInputTable(FSDao *dao)
         exit(1);
     }
 
-    dao->last_input_keystate = 0xFFFF;
+    const char get_stmt[] =
+        "select keystate from replay_input "
+        "where replay_id = ? and tick = ?;";
+
+    if (sqlite3_prepare_v2(
+            dao->db,
+            get_stmt,
+            sizeof(get_stmt),
+            &dao->replay_output_stmt,
+            NULL
+        ) != SQLITE_OK)
+    {
+        fsLogFatal("%s\n", sqlite3_errmsg(dao->db));
+        exit(1);
+    }
+
+    dao->last_input_keystate = 0;
+    dao->last_output_keystate = 0;
 }
 
 void daoInsertReplayOverview(FSDao *dao, const FSEngine *f)
@@ -330,7 +364,7 @@ void daoInsertReplayOverview(FSDao *dao, const FSEngine *f)
 void daoInsertReplayInput(FSDao *dao, u32 ticks, u32 keystate)
 {
     // Only store deltas and not each state.
-    if (dao->last_input_keystate == keystate && ticks != 0) {
+    if (dao->last_input_keystate == keystate) {
         return;
     }
 
@@ -345,6 +379,76 @@ void daoInsertReplayInput(FSDao *dao, u32 ticks, u32 keystate)
     sqlite3_reset(s);
 
     dao->last_input_keystate = keystate;
+}
+
+static void daoLoadReplayOverview(FSDao *dao, FSEngine *f, u32 replay_id)
+{
+    sqlite3_stmt *s = dao->replay_overview_select_stmt;
+
+    sqlite3_bind_int(s, 1, replay_id);
+    if (sqlite3_step(s) != SQLITE_ROW) {
+        fsLogFatal("no replay found with id: %d\n", replay_id);
+        exit(1);
+    }
+
+    if (sqlite3_column_int(s, 3) == 0) {
+        fsLogWarning("incomplete replay being played!\n");
+    }
+
+    // Skip id, version, date and complete
+    f->seed = sqlite3_column_int(s, 4);
+    f->goal = sqlite3_column_int(s, 5);
+    f->fieldWidth = sqlite3_column_int(s, 6);
+    f->fieldHeight = sqlite3_column_int(s, 7);
+    f->fieldHidden = sqlite3_column_int(s, 8);
+    f->initialActionStyle = sqlite3_column_int(s, 9);
+    f->dasSpeed = sqlite3_column_int(s, 10);
+    f->dasDelay = sqlite3_column_int(s, 11);
+    f->msPerTick = sqlite3_column_int(s, 12);
+    f->ticksPerDraw = sqlite3_column_int(s, 13);
+    f->areDelay = sqlite3_column_int(s, 14);
+    f->areCancellable = sqlite3_column_int(s, 15);
+    f->lockStyle = sqlite3_column_int(s, 16);
+    f->lockDelay = sqlite3_column_int(s, 17);
+    f->floorkickLimit = sqlite3_column_int(s, 18);
+    f->oneShotSoftDrop = sqlite3_column_int(s, 19);
+    f->rotationSystem = sqlite3_column_int(s, 20);
+    f->gravity = sqlite3_column_int(s, 21);
+    f->softDropGravity = sqlite3_column_int(s, 22);
+    f->randomizer = sqlite3_column_int(s, 23);
+    f->readyPhaseLength = sqlite3_column_int(s, 24);
+    f->goPhaseLength = sqlite3_column_int(s, 25);
+    f->infiniteReadyGoHold = sqlite3_column_int(s, 26);
+    f->nextPieceCount = sqlite3_column_int(s, 27);
+
+    sqlite3_clear_bindings(s);
+    sqlite3_reset(s);
+}
+
+void daoLoadReplay(FSDao *dao, FSEngine *f, u32 replay_id)
+{
+    daoLoadReplayOverview(dao, f, replay_id);
+
+    dao->output_replay_id = replay_id;
+    dao->last_output_keystate = 0;
+}
+
+u32 daoGetReplayInput(FSDao *dao, u32 tick)
+{
+    sqlite3_stmt *s = dao->replay_output_stmt;
+
+    sqlite3_bind_int(s, 1, dao->output_replay_id);
+    sqlite3_bind_int(s, 2, tick);
+
+    if (sqlite3_step(s) == SQLITE_ROW) {
+        dao->last_output_keystate = sqlite3_column_int(s, 0);
+    }
+
+    sqlite3_step(s);
+    sqlite3_clear_bindings(s);
+    sqlite3_reset(s);
+
+    return dao->last_output_keystate;
 }
 
 void daoMarkReplayComplete(FSDao *dao)

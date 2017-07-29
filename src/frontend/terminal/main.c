@@ -44,7 +44,7 @@ static void updateGameLogic(FSFrontend *v, FSView *g)
     else {
         // TODO: Add table lookup here. Be efficient.
         keystate &= FST_VK_FLAG_RESTART | FST_VK_FLAG_QUIT;
-        // keystate |= fsReplayGet(g->replay, f->totalTicksRaw);
+        keystate |= daoGetReplayInput(g->dao, f->totalTicksRaw);
     }
 
     fsVirtualKeysToInput(&in, keystate, f, ctl);
@@ -282,17 +282,12 @@ int main(int argc, char **argv)
         fsTryParseIniFile(&pView, &gView);
     }
 
-#if 0
     if (o.replay) {
         // Attempt to load a replay file here before we initialize the
         // graphics itself to avoid a flicker on invalid replays.
         gView.replayPlayback = true;
-        gView.replayName = o.replay;
-        // TODO: This load should take a specific game id and store it
-        // in the dao for the input lookup.
-        fsReplayLoad(&game, &replay, gView.replayName);
+        daoLoadReplay(&dao, &game, atoi(o.replay));
     }
-#endif
 
     fsiInit(&pView);
     gameLoop(&pView, &gView);
