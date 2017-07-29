@@ -419,12 +419,6 @@ const char* getIniFilePath(void)
 #ifdef __linux__
     const char *faststackConfig = "faststack/config.ini";
 
-    char *homePath = getenv("HOME");
-    if (!homePath) {
-        // TODO: Unsure about how good this fallback value is
-        homePath = "~";
-    }
-
     // XDG_CONFIG_HOME incorporates the HOME folder by default so we need to
     // handle the case independently.
     char *xdgPath = getenv("XDG_CONFIG_HOME");
@@ -433,14 +427,20 @@ const char* getIniFilePath(void)
     if (xdgPath) {
         snprintf(iniPath, sizeof(iniPath), "%s/%s", xdgPath, faststackConfig);
     } else {
+        char *homePath = getenv("HOME");
+        if (!homePath) {
+            // TODO: Unsure about how good this fallback value is
+            homePath = "~";
+        }
+
         snprintf(iniPath, sizeof(iniPath), "%s/%s/%s",
                  homePath, ".config", faststackConfig);
     }
 
     return iniPath;
-#endif
-
+#else
     return NULL;
+#endif
 }
 
 void fsTryParseIniFile(struct FSFrontend *p, FSView *v)

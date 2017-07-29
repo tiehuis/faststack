@@ -15,19 +15,80 @@
 #include "dao.h"
 #include "engine.h"
 #include "log.h"
+#include "option.h" // for FileExists
 
-// Use local share directory for this.
-#define DAO_PATH "fs.db"
+// For mkdir
+#ifdef __linux__
+#include <string.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#endif
+
+#define DAO_FILENAME "fs.db"
 
 static void setupHiscoreTable(FSDao *dao);
 static void setupReplayOverviewTable(FSDao *dao);
 static void setupReplayInputTable(FSDao *dao);
 
+// Resolves the db file to load.
+//
+// Load priority is as follows:
+//  - fs.db (only if already exists)
+//  - $XDG_DATA_HOME/faststack/database.db (linux, created if doesn't exist)
+//  - fs.db (created if doesn't exist)
+static const char* getSqlite3DatabasePath(void)
+{
+    if (fileExists(DAO_FILENAME)) {
+        return DAO_FILENAME;
+    }
+
+#ifdef __linux__
+    static char dbPath[128];
+
+    const char *fsDatabase = "faststack";
+    char *dataHome = getenv("XDG_DATA_HOME");
+    if (dataHome) {
+        snprintf(dbPath, sizeof(dbPath), "%s/%s", dataHome, fsDatabase);
+    } else {
+        char *homePath = getenv("HOME");
+        if (!homePath) {
+            homePath = "~";
+        }
+
+        snprintf(dbPath, sizeof(dbPath), "%s/%s/%s",
+                 homePath, ".local/share", fsDatabase);
+    }
+
+    // sqlite3 will create the database for us, but it won't create any
+    // leading directories, so perform that ourselves.
+    //
+    // Assumes you have a .local/share created and does not exist as a
+    // normal file.
+    errno = 0;
+    if (mkdir(dbPath, 0777) != 0) {
+        if (errno != EEXIST) {
+            fsLogFatal("mkdir '%s' returned %s", dbPath, strerror(errno));
+            exit(1);
+        }
+    } else {
+        fsLogInfo("created new database directory %s", dbPath);
+    }
+
+    strncat(dbPath, "/database.db", sizeof(dbPath));;
+    return dbPath;
+#else
+    return DAO_FILENAME;
+#endif
+}
+
 // Need to keep track of the replay foreign key.
 void daoInit(FSDao *dao)
 {
-    if (sqlite3_open(DAO_PATH, &dao->db) != SQLITE_OK) {
-        fsLogFatal("%s\n", sqlite3_errmsg(dao->db));
+    const char *path = getSqlite3DatabasePath();
+    fsLogInfo("using database at %s", path);
+
+    if (sqlite3_open(path, &dao->db) != SQLITE_OK) {
+        fsLogFatal("%s", sqlite3_errmsg(dao->db));
         exit(1);
     }
 
@@ -39,23 +100,23 @@ void daoInit(FSDao *dao)
 void daoDeinit(FSDao *dao)
 {
     if (sqlite3_finalize(dao->hiscore_stmt) != SQLITE_OK) {
-        fsLogWarning("%s\n", sqlite3_errmsg(dao->db));
+        fsLogWarning("%s", sqlite3_errmsg(dao->db));
     }
 
     if (sqlite3_finalize(dao->replay_overview_stmt) != SQLITE_OK) {
-        fsLogWarning("%s\n", sqlite3_errmsg(dao->db));
+        fsLogWarning("%s", sqlite3_errmsg(dao->db));
     }
 
     if (sqlite3_finalize(dao->replay_overview_complete_stmt) != SQLITE_OK) {
-        fsLogWarning("%s\n", sqlite3_errmsg(dao->db));
+        fsLogWarning("%s", sqlite3_errmsg(dao->db));
     }
 
     if (sqlite3_finalize(dao->replay_input_stmt) != SQLITE_OK) {
-        fsLogWarning("%s\n", sqlite3_errmsg(dao->db));
+        fsLogWarning("%s", sqlite3_errmsg(dao->db));
     }
 
     if (sqlite3_close(dao->db) != SQLITE_OK) {
-        fsLogWarning("%s\n", sqlite3_errmsg(dao->db));
+        fsLogWarning("%s", sqlite3_errmsg(dao->db));
     }
 }
 
@@ -77,7 +138,7 @@ static void setupHiscoreTable(FSDao *dao)
         ");";
 
     if (sqlite3_exec(dao->db, create_stmt, NULL, NULL, NULL) != SQLITE_OK) {
-        fsLogFatal("%s\n", sqlite3_errmsg(dao->db));
+        fsLogFatal("%s", sqlite3_errmsg(dao->db));
         exit(1);
     }
 
@@ -93,7 +154,7 @@ static void setupHiscoreTable(FSDao *dao)
             NULL
         ) != SQLITE_OK)
     {
-        fsLogFatal("%s\n", sqlite3_errmsg(dao->db));
+        fsLogFatal("%s", sqlite3_errmsg(dao->db));
         exit(1);
     }
 }
@@ -150,7 +211,7 @@ static void setupReplayOverviewTable(FSDao *dao)
         ");";
 
     if (sqlite3_exec(dao->db, create_stmt, NULL, NULL, NULL) != SQLITE_OK) {
-        fsLogFatal("%s\n", sqlite3_errmsg(dao->db));
+        fsLogFatal("%s", sqlite3_errmsg(dao->db));
         exit(1);
     }
 
@@ -224,7 +285,7 @@ static void setupReplayOverviewTable(FSDao *dao)
             NULL
         ) != SQLITE_OK)
     {
-        fsLogFatal("%s\n", sqlite3_errmsg(dao->db));
+        fsLogFatal("%s", sqlite3_errmsg(dao->db));
         exit(1);
     }
 
@@ -239,7 +300,7 @@ static void setupReplayOverviewTable(FSDao *dao)
             NULL
         ) != SQLITE_OK)
     {
-        fsLogFatal("%s\n", sqlite3_errmsg(dao->db));
+        fsLogFatal("%s", sqlite3_errmsg(dao->db));
         exit(1);
     }
 
@@ -254,7 +315,7 @@ static void setupReplayOverviewTable(FSDao *dao)
             NULL
         ) != SQLITE_OK)
     {
-        fsLogFatal("%s\n", sqlite3_errmsg(dao->db));
+        fsLogFatal("%s", sqlite3_errmsg(dao->db));
         exit(1);
     }
 }
@@ -276,7 +337,7 @@ static void setupReplayInputTable(FSDao *dao)
         ");";
 
     if (sqlite3_exec(dao->db, create_stmt, NULL, NULL, NULL) != SQLITE_OK) {
-        fsLogFatal("%s\n", sqlite3_errmsg(dao->db));
+        fsLogFatal("%s", sqlite3_errmsg(dao->db));
         exit(1);
     }
 
@@ -302,7 +363,7 @@ static void setupReplayInputTable(FSDao *dao)
             NULL
         ) != SQLITE_OK)
     {
-        fsLogFatal("%s\n", sqlite3_errmsg(dao->db));
+        fsLogFatal("%s", sqlite3_errmsg(dao->db));
         exit(1);
     }
 
@@ -318,7 +379,7 @@ static void setupReplayInputTable(FSDao *dao)
             NULL
         ) != SQLITE_OK)
     {
-        fsLogFatal("%s\n", sqlite3_errmsg(dao->db));
+        fsLogFatal("%s", sqlite3_errmsg(dao->db));
         exit(1);
     }
 
@@ -388,12 +449,12 @@ static void daoLoadReplayOverview(FSDao *dao, FSEngine *f, u32 replay_id)
 
     sqlite3_bind_int(s, 1, replay_id);
     if (sqlite3_step(s) != SQLITE_ROW) {
-        fsLogFatal("no replay found with id: %d\n", replay_id);
+        fsLogFatal("no replay found with id: %d", replay_id);
         exit(1);
     }
 
     if (sqlite3_column_int(s, 3) == 0) {
-        fsLogWarning("incomplete replay being played!\n");
+        fsLogWarning("incomplete replay being played!");
     }
 
     // Skip id, version, date and complete

@@ -29,6 +29,9 @@ struct FSOptions {
 
 int strcmpi(const char *a, const char *b);
 
+// TODO: Move.
+int fileExists(const char *path);
+
 void fsParseOptString(FSOptions *o, int argc, char **argv);
 
 #ifndef FS_DISABLE_OPTION
