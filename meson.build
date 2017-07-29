@@ -3,7 +3,7 @@ project('faststack', 'c',
     license : 'GPLv3'
 )
 
-add_project_arguments(['-Wall', '-Wextra', '-std=c99', '-pedantic'],
+add_project_arguments(['-Os', '-Wall', '-Wextra', '-std=c99', '-pedantic'],
     language : 'c'
 )
 if meson.is_cross_build()

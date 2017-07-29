@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <sqlite3.h>
 
+#include "core.h"
 #include "dao.h"
 #include "engine.h"
 #include "log.h"

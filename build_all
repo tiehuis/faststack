@@ -24,10 +24,12 @@ mkdir -p artifacts/$LGT_V
 meson build -Dfrontend=terminal
 ninja -C build
 cp build/faststack artifacts/$LGT_V/faststack-terminal
+strip artifacts/$LGT_V/faststack-terminal
 rm -rf build
 meson build -Dfrontend=sdl
 ninja -C build
 cp build/faststack artifacts/$LGT_V/faststack-sdl2
+strip artifacts/$LGT_V/faststack-sdl2
 cp examples/fs.ini artifacts/$LGT_V
 cd artifacts && tar -czvf $LGT_V.tar.gz $LGT_V && cd ..
 rm -rf artifacts/$LGT_V
@@ -39,6 +41,7 @@ mkdir -p artifacts/$WG_V
 meson build -Dfrontend=sdl --cross-file=meson_cross.txt
 ninja -C build
 cp build/faststack artifacts/$WG_V/faststack.exe
+strip artifacts/$LGT_V/faststack.exe
 cp examples/fs.ini artifacts/$WG_V
 cp dlls/libfreetype-6.dll dlls/SDL2.dll dlls/SDL2_ttf.dll dlls/zlib1.dll artifacts/$WG_V
 cd artifacts && zip -9 -r $WG_V.zip $WG_V && cd ..
