@@ -1,1 +1,3 @@
 src/frontend/SDL2/*.inc linguist-generated=true
+src/engine/sqlite.c linguist-vendored=true
+src/engine/sqlite.h linguist-vendored=true
