@@ -31,11 +31,7 @@
 #endif
 
 #ifndef FS_DISABLE_HISCORE
-#include "hiscore.h"
-#endif
-
-#ifndef FS_DISABLE_HISCORE
-#include "replay.h"
+#include "dao.h"
 #endif
 
 #endif

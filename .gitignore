@@ -1,8 +1,7 @@
 faststack
 libfs.a
-/fs.ini
+fs.ini
+fs.db
 fs.log
-fs.hiscore
-replay/*
 build
 artifacts

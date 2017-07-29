@@ -20,7 +20,7 @@ typedef struct FSControl FSControl;
 typedef struct FSView FSView;
 typedef struct FSFrontend FSFrontend;
 typedef struct FSOptions FSOptions;
-typedef struct FSReplay FSReplay;
+typedef struct FSDao FSDao;
 typedef struct FSRotationSystem FSRotationSystem;
 typedef struct FSRandCtx FSRandCtx;
 

@@ -21,7 +21,6 @@ mkdir -p artifacts
 rm -rf build
 LGT_V=faststack-$VERSION-unknown-linux-glibc
 mkdir -p artifacts/$LGT_V
-mkdir -p artifacts/$LGT_V/replay
 meson build -Dfrontend=terminal
 ninja -C build
 cp build/faststack artifacts/$LGT_V/faststack-terminal
@@ -37,7 +36,6 @@ rm -rf artifacts/$LGT_V
 rm -rf build
 WG_V=faststack-$VERSION-x86_64-windows-gnu
 mkdir -p artifacts/$WG_V
-mkdir -p artifacts/$WG_V/replay
 meson build -Dfrontend=sdl --cross-file=meson_cross.txt
 ninja -C build
 cp build/faststack artifacts/$WG_V/faststack.exe

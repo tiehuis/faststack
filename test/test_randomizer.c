@@ -48,6 +48,7 @@
 #include "framework.h"
 #include "faststack.h"
 #include <stdlib.h>
+#include <stdio.h>
 
 static FSEngine engine;
 

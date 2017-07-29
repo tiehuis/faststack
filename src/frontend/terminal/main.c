@@ -39,11 +39,12 @@ static void updateGameLogic(FSFrontend *v, FSView *g)
     u32 keystate = fsiReadKeys(v);
 
     if (!g->replayPlayback) {
-        fsReplayInsert(g->replay, f->totalTicksRaw, keystate);
+        daoInsertReplayInput(g->dao, f->totalTicksRaw, keystate);
     }
     else {
+        // TODO: Add table lookup here. Be efficient.
         keystate &= FST_VK_FLAG_RESTART | FST_VK_FLAG_QUIT;
-        keystate |= fsReplayGet(g->replay, f->totalTicksRaw);
+        // keystate |= fsReplayGet(g->replay, f->totalTicksRaw);
     }
 
     fsVirtualKeysToInput(&in, keystate, f, ctl);
@@ -176,7 +177,7 @@ start:;
                 // TODO: Fix annoying seed set here. Unintuitive.
                 if (!g->replayPlayback) {
                     g->game->seed = fsGetRoughSeed();
-                    fsReplayInit(g->game, g->replay);
+                    daoInsertReplayOverview(g->dao, g->game);
                 }
                 // If we are in playback, we will have loaded the file already
 
@@ -190,19 +191,18 @@ start:;
 
                 switch (g->game->state) {
                     case FSS_RESTART:
-                        fsReplayClear(g->replay);
                         g->replayPlayback = false;
                         // Stay in current state to restart
                         goto start;
 
                     case FSS_QUIT:
-                        fsReplayClear(g->replay);
                         g->replayPlayback = false;
                         goto end;
 
                     case FSS_GAMEOVER:
                         if (!g->replayPlayback) {
-                            fsReplaySave(g->game, g->replay);
+                            daoMarkReplayComplete(g->dao);
+                            daoSaveHiscore(g->dao, g->game);
                         }
 
                         g->replayPlayback = false;
@@ -254,8 +254,8 @@ int main(int argc, char **argv)
 {
     FSEngine game;
     FSControl control;
-    FSReplay replay;
-    FSView gView = { .game = &game, .control = &control, .replay = &replay,
+    FSDao dao;
+    FSView gView = { .game = &game, .control = &control, .dao = &dao,
                      .replayName = NULL, .replayPlayback = false };
     FSFrontend pView = { .view = &gView };
 
@@ -275,19 +275,24 @@ int main(int argc, char **argv)
 
     fsiPreInit(&pView);
     fsGameInit(&game);
+    daoInit(&dao);
     fsLoadDefaultKeys(&pView);
 
     if (!o.no_ini) {
         fsTryParseIniFile(&pView, &gView);
     }
 
+#if 0
     if (o.replay) {
         // Attempt to load a replay file here before we initialize the
         // graphics itself to avoid a flicker on invalid replays.
         gView.replayPlayback = true;
         gView.replayName = o.replay;
+        // TODO: This load should take a specific game id and store it
+        // in the dao for the input lookup.
         fsReplayLoad(&game, &replay, gView.replayName);
     }
+#endif
 
     fsiInit(&pView);
     gameLoop(&pView, &gView);

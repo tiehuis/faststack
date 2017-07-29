@@ -24,8 +24,8 @@ struct FSView {
     /// Current input state.
     FSControl *control;
 
-    /// Replay state.
-    FSReplay *replay;
+    /// Data Access object state.
+    FSDao *dao;
 
     /// Is this a replay playback?
     bool replayPlayback;

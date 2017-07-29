@@ -5,10 +5,10 @@
 // faststack Engine implementation.
 ///
 
+#include "dao.h"
 #include "default.h"
 #include "engine.h"
 #include "finesse.h"
-#include "hiscore.h"
 #include "internal.h"
 #include "log.h"
 #include "rotation.h"
@@ -756,11 +756,6 @@ beginTick:
 
       case FSS_GAMEOVER:
         f->se |= FST_SE_FLAG_GAMEOVER;
-        // Only save a hiscore if we completed the game (no quit/restart) and
-        // if this is not a replay.
-        if (!f->replay) {
-            fsHiscoreInsert(f);
-        }
         /* FALLTHROUGH */
 
       case FSS_QUIT:

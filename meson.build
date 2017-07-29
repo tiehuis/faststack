@@ -13,7 +13,6 @@ if meson.is_cross_build()
     )
 endif
 
-
 subdir('src/engine')
 
 src = []
