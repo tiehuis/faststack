@@ -74,7 +74,7 @@ static const char* getSqlite3DatabasePath(void)
         fsLogInfo("created new database directory %s", dbPath);
     }
 
-    strncat(dbPath, "/database.db", sizeof(dbPath));;
+    strncat(dbPath, "/database.db", sizeof(dbPath) - strlen(dbPath) - 1);
     return dbPath;
 #else
     return DAO_FILENAME;
