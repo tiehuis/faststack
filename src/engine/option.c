@@ -13,6 +13,7 @@
 #ifndef FS_DISABLE_OPTION
 
 #include "engine.h"
+#include "dao.h"
 #include "option.h"
 #include "log.h"
 #include "rotation.h"
@@ -217,6 +218,10 @@ void fsParseOptString(FSOptions *o, int argc, char **argv)
         }
         else if (!strcmp("-h", opt) || !strcmp("--help", opt)) {
             printf("%s\n", usage);
+            exit(0);
+        }
+        else if (!strcmp("--db-path", opt)) {
+            printf("%s\n", daoGetDatabasePath());
             exit(0);
         }
         else if (strncmp("-", opt, 1) && strncmp("--", opt, 2)) {

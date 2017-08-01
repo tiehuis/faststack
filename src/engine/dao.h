@@ -22,6 +22,7 @@ struct FSDao {
     u32 last_output_keystate;
 };
 
+const char* daoGetDatabasePath(void);
 void daoInit(FSDao *dao);
 void daoSaveHiscore(FSDao *dao, const FSEngine *f);
 void daoInsertReplayOverview(FSDao *dao, const FSEngine *f);

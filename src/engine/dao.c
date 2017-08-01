@@ -36,7 +36,7 @@ static void setupReplayInputTable(FSDao *dao);
 //  - fs.db (only if already exists)
 //  - $XDG_DATA_HOME/faststack/database.db (linux, created if doesn't exist)
 //  - fs.db (created if doesn't exist)
-static const char* getSqlite3DatabasePath(void)
+const char* daoGetDatabasePath(void)
 {
     if (fileExists(DAO_FILENAME)) {
         return DAO_FILENAME;
@@ -84,7 +84,7 @@ static const char* getSqlite3DatabasePath(void)
 // Need to keep track of the replay foreign key.
 void daoInit(FSDao *dao)
 {
-    const char *path = getSqlite3DatabasePath();
+    const char *path = daoGetDatabasePath();
     fsLogInfo("using database at %s", path);
 
     if (sqlite3_open(path, &dao->db) != SQLITE_OK) {
