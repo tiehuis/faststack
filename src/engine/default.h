@@ -86,6 +86,10 @@
 #define FSD_READY_PHASE_LENGTH 833
 #endif
 
+#ifndef FSD_SOUND_ON_BAD_FINESSE
+#define FSD_SOUND_ON_BAD_FINESSE false
+#endif
+
 #ifndef FSD_ARE_CANCELLABLE
 #define FSD_ARE_CANCELLABLE false
 #endif

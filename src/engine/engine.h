@@ -258,6 +258,9 @@ struct FSEngine {
     /// @I: Counter for ARE.
     i32 areTimer;
 
+    /// @O: Should a sound be played if bad finesse is performed
+    bool warnOnBadFinesse;
+
     /// @O: Can ARE be cancelled by input
     bool areCancellable;
 

@@ -112,6 +112,7 @@ void fsGameInit(FSEngine *f)
     f->floorkickLimit = FSD_FLOORKICK_LIMIT;
     f->infiniteReadyGoHold = FSD_INFINITE_READY_GO_HOLD;
     f->nextPieceCount = FSD_NEXT_PIECE_COUNT;
+    f->warnOnBadFinesse = FSD_SOUND_ON_BAD_FINESSE;
     f->areCancellable = FSD_ARE_CANCELLABLE;
     f->readyPhaseLength = FSD_READY_PHASE_LENGTH;
     f->goPhaseLength = FSD_GO_PHASE_LENGTH;

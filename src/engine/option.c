@@ -129,6 +129,7 @@ static void unpackOptionValue(struct FSFrontend *p, FSView *v, const char *k,
         const char *key = k + 5;
         FSEngine *dst = v->game;
 
+        TS_BOOL      (warnOnBadFinesse);
         TS_INT       (areDelay);
         TS_BOOL      (areCancellable);
         TS_INT       (dasSpeed);

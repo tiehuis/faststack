@@ -7,6 +7,7 @@
 ///
 
 #include <stdlib.h>
+#include <stdio.h>
 #include <faststack.h>
 #include "frontend.h"
 #include "interface.h"
@@ -78,6 +79,7 @@ static void playGameLoop(FSFrontend *v, FSView *g)
     i32 gameStart = fsiGetTime(v);
     i32 lastTime = fsiGetTime(v);
     i32 lag = 0;
+    i32 lastFinesse = 0;
 
     i32 avgFrame = 0;
 
@@ -98,6 +100,13 @@ static void playGameLoop(FSFrontend *v, FSView *g)
 
         fsiPreFrameHook(v);
         updateGameLogic(v, g);
+
+        if (g->game->warnOnBadFinesse) {
+            if (lastFinesse != g->game->finesse) {
+                lastFinesse = g->game->finesse;
+                putchar('\a');
+            }
+        }
 
         const bool lastFrame = f->state == FSS_GAMEOVER ||
                                f->state == FSS_RESTART ||
